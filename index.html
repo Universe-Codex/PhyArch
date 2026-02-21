@@ -1,54 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch Test</title>
+    <title>PhyArch Engine</title>
     <style>
-        body { margin: 0; background: #111; color: white; overflow: hidden; font-family: sans-serif; }
-        #ui { position: absolute; top: 10%; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
-        button { padding: 15px; font-size: 18px; pointer-events: auto; background: #007bff; color: white; border: none; border-radius: 8px; }
+        body { margin: 0; background: #050505; color: #00ff00; font-family: monospace; overflow: hidden; }
+        #status { position: absolute; bottom: 10px; left: 10px; z-index: 10; font-size: 12px; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 <body>
-    <div id="ui">
-        <h1>PhyArch Active</h1>
-        <button onclick="alert('JavaScript Bridge is Working!')">Test Interaction</button>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <div id="status">System: Initializing...</div>
 
     <script>
-        // Setup 3D Scene
+        // 1. Three.js Setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Create Green Wireframe Cube
-        const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        // Add Light for better rendering
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5).normalize();
+        scene.add(light);
+
+        const geometry = new THREE.BoxGeometry(2, 2, 2);
+        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: true });
         const cube = new THREE.Mesh(geometry, material);
         scene.add(cube);
-
         camera.position.z = 5;
 
-        // Animation Loop
+        // 2. Python (Pyodide) Integration
+        let pyRotation = 0.01;
+        async function startPython() {
+            document.getElementById('status').innerText = "System: Loading Python...";
+            const pyodide = await loadPyodide();
+            // This runs real Python logic to determine rotation speed
+            pyRotation = pyodide.runPython("0.01 * 3");
+            document.getElementById('status').innerText = "System: Python Logic Active";
+        }
+        startPython();
+
         function animate() {
             requestAnimationFrame(animate);
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
+            cube.rotation.x += pyRotation;
+            cube.rotation.y += pyRotation;
             renderer.render(scene, camera);
         }
         animate();
-
-        // Fix view if phone rotates
-        window.addEventListener('resize', () => {
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-        });
     </script>
 </body>
 </html>
