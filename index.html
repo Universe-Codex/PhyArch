@@ -301,14 +301,19 @@ if (logic.includes('db.')) injectedLibs += getLib('DEXIE'); // New Database Brid
     <meta charset="UTF-8">
     ${injectedLibs}
     <style>
-        body { background: #0a0a0c; color: #00ff88; font-family: monospace; }
-        .glass-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 20px; border-radius: 15px; }
+<style>
+        body { background: #050507; color: #00ff88; font-family: monospace; margin: 0; overflow: hidden; }
+        #status-node { 
+            position: fixed; top: 0; width: 100%; z-index: 10000;
+            background: rgba(0,20,10,0.9); border-bottom: 1px solid #00ff88;
+            padding: 10px; display: flex; justify-content: space-between; font-size: 11px;
+        }
     </style>
 </head>
 <body>
-    <div id="status-node" style="font-size:9px; color:#00ff88; display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #222;">
-    <span>NODE: ACTIVE</span>
-    <span id="boot-status">Loading Engine...</span>
+    <div id="status-node">
+        <span>SYSTEM: PREPARING SIMULATION...</span>
+        <span id="boot-status">Waking Engines</span>
     </div>
     <div class="glass-card">
         <h1>${name}</h1>
