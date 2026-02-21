@@ -155,16 +155,33 @@ async function executeLogic() {
     }
 
     // 2. Handle Inventions (The Soul)
-    if (input.startsWith("invent ")) {
-        const parts = input.split(" ");
-        const name = parts[1];
-        const type = parts[2];
-        const code = MasterCreator.inventApp(name, type);
-MasterCreator.exportInvention(name, code);
-        document.getElementById('physics-input').value = "";
-        return;
-    }
+        let cmd = input.toLowerCase();
 
+        if (cmd.includes("search") || cmd.includes("find")) {
+            MasterCreator.exportInvention("Searcher", MasterCreator.researcher);
+            systemLog("Opening Search Engine for you...", "green");
+            document.getElementById('physics-input').value = "";
+            return;
+        } 
+        else if (cmd.includes("map") || cmd.includes("where")) {
+            MasterCreator.exportInvention("Atlas", MasterCreator.map);
+            systemLog("Opening Global Map...", "green");
+            document.getElementById('physics-input').value = "";
+            return;
+        }
+        else if (cmd.includes("write") || cmd.includes("note")) {
+            MasterCreator.exportInvention("Notepad", MasterCreator.writer);
+            systemLog("Opening Writing Pad...", "green");
+            document.getElementById('physics-input').value = "";
+            return;
+        }
+        else if (cmd.includes("data") || cmd.includes("stat") || cmd.includes("satellite")) {
+            // This births the researcher but adds "math." and "db." to make it a heavy analyzer
+            MasterCreator.exportInvention("DataAnalyzer", MasterCreator.researcher + "\n // math. db.");
+            systemLog("Fetching Satellite & Statistical data nodes...", "blue");
+            document.getElementById('physics-input').value = "";
+            return;
+        }
     // 3. Handle Standard Logic/Physics
     systemLog(`Processing: ${input}`, "#fff");
     document.getElementById('physics-input').value = "";
@@ -174,6 +191,27 @@ MasterCreator.exportInvention(name, code);
         return;
     }
 
+// Central Library Repository
+const LIBS = {
+    THREE: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    MAP: 'https://unpkg.com/leaflet/dist/leaflet.js',
+    MATH: 'https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.4.4/math.min.js'
+    DEXIE: 'https://unpkg.com/dexie/dist/dexie.js',
+};
+
+const getLib = (name) => `<script src="${LIBS[name]}"></script>`;
+const loadWithRetry = async (url, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const res = await fetch(url, { method: 'HEAD' });
+            if (res.ok) return url;
+        } catch (e) {
+            systemLog(`Retry ${i+1} for ${url}...`, "yellow");
+        }
+    }
+    throw new Error("Resource Timeout");
+};
+        
     // Visual feedback
     coreMesh.scale.set(Math.random()*2 + 0.5, Math.random()*2 + 0.5, Math.random()*2 + 0.5);
 }
@@ -231,28 +269,58 @@ const MasterCreator = {
         document.body.appendChild(canvas);
         // Space for FFmpeg.wasm processing hooks
     `
+    map: `
+    // Native Mapping Node
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet/dist/leaflet.js';
+    script.onload = () => {
+        document.body.innerHTML += '<div id="map" style="height:90vh; border-radius:15px;"></div>';
+        const m = L.map('map').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
+    };
+    document.head.appendChild(script);
+`
 }, // This comma separates inventApp from exportInvention
 
     // 2. The Physical Birth with Architectural Design
-    exportInvention: function(name, logic) {
-        const content = `
-        <html>
-        <head>
-            <style>
-                body { background: #0a0a0c; color: #00ff88; font-family: monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-                .glass-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(0,255,136,0.3); border-radius: 15px; padding: 20px; backdrop-filter: blur(10px); width: 90%; }
-                button { background: #111; color: #00ff88; border: 1px solid #00ff88; padding: 10px; border-radius: 5px; cursor: pointer; }
-                button:hover { background: #00ff88; color: #000; }
-            </style>
-        </head>
-        <body>
-            <div class="glass-card">
-                <h1>\${name}</h1>
-                <hr style="border-color: #333;">
-                <script>${logic}<\/script>
-            </div>
-        </body>
-        </html>`;
+exportInvention: function(name, logic) {
+    // Around Line 277 - Smart Library Detector
+if (logic.includes('THREE')) injectedLibs += getLib('THREE');
+if (logic.includes('L.map')) injectedLibs += getLib('MAP');
+if (logic.includes('math.')) injectedLibs += getLib('MATH');
+if (logic.includes('db.')) injectedLibs += getLib('DEXIE'); // New Database Bridge
+    const content = `
+        
+<html>
+<head>
+    <meta charset="UTF-8">
+    ${injectedLibs}
+    <style>
+        body { background: #0a0a0c; color: #00ff88; font-family: monospace; }
+        .glass-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 20px; border-radius: 15px; }
+    </style>
+</head>
+<body>
+    <div id="status-node" style="font-size:9px; color:#00ff88; display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #222;">
+    <span>NODE: ACTIVE</span>
+    <span id="boot-status">Loading Engine...</span>
+    </div>
+    <div class="glass-card">
+        <h1>${name}</h1>
+        <hr style="border-color: #333;">
+        window.onload = () => {
+    const time = (performance.now() / 1000).toFixed(2);
+    document.getElementById('boot-status').innerText = time + 's Boot';
+};
+        <script>${logic}<\/script>
+    </div>
+</body>
+</html>`;
 
         const blob = new Blob([content], { type: 'text/html' });
         const link = document.createElement('a');
