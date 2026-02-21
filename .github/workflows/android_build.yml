@@ -13,25 +13,15 @@ jobs:
         with:
           node-version: 22
 
-      - name: Force Install Dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Initialize Capacitor (If Missing)
+      - name: Install and Build Web
         run: |
-          if [ ! -f "capacitor.config.ts" ]; then
-            npx cap init PhyArch com.universe.phyarch --web-dir dist
-          fi
+          npm install --legacy-peer-deps
+          npm run build
 
-      - name: Build Web Project
-        run: npm run build
-
-      - name: Setup Android Platform
+      - name: Generate and Build Android
         run: |
-          npx cap add android || echo "Android folder exists"
+          npx cap add android || echo "Already exists"
           npx cap sync
-
-      - name: Build APK with Gradle
-        run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
