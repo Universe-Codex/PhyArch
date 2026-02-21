@@ -52,6 +52,12 @@
         <div class="input-area">
             <input type="text" id="physics-input" placeholder="Enter LLM Prompt or Equation (e.g., F = m * a)" autocomplete="off">
             <button onclick="executeLogic()">Inject</button>
+        <div style="display: flex; gap: 10px; padding: 10px; flex-wrap: wrap; justify-content: center; background: rgba(0,0,0,0.3);">
+    <button onclick="quickInvent('AI', 'ai')" style="background: #004422; border: 1px solid #00ff88; padding: 8px 15px; color: white; border-radius: 4px;">+ AI Bot</button>
+    <button onclick="quickInvent('Fixer', 'architect')" style="background: #442200; border: 1px solid #ff8800; padding: 8px 15px; color: white; border-radius: 4px;">+ Fixer</button>
+    <button onclick="quickInvent('Social', 'social')" style="background: #002244; border: 1px solid #0088ff; padding: 8px 15px; color: white; border-radius: 4px;">+ Social</button>
+    <button onclick="quickInvent('Doc', 'writer')" style="background: #440044; border: 1px solid #ff00ff; padding: 8px 15px; color: white; border-radius: 4px;">+ Writer</button>
+    <button onclick="quickInvent('Search', 'researcher')" style="background: #004444; border: 1px solid #00ffff; padding: 8px 15px; color: white; border-radius: 4px;">+ Search</button>
         </div>
     </section>
 
@@ -176,30 +182,48 @@ MasterCreator.exportInvention(name, code);
    MODULE 6: MASTER CREATOR (AUTO-INVENT)
 ========================================== */
 const MasterCreator = {
-    // 1. The Synthesis Engine
+    
+    researcher: `
+    const searchWiki = async (query) => {
+        const response = await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + query + '&format=json&origin=*');
+        const data = await response.json();
+        document.getElementById('results').innerHTML = data.query.search.map(s => \`<div><b>\${s.title}</b><br>\${s.snippet}</div>\`).join('<hr>');
+    };
+    document.body.innerHTML = \`
+        <div class="glass-card">
+            <input id="q" placeholder="Search Knowledge Base...">
+            <button onclick="searchWiki(document.getElementById('q').value)">Search</button>
+            <div id="results" style="max-height:300px; overflow-y:auto;"></div>
+        </div>
+    \`;
+`  
+    writer: `
+    // Full-screen Clean UI (No 3D)
+    document.body.innerHTML = \`
+        <div class="glass-card" style="height: 90vh;">
+            <h2 contenteditable="true">Untitled Document</h2>
+            <div id="editor" contenteditable="true" style="flex-grow: 1; outline: none;">
+                Start typing your sovereign thoughts here...
+            </div>
+        </div>
+    \`;
+`
     inventApp: function(name, type) {
         systemLog(`Synthesizing Native ${type}: ${name}...`, "yellow");
         
         const blueprints = {
-    ai: `
-        // Native AI Node
-        console.log("AI Logic Active.");
-        const neuralBridge = {
-            process: (data) => {
-                // Future hook for local LLM weights
-                return "AI Processed: " + data;
-            }
-        };
-        document.body.innerHTML += "<input id='ai-in'><button onclick='alert(neuralBridge.process(document.getElementById(\"ai-in\").value))'>Ask AI</button>";
-    `,
-    social: `
-        // Native Social Database (Dexie)
-        import { Dexie } from 'https://unpkg.com/dexie/dist/dexie.js';
-        const db = new Dexie('UserAppDB');
-        db.version(1).stores({ posts: '++id, content, timestamp' });
-        console.log("Local Social DB Initialized.");
-        document.body.innerHTML += "<h3>Sovereign Social Feed</h3><div id='feed'></div>";
-    `,
+    architect: `
+    // Native Logic Debugger
+    const checkLogic = () => {
+        const userCode = document.getElementById('debug-area').value;
+        if (userCode.split('{').length !== userCode.split('}').length) {
+            systemLog("Architect: Missing a bracket { }.", "red");
+        } else {
+            systemLog("Architect: Logic structure is valid.", "#00ff88");
+        }
+    };
+    document.body.innerHTML += '<div class="glass-card"><h3>Code Architect</h3><textarea id="debug-area" style="width:100%;height:100px;background:#111;color:#00ff88;"></textarea><button onclick="checkLogic()">Fix My Code</button></div>';
+`
     media: `
         // Native Video Rendering Engine
         console.log("Video Engine Active.");
@@ -225,7 +249,7 @@ const MasterCreator = {
             <div class="glass-card">
                 <h1>\${name}</h1>
                 <hr style="border-color: #333;">
-                <script>\${logic}<\/script>
+                <script>${logic}<\/script>
             </div>
         </body>
         </html>`;
@@ -244,6 +268,13 @@ const MasterCreator = {
             camera.updateProjectionMatrix();
             renderer.setSize(viewport.clientWidth, viewport.clientHeight);
         });
-    </script>
+        // 3. Easy Button Logic
+window.quickInvent = function(name, type) {
+    const input = document.getElementById('physics-input');
+    if (input) {
+        input.value = `invent ${name} ${type}`;
+        executeLogic(); // This triggers the birth automatically
+    }
+};
 </body>
 </html>
