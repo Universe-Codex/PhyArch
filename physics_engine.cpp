@@ -1,13 +1,18 @@
-#include <emscripten/bind.h>
+#include <emscripten.h>
 
-using namespace emscripten;
+extern "C" {
 
-// High-speed structural math that JavaScript is too slow for
-float calculate_stress(float force, float area) {
-    if (area <= 0) return 0;
-    return force / area;
-}
+    // Simplified for maximum compatibility
+    EMSCRIPTEN_KEEPALIVE
+    float calculate_stress(float force, float area) {
+        if (area <= 0) return 0.0f;
+        return force / area;
+    }
 
-EMSCRIPTEN_BINDINGS(my_module) {
-    function("calculate_stress", &calculate_stress);
+    EMSCRIPTEN_KEEPALIVE
+    float calculate_displacement(float force, float length, float area, float modulus) {
+        if (area <= 0 || modulus <= 0) return 0.0f;
+        return (force * length) / (area * modulus);
+    }
+
 }
