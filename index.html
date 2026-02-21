@@ -2,55 +2,159 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch Engine</title>
-    <style>
-        body { margin: 0; background: #050505; color: #00ff00; font-family: monospace; overflow: hidden; }
-        #status { position: absolute; bottom: 10px; left: 10px; z-index: 10; font-size: 12px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PhyArch Builder IDE</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+
+    <style>
+        /* Formal CAD Interface Styles */
+        :root { --bg: #0a0a0c; --panel: #1a1a20; --text: #e0e0e0; --accent: #00ff88; --border: #333; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Top Navigation / Status */
+        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px; display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; z-index: 10; }
+        .status-light { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: red; margin-right: 5px; }
+        .active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+        /* Main 3D Viewport */
+        #viewport { flex-grow: 1; position: relative; width: 100%; background: #000; }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* Bottom Console & Builder Tools */
+        #console-panel { background: var(--panel); border-top: 1px solid var(--border); height: 35%; display: flex; flex-direction: column; z-index: 10; }
+        #log-output { flex-grow: 1; padding: 10px; overflow-y: auto; font-size: 12px; color: #aaa; border-bottom: 1px solid var(--border); background: #111; }
+        .input-area { display: flex; padding: 10px; gap: 10px; }
+        input[type="text"] { flex-grow: 1; background: #222; border: 1px solid var(--border); color: var(--accent); padding: 10px; border-radius: 4px; font-size: 14px; outline: none; }
+        button { background: #333; color: white; border: 1px solid var(--border); padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        button:active { background: var(--accent); color: black; }
+    </style>
 </head>
 <body>
-    <div id="status">System: Initializing...</div>
+
+    <header>
+        <div>PhyArch Builder v1.0</div>
+        <div>
+            <span id="indicator-py" class="status-light"></span> Pyodide
+            <span id="indicator-gh" class="status-light" style="margin-left: 10px;"></span> Factory
+        </div>
+    </header>
+
+    <main id="viewport"></main>
+
+    <section id="console-panel">
+        <div id="log-output">
+            <div>> System Initializing...</div>
+            <div>> Loading WebGL Framework...</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="physics-input" placeholder="Enter LLM Prompt or Equation (e.g., F = m * a)" autocomplete="off">
+            <button onclick="executeLogic()">Inject</button>
+        </div>
+    </section>
 
     <script>
-        // 1. Three.js Setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Add Light for better rendering
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5, 5, 5).normalize();
-        scene.add(light);
-
-        const geometry = new THREE.BoxGeometry(2, 2, 2);
-        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: true });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
-        camera.position.z = 5;
-
-        // 2. Python (Pyodide) Integration
-        let pyRotation = 0.01;
-        async function startPython() {
-            document.getElementById('status').innerText = "System: Loading Python...";
-            const pyodide = await loadPyodide();
-            // This runs real Python logic to determine rotation speed
-            pyRotation = pyodide.runPython("0.01 * 3");
-            document.getElementById('status').innerText = "System: Python Logic Active";
+        /* ==========================================
+           MODULE 1: UI & LOGGING
+        ========================================== */
+        const logWindow = document.getElementById('log-output');
+        function systemLog(message, color="#aaa") {
+            logWindow.innerHTML += `<div style="color:${color}">> ${message}</div>`;
+            logWindow.scrollTop = logWindow.scrollHeight;
         }
-        startPython();
+
+        /* ==========================================
+           MODULE 2: THREE.JS 3D ENGINE
+        ========================================== */
+        const viewport = document.getElementById('viewport');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.05);
+
+        // Professional Grid & Axis helpers for architecture
+        scene.add(new THREE.GridHelper(20, 20, 0x444444, 0x222222));
+        scene.add(new THREE.AxesHelper(5));
+
+        const camera = new THREE.PerspectiveCamera(60, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
+        camera.position.set(5, 5, 5);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+        viewport.appendChild(renderer.domElement);
+
+        // Core visual object (Placeholder for physics manipulation)
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff88, wireframe: true });
+        const coreMesh = new THREE.Mesh(geometry, material);
+        scene.add(coreMesh);
 
         function animate() {
             requestAnimationFrame(animate);
-            cube.rotation.x += pyRotation;
-            cube.rotation.y += pyRotation;
             renderer.render(scene, camera);
         }
         animate();
+
+        /* ==========================================
+           MODULE 3: PYTHON (PYODIDE) ENGINE
+        ========================================== */
+        let pyodideInstance;
+        
+        async function initPythonEngine() {
+            systemLog("Booting Pyodide Engine...", "yellow");
+            try {
+                pyodideInstance = await loadPyodide();
+                await pyodideInstance.loadPackage("micropip");
+                const micropip = pyodideInstance.pyimport("micropip");
+                
+                systemLog("Installing SymPy & NumPy (Local Sandbox)...", "yellow");
+                await micropip.install('sympy');
+                await micropip.install('numpy');
+                
+                document.getElementById('indicator-py').classList.add('active');
+                systemLog("Python Engine Active. Ready for complex logic.", "#00ff88");
+            } catch (err) {
+                systemLog("Engine Boot Failed: " + err, "red");
+            }
+        }
+        
+        // Start engine in background
+        initPythonEngine();
+
+        /* ==========================================
+           MODULE 4: EXECUTION BRIDGE
+        ========================================== */
+        async function executeLogic() {
+            const input = document.getElementById('physics-input').value;
+            if(!input) return;
+            
+            systemLog(`Input: ${input}`, "#fff");
+            document.getElementById('physics-input').value = "";
+
+            if (!pyodideInstance) {
+                systemLog("Error: Python Engine not ready yet.", "red");
+                return;
+            }
+
+            try {
+                // Future: This is where we will route to SymPy or LLM translations
+                systemLog(`Simulating... (Awaiting LLM bridge)`, "yellow");
+                
+                // Visual feedback that the system received the command
+                coreMesh.scale.set(Math.random()*2 + 0.5, Math.random()*2 + 0.5, Math.random()*2 + 0.5);
+                
+            } catch (err) {
+                systemLog(`Error: ${err}`, "red");
+            }
+        }
+
+        // Handle Resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = viewport.clientWidth / viewport.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+        });
     </script>
 </body>
 </html>
