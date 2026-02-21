@@ -181,28 +181,63 @@ const MasterCreator = {
         systemLog(`Synthesizing Native ${type}: ${name}...`, "yellow");
         
         const blueprints = {
-            ai: "console.log('AI Logic Active');",
-            social: "console.log('Database Active');",
-            media: "console.log('Video Engine Active');"
+    ai: `
+        // Native AI Node
+        console.log("AI Logic Active.");
+        const neuralBridge = {
+            process: (data) => {
+                // Future hook for local LLM weights
+                return "AI Processed: " + data;
+            }
         };
+        document.body.innerHTML += "<input id='ai-in'><button onclick='alert(neuralBridge.process(document.getElementById(\"ai-in\").value))'>Ask AI</button>";
+    `,
+    social: `
+        // Native Social Database (Dexie)
+        import { Dexie } from 'https://unpkg.com/dexie/dist/dexie.js';
+        const db = new Dexie('UserAppDB');
+        db.version(1).stores({ posts: '++id, content, timestamp' });
+        console.log("Local Social DB Initialized.");
+        document.body.innerHTML += "<h3>Sovereign Social Feed</h3><div id='feed'></div>";
+    `,
+    media: `
+        // Native Video Rendering Engine
+        console.log("Video Engine Active.");
+        const canvas = document.createElement('canvas');
+        document.body.appendChild(canvas);
+        // Space for FFmpeg.wasm processing hooks
+    `
+}, // This comma separates inventApp from exportInvention
 
-        const logic = blueprints[type] || "// General Logic";
-        const content = `<html><body style="background:#111;color:white;"><h1>${name}</h1><script>${logic}<\/script></body></html>`;
-        
-        systemLog(`Native Invention: ${name} compiled locally.`, "#00ff88");
-        return content; // Return the raw text so we can save or launch it
-    },
+    // 2. The Physical Birth with Architectural Design
+    exportInvention: function(name, logic) {
+        const content = `
+        <html>
+        <head>
+            <style>
+                body { background: #0a0a0c; color: #00ff88; font-family: monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+                .glass-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(0,255,136,0.3); border-radius: 15px; padding: 20px; backdrop-filter: blur(10px); width: 90%; }
+                button { background: #111; color: #00ff88; border: 1px solid #00ff88; padding: 10px; border-radius: 5px; cursor: pointer; }
+                button:hover { background: #00ff88; color: #000; }
+            </style>
+        </head>
+        <body>
+            <div class="glass-card">
+                <h1>\${name}</h1>
+                <hr style="border-color: #333;">
+                <script>\${logic}<\/script>
+            </div>
+        </body>
+        </html>`;
 
-    // 2. The Physical Birth (Save to Phone)
-    exportInvention: function(name, content) {
         const blob = new Blob([content], { type: 'text/html' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `${name}.html`;
+        link.download = `\${name}.html`;
         link.click();
-        systemLog(`Invention ${name} saved to local storage.`, "#00ff88");
+        systemLog(`Invention \${name} birthed with Architect Style.`, "#00ff88");
     }
-}; // This MUST close the entire object
+}; // This MUST be the ONLY closing bracket for MasterCreator
         // Handle Resizing
         window.addEventListener('resize', () => {
             camera.aspect = viewport.clientWidth / viewport.clientHeight;
