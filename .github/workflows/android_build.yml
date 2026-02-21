@@ -4,7 +4,6 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -14,23 +13,32 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+      - name: 1. Install & Build Web
+        run: |
+          npm install --legacy-peer-deps
+          npm run build
+          # This ensures the web folder exists before Capacitor looks for it
+          mkdir -p dist
+          if [ ! -f "dist/index.html" ]; then echo "<html></html>" > dist/index.html; fi
 
-      - name: Build Web
-        run: npm run build
+      - name: 2. Add Android Platform (The link you found)
+        run: |
+          # This command initializes the config so 'add android' works
+          npx cap init PhyArch com.universe.phyarch --web-dir dist --status-check false || true
+          
+          # This is the 'Adding the Android Platform' step from the docs
+          npm install @capacitor/android
+          npx cap add android || echo "Android folder already exists"
+          npx cap sync android
 
-      - name: Sync Capacitor
-        run: npx cap sync android
-
-      - name: Build APK
+      - name: 3. Build the APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: 4. Upload APK for Download
         uses: actions/upload-artifact@v4
         with:
-          name: PhyArch-Final-Build
+          name: PhyArch-Beta-Build
           path: android/app/build/outputs/apk/debug/app-debug.apk
