@@ -199,7 +199,7 @@ const LIBS = {
     DEXIE: 'https://unpkg.com/dexie/dist/dexie.js',
 };
 
-const getLib = (name) => `<script src="${LIBS[name]}"></script>`;
+const getLib = (name) => `<script src="${LIBS[name]}"><\/script>`;
 const loadWithRetry = async (url, retries = 3) => {
     for (let i = 0; i < retries; i++) {
         try {
@@ -301,20 +301,34 @@ if (logic.includes('db.')) injectedLibs += getLib('DEXIE'); // New Database Brid
     <meta charset="UTF-8">
     ${injectedLibs}
 <style>
-        body { background: #050507; color: #00ff88; font-family: monospace; margin: 0; overflow: hidden; }
-        #status-node { 
-            position: fixed; top: 0; width: 100%; z-index: 10000;
-            background: rgba(0,20,10,0.9); border-bottom: 1px solid #00ff88;
-            padding: 10px; display: flex; justify-content: space-between; font-size: 11px;
-        }
-    </style>
+    /* 1. Base Look */
+    body { background: #050507; color: #00ff88; font-family: monospace; margin: 0; overflow: hidden; }
+    
+    /* 2. Glow Header */
+    #status-node { 
+        position: fixed; top: 0; width: 100%; z-index: 10000;
+        background: rgba(0,20,10,0.9); border-bottom: 1px solid #00ff88;
+        padding: 10px; display: flex; justify-content: space-between; 
+        font-size: 11px; text-shadow: 0 0 5px #00ff88;
+    }
+
+    /* 3. Pulsing Engine */
+    #boot-status { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+    /* 4. Cyber Scanlines */
+    body::after {
+        content: ""; position: fixed; inset: 0; pointer-events: none;
+        background: repeating-linear-gradient(rgba(0,255,136,0.03) 0px, transparent 2px);
+        z-index: 10001;
+    }
+</style>
 </head>
 <body>
     <div id="status-node">
         <span>SYSTEM: PREPARING SIMULATION...</span>
         <span id="boot-status">Waking Engines</span>
     </div>
-    <div class="glass-card">
         <h1>${name}</h1>
         <hr style="border-color: #333;">
         window.onload = () => {
