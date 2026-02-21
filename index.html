@@ -55,7 +55,7 @@
         </div>
     </section>
 
-    <script>
+    <script type="module">
         /* ==========================================
            MODULE 1: UI & LOGGING
         ========================================== */
@@ -68,6 +68,17 @@
         /* ==========================================
            MODULE 2: THREE.JS 3D ENGINE
         ========================================== */
+       /* ==========================================
+   MODULE 1: THE HANDS (GITHUB BRIDGE)
+========================================== */
+import { Octokit } from "https://esm.sh/@octokit/rest";
+
+// This function will eventually use your Secret Token to "Push" your new apps
+async function deployInvention(name, content) {
+    systemLog(`Initiating Factory Build for: ${name}...`, "yellow");
+    // Deployment logic will go here once you have your Secret Token
+}
+        
         const viewport = document.getElementById('viewport');
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x000000, 0.05);
@@ -121,34 +132,77 @@
         
         // Start engine in background
         initPythonEngine();
+/* ==========================================
+   MODULE 4: EXECUTION BRIDGE (MASTER)
+========================================== */
+async function executeLogic() {
+    const input = document.getElementById('physics-input').value;
+    if(!input) return;
 
-        /* ==========================================
-           MODULE 4: EXECUTION BRIDGE
-        ========================================== */
-        async function executeLogic() {
-            const input = document.getElementById('physics-input').value;
-            if(!input) return;
-            
-            systemLog(`Input: ${input}`, "#fff");
-            document.getElementById('physics-input').value = "";
+    // 1. Handle Authentication (The Hands)
+    if (input.startsWith("auth ")) {
+        const token = input.split(" ")[1];
+        window.githubToken = token;
+        systemLog("Factory Access Granted. Hands are active.", "#00ff88");
+        document.getElementById('physics-input').value = "";
+        return;
+    }
 
-            if (!pyodideInstance) {
-                systemLog("Error: Python Engine not ready yet.", "red");
-                return;
-            }
+    // 2. Handle Inventions (The Soul)
+    if (input.startsWith("invent ")) {
+        const parts = input.split(" ");
+        const name = parts[1];
+        const type = parts[2];
+        const code = MasterCreator.inventApp(name, type);
+MasterCreator.exportInvention(name, code);
+        document.getElementById('physics-input').value = "";
+        return;
+    }
 
-            try {
-                // Future: This is where we will route to SymPy or LLM translations
-                systemLog(`Simulating... (Awaiting LLM bridge)`, "yellow");
-                
-                // Visual feedback that the system received the command
-                coreMesh.scale.set(Math.random()*2 + 0.5, Math.random()*2 + 0.5, Math.random()*2 + 0.5);
-                
-            } catch (err) {
-                systemLog(`Error: ${err}`, "red");
-            }
-        }
+    // 3. Handle Standard Logic/Physics
+    systemLog(`Processing: ${input}`, "#fff");
+    document.getElementById('physics-input').value = "";
 
+    if (!pyodideInstance) {
+        systemLog("Error: Python Engine not ready yet.", "red");
+        return;
+    }
+
+    // Visual feedback
+    coreMesh.scale.set(Math.random()*2 + 0.5, Math.random()*2 + 0.5, Math.random()*2 + 0.5);
+}
+        
+/* ==========================================
+   MODULE 6: MASTER CREATOR (AUTO-INVENT)
+========================================== */
+const MasterCreator = {
+    // 1. The Synthesis Engine
+    inventApp: function(name, type) {
+        systemLog(`Synthesizing Native ${type}: ${name}...`, "yellow");
+        
+        const blueprints = {
+            ai: "console.log('AI Logic Active');",
+            social: "console.log('Database Active');",
+            media: "console.log('Video Engine Active');"
+        };
+
+        const logic = blueprints[type] || "// General Logic";
+        const content = `<html><body style="background:#111;color:white;"><h1>${name}</h1><script>${logic}<\/script></body></html>`;
+        
+        systemLog(`Native Invention: ${name} compiled locally.`, "#00ff88");
+        return content; // Return the raw text so we can save or launch it
+    },
+
+    // 2. The Physical Birth (Save to Phone)
+    exportInvention: function(name, content) {
+        const blob = new Blob([content], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${name}.html`;
+        link.click();
+        systemLog(`Invention ${name} saved to local storage.`, "#00ff88");
+    }
+}; // This MUST close the entire object
         // Handle Resizing
         window.addEventListener('resize', () => {
             camera.aspect = viewport.clientWidth / viewport.clientHeight;
