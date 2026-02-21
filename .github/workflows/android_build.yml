@@ -5,22 +5,39 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
-      - run: npm run build
-      - name: Create Android Folder
-        run: npx cap add android || echo "Folder already exists"
-      - run: npx cap sync
-      - name: Build APK
+
+      - name: Force Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Initialize Capacitor (If Missing)
+        run: |
+          if [ ! -f "capacitor.config.ts" ]; then
+            npx cap init PhyArch com.universe.phyarch --web-dir dist
+          fi
+
+      - name: Build Web Project
+        run: npm run build
+
+      - name: Setup Android Platform
+        run: |
+          npx cap add android || echo "Android folder exists"
+          npx cap sync
+
+      - name: Build APK with Gradle
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PhyArch-Build
+          name: PhyArch-Final-Build
           path: android/app/build/outputs/apk/debug/app-debug.apk
