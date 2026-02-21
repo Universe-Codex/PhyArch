@@ -21,7 +21,6 @@ jobs:
             -s MODULARIZE=1 \
             -s EXPORT_NAME='createPhysicsModule' \
             -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' \
-            -s EXPORTED_FUNCTIONS='["_calculate_stress", "_calculate_displacement"]' \
             -O3
 
       - name: Setup Node
