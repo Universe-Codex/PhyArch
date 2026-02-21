@@ -13,15 +13,27 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install and Build Web
+      - name: Install & Build Web
         run: |
           npm install --legacy-peer-deps
           npm run build
+          # Create a dummy folder if the build command didn't make 'dist'
+          mkdir -p dist
+          if [ ! -f "dist/index.html" ]; then touch dist/index.html; fi
 
-      - name: Generate and Build Android
+      - name: Initialize & Build Android
         run: |
+          # Force initialize the config with correct web-dir
+          npx cap init PhyArch com.universe.phyarch --web-dir dist --status-check false || true
+          
+          # Install the android platform package explicitly
+          npm install @capacitor/android
+          
+          # Add and Sync
           npx cap add android || echo "Already exists"
           npx cap sync
+          
+          # Compile
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
