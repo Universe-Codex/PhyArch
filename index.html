@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch NEXUS 4.1 — Connected Spatial Lab</title>
+    <title>PhyArch NEXUS v4.3 — Quantum Spatial Lab</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
@@ -21,108 +22,149 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:var(--bg); color:#fff; overflow:hidden; height:100vh; display:flex; flex-direction:column; font-family: var(--font); }
         
-        header { height:56px; background:#000; border-bottom:1px solid #222; display:flex; align-items:center; padding:0 20px; justify-content:space-between; }
+        /* Header & UI */
+        header { height:56px; background:#000; border-bottom:1px solid #222; display:flex; align-items:center; padding:0 20px; justify-content:space-between; z-index:100; }
         .logo { font-size:18px; font-weight:900; letter-spacing:4px; }
         .logo span { color:var(--accent); }
+        .btn-group { display: flex; gap: 8px; }
 
         .workspace { flex:1; display:flex; overflow: hidden; }
-        #viewport { flex:1; background:#000; cursor: crosshair; }
+        #viewport { flex:1; background:#000; cursor: crosshair; outline: none; }
         
+        /* Sidebar */
         .sidebar { width:360px; background:var(--panel); border-left:1px solid #222; display:flex; flex-direction:column; }
         .tab-bar { display:flex; background:#05050a; }
-        .tab { flex:1; padding:14px; text-align:center; font-size:10px; cursor:pointer; border-bottom:2px solid transparent; opacity: 0.5; }
+        .tab { flex:1; padding:14px; text-align:center; font-size:10px; cursor:pointer; border-bottom:2px solid transparent; opacity: 0.5; transition: 0.3s; }
         .tab-active { border-color:var(--accent); color:var(--accent); opacity: 1; background: rgba(0,255,157,0.05); }
         
         .panel { flex:1; padding:18px; overflow-y:auto; display:none; }
         .panel-active { display:block; }
         
-        #console { height:200px; background:#000; border-top:1px solid #222; overflow-y:auto; padding:10px; font-size:11px; color:#666; }
+        /* Elements */
+        .glass { background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px; padding:14px; margin-bottom:16px; }
+        #console { height:200px; background:#000; border-top:1px solid #222; display:flex; flex-direction:column; }
+        #log { flex:1; padding:12px; overflow-y:auto; font-size:11px; color:#666; }
         
         textarea, input { background:#111; border:1px solid #333; color:var(--accent); padding:10px; border-radius:4px; outline: none; font-family: var(--font); width: 100%; }
-        button { cursor: pointer; border: none; border-radius: 4px; padding: 10px; font-weight: bold; background: var(--accent); color: #000; margin-top: 10px; }
+        button { cursor: pointer; border: none; border-radius: 4px; padding: 8px 12px; font-weight: bold; background: var(--accent); color: #000; transition: 0.2s; font-size: 11px; }
+        button:hover { filter: brightness(1.2); }
+        .btn-sec { background: transparent; border: 1px solid #444; color: #fff; }
         
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .online { background: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
+        /* Feedback */
+        #flash { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 2000; transition: opacity 0.1s; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+<div id="flash"></div>
+
 <header>
-    <div class="logo">PHY<span>ARCH</span> NEXUS <small style="font-size:10px; vertical-align: middle;">[LIVE]</small></div>
-    <div id="connection-status" style="font-size: 10px; color: var(--accent2);">
-        <span class="status-dot online"></span> SYSTEM CONNECTED
+    <div class="logo">PHY<span>ARCH</span> NEXUS <small style="font-size:10px; opacity: 0.6;">v4.3 LIVE</small></div>
+    <div class="btn-group">
+        <button class="btn-sec" onclick="App.exportProject()">SAVE</button>
+        <button class="btn-sec" onclick="document.getElementById('fileIn').click()">LOAD</button>
+        <input type="file" id="fileIn" hidden onchange="App.importProject(event)">
+        <button class="btn-sec" onclick="App.screenshot()">📸</button>
+        <button style="background:var(--danger)" onclick="App.resetSim()">WIPE</button>
     </div>
 </header>
 
 <div class="workspace">
-    <div id="viewport"></div>
+    <div id="viewport" tabindex="0"></div>
     
     <aside class="sidebar">
         <div class="tab-bar">
             <div class="tab tab-active" onclick="switchTab(0)">ANALYTICS</div>
-            <div class="tab" onclick="switchTab(1)">PYTHON LAB</div>
+            <div class="tab" onclick="switchTab(1)">AI FORGE</div>
+            <div class="tab" onclick="switchTab(2)">PYTHON LAB</div>
         </div>
         
         <div id="panel-0" class="panel panel-active">
-            <h4 style="color:var(--accent2); font-size: 11px; margin-bottom:10px;">LIVE PROBE</h4>
-            <div id="inspector" style="background:rgba(255,255,255,0.03); padding:10px; font-size:11px; border-radius:8px;">Awaiting live stream...</div>
+            <h4 style="color:var(--accent2); font-size: 11px; margin-bottom:10px;">PROBE SENSOR</h4>
+            <div id="inspector" class="glass" style="font-size: 11px; line-height: 1.6;">Select entity to track...</div>
+            
+            <h4 style="color:var(--accent2); font-size: 11px; margin-bottom:10px;">RENDER ENGINE</h4>
+            <div class="glass">
+                <label style="font-size: 10px; color: #888;">FOG DENSITY</label>
+                <input type="range" min="0" max="0.05" step="0.001" value="0.01" oninput="App.scene.fog.density = this.value">
+                <button class="btn-sec" style="width:100%; margin-top:10px;" onclick="App.toggleWireframe()">TOGGLE WIREFRAME</button>
+            </div>
+        </div>
+
+        <div id="panel-1" class="panel">
+            <h4 style="color:var(--accent2); font-size: 11px; margin-bottom:10px;">AI STRUCTURE GEN</h4>
+            <input id="ai-input" placeholder="Pattern (dna, solar, liquid)...">
+            <button onclick="runForge()" style="width:100%">GENERATE MESH</button>
+            <div id="ai-log" style="margin-top:15px; font-size: 11px; color:#555;"></div>
         </div>
         
-        <div id="panel-1" class="panel">
+        <div id="panel-2" class="panel">
             <h4 style="color:var(--accent2); font-size: 11px; margin-bottom:10px;">REAL-TIME KERNEL</h4>
-            <textarea id="py-code" spellcheck="false" style="height:350px; font-size:11px;">
-# Real-Time Data Example: Market-Driven Physics
+            <textarea id="py-code" spellcheck="false" style="height:320px; font-size:11px; color:var(--accent2);">
 import json
-
-async def sync_universe():
-    Omni.log("Fetching live Bitcoin data...")
-    # Using public API to drive physics scale
-    resp = await Omni.get_data("https://api.coinbase.com/v2/prices/BTC-USD/spot")
-    data = json.loads(resp)
-    price = float(data['data']['amount'])
-    
-    Omni.log(f"BTC Spot: ${price}")
-    # Spawn a box where the size is based on the current price (normalized)
-    size = price / 15000 
-    Omni.spawn('box', 1, {'pos':{'x':0,'y':20,'z':0}, 'size': size, 'color': 0x00ff9d})
+async def fetch_and_spawn():
+    Omni.log("Syncing with live data...")
+    # Example: BTC Price influences sphere size
+    res = await Omni.get_data("https://api.coinbase.com/v2/prices/BTC-USD/spot")
+    data = json.loads(res)
+    val = float(data['data']['amount']) / 20000
+    Omni.spawn('sphere', 1, {'size': val, 'pos':{'x':0,'y':30,'z':0}})
 
 import asyncio
-asyncio.ensure_future(sync_universe())
-            </textarea>
-            <button onclick="runPython()">EXECUTE WITH LIVE DATA</button>
+asyncio.ensure_future(fetch_and_spawn())</textarea>
+            <button onclick="runPython()" style="width:100%">EXECUTE KERNEL</button>
         </div>
     </aside>
 </div>
 
-<div id="console" id="log"></div>
+<div id="console">
+    <div id="log"></div>
+    <div style="display:flex; background:#05050a; border-top:1px solid #222;">
+        <input id="cmd-in" placeholder="Command (e.g. 'spawn box 5', 'gravity -2')..." style="border:none;">
+        <button onclick="App.execCmd(document.getElementById('cmd-in').value); document.getElementById('cmd-in').value=''" style="border-radius:0;">EXEC</button>
+    </div>
+</div>
 
 <script>
 class NexusApp {
     constructor() {
         this.entities = [];
+        this.selected = null;
         this.pyodide = null;
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
     }
 
     async init() {
         const vp = document.getElementById('viewport');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 1000);
-        this.camera.position.set(50, 50, 50);
-        this.renderer = new THREE.WebGLRenderer({antialias:true});
+        this.scene.fog = new THREE.FogExp2(0x020205, 0.01);
+        
+        this.camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 2000);
+        this.camera.position.set(60, 60, 60);
+        
+        this.renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
         this.renderer.setSize(vp.clientWidth, vp.clientHeight);
         vp.appendChild(this.renderer.domElement);
-        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.8, 0) });
-        this.scene.add(new THREE.GridHelper(100, 20, 0x333333, 0x111111));
 
-        // Ground
+        // Environment
+        this.scene.add(new THREE.GridHelper(200, 40, 0x00ff88, 0x111111));
         const ground = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
         ground.quaternion.setFromEuler(-Math.PI/2, 0, 0);
         this.world.addBody(ground);
 
+        // Interaction
+        window.addEventListener('resize', () => this.resize());
+        vp.addEventListener('mousedown', (e) => this.onPick(e));
+        
+        this.world.addEventListener('beginContact', (e) => this.visualizeForce(e));
+
         this.animate();
-        this.log("NEXUS LIVE: Online and ready for network requests.");
+        this.log("NEXUS CORE v4.3: Quantum spatial engine ready.", "#00ff9d");
     }
 
     animate() {
@@ -132,40 +174,127 @@ class NexusApp {
             e.mesh.position.copy(e.body.position);
             e.mesh.quaternion.copy(e.body.quaternion);
         });
+        if(this.selected) this.updateInspector();
         this.renderer.render(this.scene, this.camera);
     }
 
-    /**
-     * THE BRIDGE: Allows Python to bypass its sandbox and fetch real data
-     */
-    async fetchRemote(url) {
-        try {
-            const response = await fetch(url);
-            return await response.text();
-        } catch (e) {
-            return JSON.stringify({error: "Connection failed: " + e.message});
+    spawn(type, count, opts = {}) {
+        for (let i = 0; i < count; i++) {
+            const size = opts.size || 2.5;
+            const geo = type === 'sphere' ? new THREE.SphereGeometry(size, 24, 24) : new THREE.BoxGeometry(size, size, size);
+            const shape = type === 'sphere' ? new CANNON.Sphere(size) : new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
+            const mat = new THREE.MeshStandardMaterial({ color: opts.color || 0x00d0ff, wireframe: true, emissive: opts.color || 0x00d0ff, emissiveIntensity: 0.2 });
+            
+            const mesh = new THREE.Mesh(geo, mat);
+            const body = new CANNON.Body({
+                mass: opts.mass || 1,
+                shape: shape,
+                position: new CANNON.Vec3(opts.pos?.x ?? (Math.random()-0.5)*40, opts.pos?.y ?? 40, opts.pos?.z ?? (Math.random()-0.5)*40)
+            });
+            if(opts.vel) body.velocity.set(opts.vel.x, opts.vel.y, opts.vel.z);
+
+            this.scene.add(mesh);
+            this.world.addBody(body);
+            this.entities.push({mesh, body, type, size});
         }
     }
 
-    spawn(type, count, opts = {}) {
-        const size = opts.size || 2;
-        const geo = type === 'sphere' ? new THREE.SphereGeometry(size) : new THREE.BoxGeometry(size, size, size);
-        const shape = type === 'sphere' ? new CANNON.Sphere(size) : new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
-        const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color: opts.color || 0x00ff9d, wireframe: true}));
-        const body = new CANNON.Body({ mass: 1, shape, position: new CANNON.Vec3(opts.pos?.x||0, opts.pos?.y||10, opts.pos?.z||0) });
-        
-        this.scene.add(mesh);
-        this.world.addBody(body);
-        this.entities.push({mesh, body});
+    visualizeForce(event) {
+        const force = event.contact.getImpactVelocityAlongNormal();
+        if (force > 8) {
+            const p = event.contact.bj.position;
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xff3366 });
+            const points = [new THREE.Vector3(p.x, p.y, p.z), new THREE.Vector3(p.x, p.y + force*0.2, p.z)];
+            const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lineMat);
+            this.scene.add(line);
+            setTimeout(() => this.scene.remove(line), 400);
+        }
     }
 
-    log(m) {
-        const c = document.getElementById('console');
-        c.innerHTML += `<div>>> ${m}</div>`;
-        c.scrollTop = c.scrollHeight;
+    onPick(e) {
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const hits = this.raycaster.intersectObjects(this.entities.map(e => e.mesh));
+        if (hits.length > 0) {
+            this.selected = this.entities.find(en => en.mesh === hits[0].object);
+            this.log(`Probed: ${this.selected.type.toUpperCase()} [${this.selected.mesh.uuid.slice(0,5)}]`);
+        }
+    }
+
+    updateInspector() {
+        const v = this.selected.body.velocity.length().toFixed(2);
+        document.getElementById('inspector').innerHTML = `
+            <span style="color:var(--accent2)">TYPE:</span> ${this.selected.type.toUpperCase()}<br>
+            <span style="color:var(--accent2)">VEL:</span> ${v} m/s<br>
+            <span style="color:var(--accent2)">ALT:</span> ${this.selected.body.position.y.toFixed(2)}m
+        `;
+    }
+
+    execCmd(str) {
+        const [cmd, p1, p2] = str.toLowerCase().split(' ');
+        if(cmd === 'spawn') this.spawn(p1, parseInt(p2)||1);
+        if(cmd === 'gravity' || cmd === 'g') this.world.gravity.y = parseFloat(p1);
+        if(cmd === 'liquid') this.spawn('sphere', parseInt(p1)||50, {size: 0.6, color: 0x00d0ff});
+        this.log(`CMD: ${str}`, "#aaa");
+    }
+
+    screenshot() {
+        const f = document.getElementById('flash');
+        f.style.opacity = '1'; setTimeout(() => f.style.opacity = '0', 100);
+        this.renderer.render(this.scene, this.camera);
+        const link = document.createElement('a');
+        link.download = `Nexus_Capture_${Date.now()}.png`;
+        link.href = this.renderer.domElement.toDataURL();
+        link.click();
+    }
+
+    exportProject() {
+        const data = JSON.stringify(this.entities.map(e => ({type: e.type, size: e.size, pos: e.body.position})));
+        const blob = new Blob([data], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Nexus_State_${Date.now()}.json`;
+        a.click();
+    }
+
+    importProject(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const data = JSON.parse(ev.target.result);
+            this.resetSim();
+            data.forEach(d => this.spawn(d.type, 1, {size: d.size, pos: d.pos}));
+            this.log("Project state restored.");
+        };
+        reader.readAsText(e.target.files[0]);
+    }
+
+    toggleWireframe() {
+        this.entities.forEach(e => e.mesh.material.wireframe = !e.mesh.material.wireframe);
+    }
+
+    log(m, c = "#666") {
+        const l = document.getElementById('log');
+        l.innerHTML += `<div><span style="color:#333">[${new Date().toLocaleTimeString().split(' ')[0]}]</span> <span style="color:${c}">>> ${m}</span></div>`;
+        l.scrollTop = l.scrollHeight;
+    }
+
+    resetSim() {
+        this.entities.forEach(e => { this.scene.remove(e.mesh); this.world.removeBody(e.body); });
+        this.entities = []; this.selected = null;
+        this.log("Simulation wiped.", "var(--danger)");
+    }
+
+    resize() {
+        const vp = document.getElementById('viewport');
+        this.camera.aspect = vp.clientWidth / vp.clientHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(vp.clientWidth, vp.clientHeight);
     }
 }
 
+// UI & Logic Bridges
 const App = new NexusApp();
 function switchTab(n) {
     document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('tab-active', i===n));
@@ -173,20 +302,38 @@ function switchTab(n) {
 }
 
 async function runPython() {
-    App.log("Kernel processing script...");
-    await App.pyodide.runPythonAsync(document.getElementById('py-code').value);
+    if (!App.pyodide) { App.log("Kernel booting...", "#ff3366"); return; }
+    try { await App.pyodide.runPythonAsync(document.getElementById('py-code').value); }
+    catch(e) { App.log(e.message, "#f36"); }
+}
+
+function runForge() {
+    const input = document.getElementById('ai-input').value.toLowerCase();
+    if(input.includes('dna')) {
+        for(let i=0; i<40; i++) {
+            const a = i * 0.4;
+            App.spawn('sphere', 1, {pos:{x:Math.cos(a)*12, y:i*1.5, z:Math.sin(a)*12}, size:1, color:0x00ff9d});
+            App.spawn('sphere', 1, {pos:{x:Math.cos(a+Math.PI)*12, y:i*1.5, z:Math.sin(a+Math.PI)*12}, size:1, color:0xff3366});
+        }
+    } else if(input.includes('solar')) {
+        App.spawn('sphere', 1, {size: 10, pos:{x:0,y:20,z:0}, color: 0xffff00});
+        for(let i=1; i<6; i++) {
+            const r = 20 + i*10;
+            App.spawn('sphere', 1, {pos:{x:r, y:20, z:0}, size: 2, vel:{x:0, y:0, z:Math.sqrt(50/r)*5}});
+        }
+    } else { App.spawn('box', 10); }
+    document.getElementById('ai-input').value = "";
 }
 
 (async () => {
     await App.init();
     App.pyodide = await loadPyodide();
-    // Expose the app and the network bridge to Python
-    App.pyodide.globals.set("Omni", {
-        spawn: (t,c,o) => App.spawn(t,c,o.toJs()),
-        get_data: (url) => App.fetchRemote(url), // <--- Network bridge
-        log: (m) => App.log(m)
+    App.pyodide.globals.set("Omni", { 
+        spawn: (t,c,o) => App.spawn(t,c,o.toJs ? o.toJs() : o), 
+        get_data: (url) => fetch(url).then(r => r.text()),
+        log: (m) => App.log(m, "#00ff9d") 
     });
-    App.log("PYTHON: AI Kernel Online with Network Access.");
+    App.log("PYTHON: Live Data Kernel Online.", "#00ff9d");
 })();
 </script>
 </body>
