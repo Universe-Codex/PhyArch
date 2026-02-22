@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch NEXUS v4.1 — Quantum Spatial Lab</title>
+    <title>PhyArch NEXUS 4.1 — Connected Spatial Lab</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    
     <style>
         :root {
             --bg: #020205;
@@ -15,55 +16,41 @@
             --accent: #00ff9d;
             --accent2: #00d0ff;
             --danger: #ff3366;
+            --font: 'JetBrains Mono', monospace;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--bg); color:#fff; overflow:hidden; height:100vh; display:flex; flex-direction:column; font-family:'JetBrains Mono', monospace; }
+        body { background:var(--bg); color:#fff; overflow:hidden; height:100vh; display:flex; flex-direction:column; font-family: var(--font); }
         
-        #loader {
-            position:fixed; inset:0; background:var(--bg); z-index:1000;
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            transition:opacity 0.6s;
-        }
-
-        header {
-            height:56px; background:#000; border-bottom:1px solid #222;
-            display:flex; align-items:center; padding:0 20px; justify-content:space-between; z-index:200;
-        }
-        .logo { font-size:20px; font-weight:900; letter-spacing:4px; }
+        header { height:56px; background:#000; border-bottom:1px solid #222; display:flex; align-items:center; padding:0 20px; justify-content:space-between; }
+        .logo { font-size:18px; font-weight:900; letter-spacing:4px; }
         .logo span { color:var(--accent); }
 
-        .workspace { flex:1; display:flex; }
+        .workspace { flex:1; display:flex; overflow: hidden; }
         #viewport { flex:1; background:#000; cursor: crosshair; }
         
-        .sidebar { width:340px; background:var(--panel); border-left:1px solid #222; display:flex; flex-direction:column; }
-        .tab-bar { display:flex; background:#0a0a12; }
-        .tab { flex:1; padding:14px; text-align:center; font-size:12px; cursor:pointer; border-bottom:3px solid transparent; opacity: 0.6; }
-        .tab-active { border-color:var(--accent); color:var(--accent); opacity: 1; }
+        .sidebar { width:360px; background:var(--panel); border-left:1px solid #222; display:flex; flex-direction:column; }
+        .tab-bar { display:flex; background:#05050a; }
+        .tab { flex:1; padding:14px; text-align:center; font-size:10px; cursor:pointer; border-bottom:2px solid transparent; opacity: 0.5; }
+        .tab-active { border-color:var(--accent); color:var(--accent); opacity: 1; background: rgba(0,255,157,0.05); }
         
-        .panel { flex:1; padding:18px; overflow:auto; display:none; }
+        .panel { flex:1; padding:18px; overflow-y:auto; display:none; }
         .panel-active { display:block; }
         
-        .glass { background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px; padding:14px; margin-bottom:16px; }
+        #console { height:200px; background:#000; border-top:1px solid #222; overflow-y:auto; padding:10px; font-size:11px; color:#666; }
         
-        #console { height:180px; background:#000; border-top:1px solid #222; display:flex; flex-direction:column; }
-        #log { flex:1; padding:12px; overflow-y:auto; font-size:11px; color:#555; font-family: monospace; }
-        .cmd-row { display:flex; padding:8px; gap:8px; background:#0a0a12; }
-        input { flex:1; background:#111; border:1px solid #444; color:var(--accent); padding:10px; border-radius:4px; outline: none; }
-        button { cursor: pointer; transition: 0.2s; }
+        textarea, input { background:#111; border:1px solid #333; color:var(--accent); padding:10px; border-radius:4px; outline: none; font-family: var(--font); width: 100%; }
+        button { cursor: pointer; border: none; border-radius: 4px; padding: 10px; font-weight: bold; background: var(--accent); color: #000; margin-top: 10px; }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .online { background: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
     </style>
 </head>
 <body>
 
-<div id="loader">
-    <div style="width:40px;height:40px;border:3px solid #222;border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;"></div>
-    <div style="font-size:10px; color:var(--accent); letter-spacing:2px; margin-top:15px;">SYNCING UNIVERSE...</div>
-</div>
-
 <header>
-    <div class="logo">PHY<span>ARCH</span> NEXUS 4.1</div>
-    <div class="header-btns">
-        <button class="glass" style="padding:5px 15px; color:var(--accent)" onclick="App.saveScene()">EXPORT .JSON</button>
-        <button class="glass" style="padding:5px 15px; color:var(--danger)" onclick="App.resetSim()">WIPE</button>
+    <div class="logo">PHY<span>ARCH</span> NEXUS <small style="font-size:10px; vertical-align: middle;">[LIVE]</small></div>
+    <div id="connection-status" style="font-size: 10px; color: var(--accent2);">
+        <span class="status-dot online"></span> SYSTEM CONNECTED
     </div>
 </header>
 
@@ -73,90 +60,69 @@
     <aside class="sidebar">
         <div class="tab-bar">
             <div class="tab tab-active" onclick="switchTab(0)">ANALYTICS</div>
-            <div class="tab" onclick="switchTab(1)">AI FORGE</div>
-            <div class="tab" onclick="switchTab(2)">PY LAB</div>
+            <div class="tab" onclick="switchTab(1)">PYTHON LAB</div>
         </div>
         
         <div id="panel-0" class="panel panel-active">
-            <h4 style="color:var(--accent2); font-size: 12px; margin-bottom:10px">REAL-TIME PROBE</h4>
-            <div id="inspector" class="glass" style="font-size: 11px; line-height: 1.6;">Awaiting object selection...</div>
-            
-            <h4 style="color:var(--accent2); font-size: 12px; margin-bottom:10px">WORLD CONSTANTS</h4>
-            <div class="glass">
-                <label style="font-size: 10px; color: #888;">GRAVITY: <span id="grav-val">-9.8</span> m/s²</label>
-                <input id="gravity" type="range" min="-30" max="10" value="-9.8" step="0.1" style="width:100%; margin-top:10px;">
-            </div>
+            <h4 style="color:var(--accent2); font-size: 11px; margin-bottom:10px;">LIVE PROBE</h4>
+            <div id="inspector" style="background:rgba(255,255,255,0.03); padding:10px; font-size:11px; border-radius:8px;">Awaiting live stream...</div>
         </div>
         
         <div id="panel-1" class="panel">
-            <div id="ai-log" style="height:280px; overflow:auto; font-size:11px; margin-bottom:10px; border-bottom: 1px solid #222;"></div>
-            <div style="display:flex; gap: 5px;">
-                <input id="ai-input" placeholder="Pattern (e.g. lorenz, dna, solar)...">
-                <button onclick="forgeWithAI()" style="background:var(--accent); border:none; padding:0 10px; border-radius:4px;">GO</button>
-            </div>
-        </div>
-        
-        <div id="panel-2" class="panel">
-            <textarea id="py-code" style="width:100%; height:300px; background:#000; color:var(--accent2); border:1px solid #333; font-size:11px; padding:10px;">
-# Chaos Theory: Lorenz Attractor
-import math
-Omni.log("Calculating strange attractor...")
-x, y, z = 0.1, 0, 0
-s, r, b = 10, 28, 8/3
-for i in range(500):
-    dt = 0.01
-    dx = s * (y - x) * dt
-    dy = (x * (r - z) - y) * dt
-    dz = (x * y - b * z) * dt
-    x, y, z = x+dx, y+dy, z+dz
-    Omni.spawn('sphere', 1, {'pos':{'x':x, 'y':y, 'z':z-20}, 'size':0.3, 'color':0x00ffcc})
+            <h4 style="color:var(--accent2); font-size: 11px; margin-bottom:10px;">REAL-TIME KERNEL</h4>
+            <textarea id="py-code" spellcheck="false" style="height:350px; font-size:11px;">
+# Real-Time Data Example: Market-Driven Physics
+import json
+
+async def sync_universe():
+    Omni.log("Fetching live Bitcoin data...")
+    # Using public API to drive physics scale
+    resp = await Omni.get_data("https://api.coinbase.com/v2/prices/BTC-USD/spot")
+    data = json.loads(resp)
+    price = float(data['data']['amount'])
+    
+    Omni.log(f"BTC Spot: ${price}")
+    # Spawn a box where the size is based on the current price (normalized)
+    size = price / 15000 
+    Omni.spawn('box', 1, {'pos':{'x':0,'y':20,'z':0}, 'size': size, 'color': 0x00ff9d})
+
+import asyncio
+asyncio.ensure_future(sync_universe())
             </textarea>
-            <button onclick="runPython()" style="width:100%; margin-top:10px; padding:10px; background:var(--accent2); border:none; font-weight:bold;">RUN KERNEL</button>
+            <button onclick="runPython()">EXECUTE WITH LIVE DATA</button>
         </div>
     </aside>
 </div>
 
-<div id="console">
-    <div id="log"></div>
-</div>
+<div id="console" id="log"></div>
 
 <script>
 class NexusApp {
     constructor() {
         this.entities = [];
-        this.selected = null;
         this.pyodide = null;
     }
 
     async init() {
         const vp = document.getElementById('viewport');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 2000);
-        this.camera.position.set(60, 60, 60);
-        
+        this.camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 1000);
+        this.camera.position.set(50, 50, 50);
         this.renderer = new THREE.WebGLRenderer({antialias:true});
         this.renderer.setSize(vp.clientWidth, vp.clientHeight);
         vp.appendChild(this.renderer.domElement);
-        
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-        this.world = new CANNON.World({gravity: new CANNON.Vec3(0, -9.8, 0)});
+        
+        this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.8, 0) });
+        this.scene.add(new THREE.GridHelper(100, 20, 0x333333, 0x111111));
 
-        // Ground Plane
-        const groundBody = new CANNON.Body({mass: 0, shape: new CANNON.Plane()});
-        groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
-        this.world.addBody(groundBody);
-        this.scene.add(new THREE.GridHelper(200, 40, 0x00ff88, 0x111111));
+        // Ground
+        const ground = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
+        ground.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+        this.world.addBody(ground);
 
         this.animate();
-        this.log("NEXUS 4.1: Rigid Body Physics Engine Bound.", "#00ff9d");
-
-        window.addEventListener('resize', () => this.resize());
-        document.getElementById('gravity').addEventListener('input', (e) => {
-            this.world.gravity.y = parseFloat(e.target.value);
-            document.getElementById('grav-val').textContent = e.target.value;
-        });
-
-        setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
+        this.log("NEXUS LIVE: Online and ready for network requests.");
     }
 
     animate() {
@@ -167,63 +133,60 @@ class NexusApp {
             e.mesh.quaternion.copy(e.body.quaternion);
         });
         this.renderer.render(this.scene, this.camera);
-        this.controls.update();
     }
 
-    spawn(type, count, opts = {}) {
-        for (let i = 0; i < count; i++) {
-            const size = opts.size || 2;
-            const geo = type === 'sphere' ? new THREE.SphereGeometry(size, 16, 16) : new THREE.BoxGeometry(size, size, size);
-            const shape = type === 'sphere' ? new CANNON.Sphere(size) : new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
-            
-            const mat = new THREE.MeshPhongMaterial({color: opts.color || 0x00d0ff, wireframe: true});
-            const mesh = new THREE.Mesh(geo, mat);
-            const body = new CANNON.Body({
-                mass: opts.mass || 1,
-                shape: shape,
-                position: new CANNON.Vec3(opts.pos?.x || 0, opts.pos?.y || 20, opts.pos?.z || 0)
-            });
-            if (opts.vel) body.velocity.set(opts.vel.x, opts.vel.y, opts.vel.z);
-
-            this.scene.add(mesh);
-            this.world.addBody(body);
-            this.entities.push({mesh, body});
+    /**
+     * THE BRIDGE: Allows Python to bypass its sandbox and fetch real data
+     */
+    async fetchRemote(url) {
+        try {
+            const response = await fetch(url);
+            return await response.text();
+        } catch (e) {
+            return JSON.stringify({error: "Connection failed: " + e.message});
         }
     }
 
-    log(m, c = "#555") {
-        const l = document.getElementById('log');
-        l.innerHTML += `<div><span style="color:${c}">>> ${m}</span></div>`;
-        l.scrollTop = l.scrollHeight;
+    spawn(type, count, opts = {}) {
+        const size = opts.size || 2;
+        const geo = type === 'sphere' ? new THREE.SphereGeometry(size) : new THREE.BoxGeometry(size, size, size);
+        const shape = type === 'sphere' ? new CANNON.Sphere(size) : new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
+        const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color: opts.color || 0x00ff9d, wireframe: true}));
+        const body = new CANNON.Body({ mass: 1, shape, position: new CANNON.Vec3(opts.pos?.x||0, opts.pos?.y||10, opts.pos?.z||0) });
+        
+        this.scene.add(mesh);
+        this.world.addBody(body);
+        this.entities.push({mesh, body});
     }
 
-    resetSim() {
-        this.entities.forEach(e => { this.scene.remove(e.mesh); this.world.removeBody(e.body); });
-        this.entities = [];
+    log(m) {
+        const c = document.getElementById('console');
+        c.innerHTML += `<div>>> ${m}</div>`;
+        c.scrollTop = c.scrollHeight;
     }
 }
 
-// Global Logic
+const App = new NexusApp();
 function switchTab(n) {
     document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('tab-active', i===n));
     document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('panel-active', i===n));
 }
 
 async function runPython() {
-    if (!App.pyodide) { App.log("Kernel booting...", "#ff0"); return; }
-    try { await App.pyodide.runPythonAsync(document.getElementById('py-code').value); }
-    catch(e) { App.log(e.message, "#f36"); }
+    App.log("Kernel processing script...");
+    await App.pyodide.runPythonAsync(document.getElementById('py-code').value);
 }
 
-const App = new NexusApp();
 (async () => {
     await App.init();
     App.pyodide = await loadPyodide();
-    App.pyodide.globals.set("Omni", { 
-        spawn: (t,c,o) => App.spawn(t,c,o.toJs ? o.toJs() : o), 
-        log: (m) => App.log(m, "#00ff9d") 
+    // Expose the app and the network bridge to Python
+    App.pyodide.globals.set("Omni", {
+        spawn: (t,c,o) => App.spawn(t,c,o.toJs()),
+        get_data: (url) => App.fetchRemote(url), // <--- Network bridge
+        log: (m) => App.log(m)
     });
-    App.log("Python Data-Science Kernel Ready.", "#00ff9d");
+    App.log("PYTHON: AI Kernel Online with Network Access.");
 })();
 </script>
 </body>
