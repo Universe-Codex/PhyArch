@@ -3,245 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch NEXUS — Spatial Feed</title>
+    <title>PhyArch NEXUS — Multi-Mode Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    
     <style>
-        :root {
-            --bg: #000;
-            --accent: #00ff9d;
-            --accent2: #00d0ff;
-            --font: 'JetBrains Mono', monospace;
-        }
+        :root { --accent: #00ff9d; --bg: #020205; --panel: #0a0a0f; --font: 'Inter', sans-serif; }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--bg); color:#fff; font-family: var(--font); overflow: hidden; height: 100vh; }
+        body { background:var(--bg); color:#fff; font-family:var(--font); overflow:hidden; }
 
-        /* --- HOME FEED (TIKTOK STYLE) --- */
-        #home-feed {
-            position: fixed; inset: 0; z-index: 1000;
-            overflow-y: scroll; scroll-snap-type: y mandatory;
-            background: #000; transition: transform 0.8s cubic-bezier(0.8,0,0.2,1);
+        /* --- 1. MINIMAL BOOT --- */
+        #boot-screen {
+            position: fixed; inset:0; background:#000; z-index:10000;
+            display:flex; align-items:center; justify-content:center;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .feed-card {
-            height: 100vh; width: 100%; scroll-snap-align: start;
-            position: relative; display: flex; align-items: center; justify-content: center;
-            border-bottom: 1px solid #111;
-        }
-        .card-bg { position: absolute; inset:0; opacity: 0.4; pointer-events: none; }
-        
-        .card-ui {
-            position: absolute; bottom: 40px; left: 20px; z-index: 10;
-        }
-        .card-ui h2 { font-size: 24px; letter-spacing: 2px; color: var(--accent); }
-        .card-ui p { font-size: 12px; opacity: 0.6; margin-top: 5px; }
+        .boot-logo { font-size:28px; font-weight:900; letter-spacing:12px; }
+        .boot-logo span { color:var(--accent); }
 
-        .side-actions {
-            position: absolute; right: 20px; bottom: 100px;
-            display: flex; flex-direction: column; gap: 25px; align-items: center;
+        /* --- 2. HUB (NETFLIX STYLE) --- */
+        #hub {
+            height:100vh; width:100%; padding: 40px 60px; overflow-y: auto;
+            display:none; transition: transform 0.6s ease;
         }
-        .action-btn {
-            width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.2); transition: 0.3s;
+        .nav-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:40px; }
+        .mode-toggles { display:flex; gap:10px; }
+        .mode-btn { background:rgba(255,255,255,0.05); border:1px solid #222; color:#fff; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:11px; }
+        .mode-btn.active { background:var(--accent); color:#000; border:none; }
+
+        .billboard { 
+            width:100%; height:45vh; border-radius:12px; background:linear-gradient(45deg, #001a0d, #05050a);
+            display:flex; flex-direction:column; justify-content:center; padding:60px; margin-bottom:40px;
+            position:relative; overflow:hidden;
         }
-        .action-btn:hover { background: var(--accent); color: #000; transform: scale(1.1); }
-        .work-btn { 
-            background: var(--accent); color: #000; font-weight: 900; 
-            box-shadow: 0 0 20px var(--accent);
+        .billboard h1 { font-size:48px; margin-bottom:10px; }
+        .billboard p { opacity:0.6; max-width:500px; margin-bottom:20px; }
+
+        .row-title { font-size:18px; margin-bottom:20px; color:var(--accent); }
+        .project-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
+        .project-card { 
+            background:var(--panel); border:1px solid #1a1a1a; height:180px; border-radius:8px; 
+            padding:20px; display:flex; flex-direction:column; justify-content:flex-end;
+            transition: transform 0.3s; cursor:pointer;
+        }
+        .project-card:hover { transform: scale(1.03); border-color:var(--accent); }
+
+        /* --- 3. FEED (TIKTOK STYLE) --- */
+        #feed {
+            height:100vh; width:100%; scroll-snap-type: y mandatory; overflow-y: scroll;
+            display:none; position:fixed; inset:0;
+        }
+        .feed-item { 
+            height:100vh; width:100%; scroll-snap-align:start; 
+            display:flex; align-items:flex-end; padding:60px;
+            background: radial-gradient(circle at bottom left, #002211 0%, #000 60%);
         }
 
-        /* --- WORKSPACE (THE LAB) --- */
+        /* --- 4. WORKSPACE --- */
         #workspace {
-            display: flex; height: 100vh; width: 100vw;
-            transform: translateY(100%); transition: transform 0.8s cubic-bezier(0.8,0,0.2,1);
+            position:fixed; inset:0; display:flex; 
+            transform:translateX(100%); transition:transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background:#000; z-index:2000;
         }
-        .viewport-container { flex: 1; position: relative; }
-        #viewport { width: 100%; height: 100%; }
+        #viewport { flex:1; background:#000; }
+        .side-lab { width:380px; background:var(--panel); border-left:1px solid #1a1a1a; padding:30px; }
 
-        .sidebar { width: 350px; background: #05050a; border-left: 1px solid #222; display: flex; flex-direction: column; }
-        .tab-bar { display: flex; border-bottom: 1px solid #222; }
-        .tab { flex: 1; padding: 15px; text-align: center; font-size: 10px; cursor: pointer; opacity: 0.5; }
-        .tab-active { opacity: 1; color: var(--accent); border-bottom: 2px solid var(--accent); }
-
-        .panel { flex: 1; padding: 20px; display: none; overflow-y: auto; }
-        .panel-active { display: block; }
-
-        #console { height: 150px; background: #000; border-top: 1px solid #222; padding: 10px; font-size: 11px; color: #555; overflow-y: auto; }
-
-        /* UI Helpers */
-        .loading-tag { position: fixed; top: 20px; left: 20px; font-size: 10px; color: var(--accent); z-index: 2000; }
-        .exit-work { position: absolute; top: 20px; right: 20px; z-index: 100; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; cursor: pointer; font-size: 10px; }
-
-        textarea { width: 100%; background: #111; border: 1px solid #333; color: var(--accent2); padding: 10px; font-family: var(--font); margin-bottom: 10px; }
-        button.cta { width: 100%; padding: 12px; background: var(--accent); color: #000; border: none; font-weight: 900; cursor: pointer; }
+        /* Utils */
+        .cta { padding:12px 24px; background:var(--accent); color:#000; border-radius:4px; border:none; font-weight:bold; cursor:pointer; width:fit-content; }
+        textarea { width:100%; background:#000; border:1px solid #333; color:var(--accent); padding:15px; border-radius:8px; margin-bottom:20px; font-family:'JetBrains Mono', monospace; }
     </style>
 </head>
 <body>
 
-    <div id="loading-status" class="loading-tag">● KERNEL BOOTING...</div>
+    <div id="boot-screen">
+        <div class="boot-logo">PHY<span>ARCH</span></div>
+    </div>
 
-    <div id="home-feed">
-        <div class="feed-card">
-            <div class="card-bg" style="background: radial-gradient(circle at center, #001a0d 0%, #000 70%);"></div>
-            <div class="card-ui">
-                <h2>QUANTUM HELIX</h2>
-                <p>Advanced DNA Simulation using Python Logic</p>
-            </div>
-            <div class="side-actions">
-                <div class="action-btn">❤️</div>
-                <div class="action-btn">💬</div>
-                <div class="action-btn work-btn" onclick="enterWork('dna')">WORK</div>
+    <div id="hub">
+        <div class="nav-header">
+            <div style="font-weight:900; letter-spacing:4px;">NEXUS</div>
+            <div class="mode-toggles">
+                <button class="mode-btn active" onclick="switchView('hub')">GRID VIEW</button>
+                <button class="mode-btn" onclick="switchView('feed')">FEED VIEW</button>
+                <button class="mode-btn" onclick="openLab()">DIRECT WORK</button>
             </div>
         </div>
 
-        <div class="feed-card">
-            <div class="card-bg" style="background: radial-gradient(circle at center, #00121a 0%, #000 70%);"></div>
-            <div class="card-ui">
-                <h2>MARKET FLOW</h2>
-                <p>Real-time BTC Data driving physical mass</p>
+        <div class="billboard">
+            <h1>NEBULA CORE</h1>
+            <p>A procedural star-birth simulation running on our latest Quantum Physics kernel. High performance, zero latency.</p>
+            <button class="cta" onclick="openLab()">OPEN PROJECT</button>
+        </div>
+
+        <h3 class="row-title">RECENT SIMULATIONS</h3>
+        <div class="project-grid">
+            <div class="project-card" onclick="openLab()"><h3>Helix-V4</h3><p style="font-size:11px; opacity:0.5;">Last edit: 2h ago</p></div>
+            <div class="project-card" onclick="openLab()"><h3>Market-Drop</h3><p style="font-size:11px; opacity:0.5;">Last edit: 1d ago</p></div>
+            <div class="project-card" onclick="openLab()"><h3>Fluid-Test</h3><p style="font-size:11px; opacity:0.5;">Last edit: 4d ago</p></div>
+        </div>
+    </div>
+
+    <div id="feed">
+        <div class="feed-item">
+            <div>
+                <h1 style="font-size:32px;">HELIX V4</h1>
+                <p style="margin:10px 0 20px; opacity:0.6;">Automated genetic structuralism.</p>
+                <button class="cta" onclick="openLab()">WORK ON THIS</button>
             </div>
-            <div class="side-actions">
-                <div class="action-btn">❤️</div>
-                <div class="action-btn">💬</div>
-                <div class="action-btn work-btn" onclick="enterWork('market')">WORK</div>
+        </div>
+        <div class="feed-item" style="background: radial-gradient(circle at bottom left, #001122 0%, #000 60%);">
+            <div>
+                <h1 style="font-size:32px;">MARKET DROP</h1>
+                <p style="margin:10px 0 20px; opacity:0.6;">Real-time asset collision.</p>
+                <button class="cta" onclick="openLab()">WORK ON THIS</button>
             </div>
         </div>
     </div>
 
     <div id="workspace">
-        <div class="viewport-container">
-            <div class="exit-work" onclick="exitWork()">BACK TO FEED</div>
-            <div id="viewport"></div>
+        <div id="viewport">
+            <button onclick="closeLab()" style="position:absolute; top:25px; left:25px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid #333; padding:10px 20px; border-radius:5px; cursor:pointer;">EXIT TO HUB</button>
         </div>
-        
-        <aside class="sidebar">
-            <div class="tab-bar">
-                <div class="tab tab-active" onclick="switchTab(0)">FORGE</div>
-                <div class="tab" onclick="switchTab(1)">PYTHON</div>
-            </div>
+        <div class="side-lab">
+            <h2 style="margin-bottom:30px; font-size:20px; color:var(--accent);">LAB CORE</h2>
+            <label style="font-size:10px; opacity:0.5;">AI FORGE PROMPT</label>
+            <textarea rows="4" placeholder="Describe matter..."></textarea>
+            <button class="cta" style="width:100%;">GENERATE</button>
             
-            <div id="panel-0" class="panel panel-active">
-                <h4 style="color:var(--accent2); margin-bottom:15px; font-size:12px;">AI FORGE</h4>
-                <textarea id="ai-input" placeholder="Prompt structure..."></textarea>
-                <button class="cta" onclick="runForge()">GENERATE</button>
+            <div style="margin-top:40px;">
+                <label style="font-size:10px; opacity:0.5;">PYTHON KERNEL</label>
+                <textarea rows="8" placeholder="# import omni..."></textarea>
+                <button class="cta" style="width:100%; background:#fff;">EXECUTE</button>
             </div>
-
-            <div id="panel-1" class="panel">
-                <h4 style="color:var(--accent2); margin-bottom:15px; font-size:12px;">CODE KERNEL</h4>
-                <textarea id="py-code" rows="10">Omni.spawn('sphere', 20)</textarea>
-                <button class="cta" onclick="runPython()">RUN SCRIPT</button>
-            </div>
-
-            <div id="console"></div>
-        </aside>
+        </div>
     </div>
 
 <script>
-class NexusPlatform {
-    constructor() {
-        this.entities = [];
-        this.pyodide = null;
-    }
-
-    async init() {
-        const vp = document.getElementById('viewport');
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 1000);
-        this.camera.position.set(50, 50, 50);
-        this.renderer = new THREE.WebGLRenderer({antialias:true});
-        this.renderer.setSize(vp.clientWidth, vp.clientHeight);
-        vp.appendChild(this.renderer.domElement);
-        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    // System Transitions
+    function switchView(view) {
+        document.getElementById('hub').style.display = view === 'hub' ? 'block' : 'none';
+        document.getElementById('feed').style.display = view === 'feed' ? 'block' : 'none';
         
-        this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.8, 0) });
-        this.scene.add(new THREE.GridHelper(100, 20, 0x222222, 0x111111));
-
-        const ground = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
-        ground.quaternion.setFromEuler(-Math.PI/2, 0, 0);
-        this.world.addBody(ground);
-
-        this.animate();
-    }
-
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        this.world.fixedStep();
-        this.entities.forEach(e => {
-            e.mesh.position.copy(e.body.position);
-            e.mesh.quaternion.copy(e.body.quaternion);
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.toLowerCase().includes(view));
         });
-        this.renderer.render(this.scene, this.camera);
     }
 
-    spawn(type, count, opts = {}) {
-        for(let i=0; i<count; i++) {
-            const size = opts.size || 2;
-            const geo = type === 'sphere' ? new THREE.SphereGeometry(size) : new THREE.BoxGeometry(size, size, size);
-            const shape = type === 'sphere' ? new CANNON.Sphere(size) : new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
-            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color: opts.color || 0x00ff9d, wireframe: true}));
-            const body = new CANNON.Body({ mass: 1, shape, position: new CANNON.Vec3((Math.random()-0.5)*20, 30 + i*3, (Math.random()-0.5)*20) });
-            this.scene.add(mesh);
-            this.world.addBody(body);
-            this.entities.push({mesh, body});
-        }
+    function openLab() {
+        document.getElementById('workspace').style.transform = 'translateX(0)';
     }
 
-    log(m) {
-        const c = document.getElementById('console');
-        c.innerHTML += `<div>> ${m}</div>`;
-        c.scrollTop = c.scrollHeight;
+    function closeLab() {
+        document.getElementById('workspace').style.transform = 'translateX(100%)';
     }
-}
 
-const App = new NexusPlatform();
-
-// --- PLATFORM UI LOGIC ---
-function enterWork(template) {
-    document.getElementById('home-feed').style.transform = 'translateY(-100%)';
-    document.getElementById('workspace').style.transform = 'translateY(0)';
-    if(template === 'dna') {
-        setTimeout(() => runForge("dna helix"), 1000);
-    }
-}
-
-function exitWork() {
-    document.getElementById('home-feed').style.transform = 'translateY(0)';
-    document.getElementById('workspace').style.transform = 'translateY(100%)';
-}
-
-function switchTab(n) {
-    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('tab-active', i===n));
-    document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('panel-active', i===n));
-}
-
-async function runPython() {
-    await App.pyodide.runPythonAsync(document.getElementById('py-code').value);
-}
-
-function runForge(forceInput = null) {
-    const prompt = forceInput || document.getElementById('ai-input').value;
-    if(prompt.includes('dna')) {
-        for(let i=0; i<30; i++) {
-            const a = i * 0.5;
-            App.spawn('sphere', 1, {pos:{x:Math.cos(a)*10, y:i*1.2, z:Math.sin(a)*10}, color: 0x00ff9d});
-        }
-    } else {
-        App.spawn('box', 5);
-    }
-}
-
-(async () => {
-    await App.init();
-    App.pyodide = await loadPyodide();
-    App.pyodide.globals.set("Omni", { 
-        spawn: (t,c,o) => App.spawn(t,c,o.toJs ? o.toJs() : o),
-        log: (m) => App.log(m)
-    });
-    document.getElementById('loading-status').innerHTML = "● SYSTEM READY";
-    document.getElementById('loading-status').style.color = "#00ff9d";
-})();
+    // App Initialization
+    (async () => {
+        // Prepare Engine (Placeholder for Three.js/Pyodide init)
+        setTimeout(() => {
+            document.getElementById('boot-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('hub').style.display = 'block';
+            }, 1000);
+        }, 2000);
+    })();
 </script>
 </body>
 </html>
