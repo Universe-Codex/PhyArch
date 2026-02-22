@@ -7,12 +7,12 @@
   <meta name="description" content="The ultimate futuristic science hub for 3D rendering, simulations, AI creation, and data analysis." />
   <title>PhyArch NEXUS — MasterAppBuilder</title>
 
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json" />
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
 
-  <!-- Icons (replace with real ones later) -->
-  <link rel="icon" href="https://via.placeholder.com/32/3b82f6/ffffff?text=N" />
-  <link rel="apple-touch-icon" href="https://via.placeholder.com/180/3b82f6/ffffff?text=N" />
+  <!-- Icons -->
+  <link rel="icon" href="/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192" />
 
   <!-- Fonts -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
@@ -238,7 +238,7 @@
     <div id="topbar">
       <div class="topbar-logo">PhyArch NEXUS</div>
       <input type="text" class="topbar-search" placeholder="Search or AI prompt..." />
-      <button class="topbar-button">Update</button>
+      <button class="topbar-button" onclick="selfUpdate()">Update</button>
     </div>
 
     <!-- Content -->
@@ -319,6 +319,13 @@
       document.getElementById('ai-input').value = '';
     }
 
+    // Self-Update stub
+    function selfUpdate() {
+      if (confirm('Allow self-update?')) {
+        alert('Checking for updates... (simulated)');
+      }
+    }
+
     // Init on load
     window.onload = init3D;
     window.onresize = () => {
@@ -330,13 +337,13 @@
     };
   </script>
 
-  <!-- Service Worker Registration -->
+  <!-- Service Worker Registration (this is point #5 from checklist) -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('Service Worker registered'))
-          .catch(err => console.log('Service Worker failed:', err));
+          .then(reg => console.log('Service Worker registered successfully'))
+          .catch(err => console.log('Service Worker registration failed:', err));
       });
     }
   </script>
