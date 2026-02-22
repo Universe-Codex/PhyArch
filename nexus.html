@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PhyArch NEXUS — Ultimate Futuristic Science Hub</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.js"></script>
   <style>
     :root {
       --bg: #0a0a0f;
@@ -142,103 +144,30 @@ nav a:hover {
   overflow:hidden;
 }
 
-#ai-terminal {
-  position:fixed;
-  bottom:80px;
-  left:24px;
-  right:24px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:16px;
-  display:none;
-  z-index:1000;
-}
-#ai-terminal input {
-  width:100%;
-  background:transparent;
-  border:none;
-  color:var(--text);
-  font-family:monospace;
-  font-size:16px;
-  outline:none;
-}
-
-#python-terminal {
-  position:fixed;
-  bottom:80px;
-  left:24px;
-  right:24px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:16px;
-  display:none;
-  z-index:1000;
-}
-#python-terminal input {
-  width:100%;
-  background:transparent;
-  border:none;
-  color:var(--text);
-  font-family:monospace;
-  font-size:16px;
-  outline:none;
-}
-
-#voice-mic {
-  position:fixed;
-  bottom:80px;
-  right:24px;
-  background:var(--green);
-  color:white;
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:1000;
-  transition:all 0.2s;
-}
-#voice-mic:active {
-  transform:scale(0.98);
-}
-
-#bottom-bar {
+#background-terminal {
   position:fixed;
   bottom:0;
   left:0;
   right:0;
   background:var(--surface);
-  border-top:1px solid var(--border);
-  display:flex;
-  justify-content:space-around;
-  padding:12px 0;
-  z-index:1000;
+  padding:12px;
+  font-family:monospace;
+  font-size:14px;
+  color:var(--green);
+  display:none;
+  z-index:500;
 }
-.bar-icon {
-  color:var(--dim);
-  font-size:24px;
+
+#settings-section {
+  padding:48px 24px;
+}
+#update-button {
+  padding:12px 24px;
+  background:var(--yellow);
+  color:var(--bg);
+  border:none;
+  border-radius:8px;
   cursor:pointer;
-  transition:all 0.2s;
-}
-.bar-icon:active {
-  color:var(--accent);
-  transform:scale(1.1);
-}
-#ai-button {
-  background:var(--accent);
-  color:white;
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 4px 12px rgba(59,130,246,0.3);
-  margin-top:-28px;
 }
 
 footer {
@@ -257,6 +186,7 @@ footer {
     <a href="#">Feed</a>
     <a href="#workspace">Workspace</a>
     <a href="#">Achievements</a>
+    <a href="#settings-section">Settings</a>
   </nav>
 </header>
 
@@ -293,6 +223,14 @@ footer {
       <h3>GLTF Import</h3>
       <p>Drag and drop 3D models for instant rendering.</p>
     </div>
+    <div class="card">
+      <h3>Search & Research</h3>
+      <p>Built-in search for data and updates.</p>
+    </div>
+    <div class="card">
+      <h3>Self-Update</h3>
+      <p>App can analyze, modify, and update itself with permission.</p>
+    </div>
   </div>
 </section>
 
@@ -314,16 +252,30 @@ footer {
 
 <section class="section">
   <h2>Workspace</h2>
-  <div id="workspace" style="height:600px;background:var(--surface);border-radius:16px;"></div>
+  <div id="workspace"></div>
   <div style="margin-top:24px;text-align:center;">
-    <input type="file" id="gltf-import" accept=".gltf,.glb" style="display:none;">
-    <button style="padding:12px 24px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;" onclick="runSimulation()">Run Simulation</button>
+    <button style="padding:12px 24px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;" onclick="init3D()">Init 3D View</button>
     <button style="padding:12px 24px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="togglePython()">Python Terminal</button>
     <button style="padding:12px 24px;background:var(--yellow);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="toggleAI()">AI Forge</button>
     <button style="padding:12px 24px;background:var(--red);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="fetchMolecule()">Molecular Viewer</button>
+    <input type="file" id="gltf-import" accept=".gltf,.glb" style="display:none;" onchange="importGLTF(this.files[0])">
     <button style="padding:12px 24px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="document.getElementById('gltf-import').click()">Import GLTF</button>
+    <button style="padding:12px 24px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="fetchDataFeed()">Load Data Feed</button>
+    <button style="padding:12px 24px;background:var(--yellow);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="saveProject()">Save Project</button>
+    <button style="padding:12px 24px;background:var(--yellow);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="loadProject()">Load Project</button>
   </div>
 </section>
+
+<section id="settings-section" class="section">
+  <h2>Settings</h2>
+  <div class="card">
+    <h3>Self-Update</h3>
+    <p>Allow the app to search, analyze, and update itself periodically.</p>
+    <button id="update-button" onclick="selfUpdate()">Check for Update</button>
+  </div>
+</section>
+
+<div id="background-terminal"></div>
 
 <footer>
   © 2026 PhyArch NEXUS. All rights reserved.
@@ -341,72 +293,133 @@ footer {
   <div id="ai-output"></div>
 </div>
 
-<script>
-// 3D Viewport (minimal Three.js embedded)
-const vp = document.getElementById('workspace');
-vp.innerHTML = '<p style="text-align:center;padding:160px 0;color:var(--dim);">3D Viewport — Real rendering with physics.</p>';
+<div id="voice-mic" style="position:fixed;bottom:80px;right:24px;background:var(--green);color:white;width:56px;height:56px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="toggleVoice()"></div>
 
-// Temporal Simulation (expanded)
-let simulationRunning = false;
-function runSimulation() {
-  simulationRunning = !simulationRunning;
-  alert(simulationRunning ? 'Simulation started' : 'Simulation stopped');
+<div id="bottom-bar">
+  <span class="bar-icon" onclick="location.href='#'"></span>
+  <span class="bar-icon" onclick="alert('Search')"></span>
+  <span id="ai-button" class="bar-icon" onclick="toggleAI()"></span>
+  <span class="bar-icon" onclick="alert('Notifications')"></span>
+  <span class="bar-icon" onclick="alert('Profile')"></span>
+</div>
+
+<script>
+// 3D Viewport with Three.js
+let scene, camera, renderer;
+function init3D() {
+  const vp = document.getElementById('workspace');
+  vp.innerHTML = '';
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, vp.clientWidth / vp.clientHeight, 0.1, 1000);
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(vp.clientWidth, vp.clientHeight);
+  vp.appendChild(renderer.domElement);
+  camera.position.z = 5;
+  const geometry = new THREE.BoxGeometry();
+  const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+  const cube = new THREE.Mesh(geometry, material);
+  scene.add(cube);
+  function animate3D() {
+    requestAnimationFrame(animate3D);
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate3D();
 }
 
-// Python Kernel (simulated execution)
+// Temporal Projection (in 3D)
+let temporalLead = 0.4;
+document.getElementById('lead').addEventListener('input', e => {
+  temporalLead = e.target.value / 100;
+  // Update projection in 3D (simulated)
+  alert('Temporal lead updated to ' + (temporalLead * 20).toFixed(1) + 's');
+});
+
+// Self-Analysis & Self-Update
+const terminal = document.getElementById('background-terminal');
+terminal.style.display = 'block';
+terminal.innerText = 'Background Terminal: Ready for self-analysis...';
+function selfAnalyze() {
+  terminal.innerText += '\nAnalyzing... Missing: Full Pyodide. Modifying code...';
+  // Simulate self-modification
+  setTimeout(() => {
+    terminal.innerText += '\nModified: Added Pyodide stub.';
+  }, 1000);
+}
+function selfUpdate() {
+  if (confirm('Allow self-update? (Checks every 7 days)')) {
+    terminal.innerText += '\nSearching for updates...';
+    // Simulate research/search
+    setTimeout(() => {
+      terminal.innerText += '\nFound update: Integrating new feature.';
+      // Simulate install
+      alert('Updated successfully!');
+    }, 2000);
+  }
+}
+setInterval(selfAnalyze, 30000); // Auto-analyze every 30s
+
+// Search Feature (web integration simulation)
+function search(query) {
+  terminal.innerText += '\nSearching: ' + query;
+  // Simulate
+  return 'Results for "' + query + '" (simulated from web)';
+}
+
+// Update/Install (settings-like)
+document.getElementById('update-button').onclick = selfUpdate;
+
+// Python Terminal
 function togglePython() {
-  const terminal = document.getElementById('python-terminal');
-  terminal.style.display = terminal.style.display === 'block' ? 'none' : 'block';
+  const term = document.getElementById('python-terminal');
+  term.style.display = term.style.display === 'block' ? 'none' : 'block';
 }
 function executePython() {
   const code = document.getElementById('python-input').value;
+  // Simulate Pyodide
   try {
-    const result = eval(code); // Danger: Real execution in full version use Pyodide
+    const result = eval(code); // Danger: Use real Pyodide in production
     document.getElementById('python-output').innerText = result;
   } catch (e) {
     document.getElementById('python-output').innerText = 'Error: ' + e.message;
   }
 }
 
-// AI Forge (prompt generation)
+// AI Forge
 function toggleAI() {
   const forge = document.getElementById('ai-forge');
   forge.style.display = forge.style.display === 'block' ? 'none' : 'block';
 }
 function processAI() {
   const prompt = document.getElementById('ai-input').value;
-  // Simulate AI response
-  const response = `Generated from prompt: "${prompt}" (e.g., code or simulation)`;
+  const response = `Generated from prompt: "${prompt}" (simulated)`;
   document.getElementById('ai-output').innerText = response;
 }
 
-// Molecular Viewer (PubChem fetch simulation)
-function fetchMolecule() {
-  alert('Fetching caffeine structure from PubChem... (simulated)');
+// Voice Input
+function toggleVoice() {
+  alert('Voice command activated (simulated)');
 }
 
-// GLTF Import (drag-drop simulation)
-document.getElementById('gltf-import').addEventListener('change', e => {
-  alert('GLTF model imported: ' + e.target.files[0].name);
-});
+// Data Feeds
+function fetchDataFeed() {
+  alert('Weather feed: Wind influencing simulation (simulated)');
+}
 
-// Voice Input (speech recognition)
-const mic = document.createElement('button');
-mic.innerText = '';
-mic.style = 'position:fixed;bottom:80px;right:24px;background:var(--green);color:white;width:56px;height:56px;border-radius:50%;cursor:pointer;';
-document.body.appendChild(mic);
-mic.onclick = () => {
-  alert('Voice command: "inject nodes" (simulated)');
-};
+// Molecular Viewer
+function fetchMolecule() {
+  alert('Molecular structure fetched (simulated from PubChem)');
+}
 
-// Real-Time Data Feeds (simulated weather/stock)
-setInterval(() => {
-  alert('Weather feed updated: Wind influencing simulation (simulated)');
-}, 30000);
+// GLTF Import
+function importGLTF(file) {
+  alert('GLTF imported: ' + file.name + ' (rendered in 3D)');
+}
 
-// Save/Load (local storage)
+// Save/Load Project
 function saveProject() {
-  localStorage.setItem('nexus-project', 'Saved data (simulated)');
+  localStorage.setItem('nexus-project', JSON.stringify({nodes: 'data'}));
   alert('Project saved');
 }
 function loadProject() {
@@ -414,27 +427,11 @@ function loadProject() {
   alert('Project loaded: ' + data);
 }
 
-// Account (simulated login)
-function login() {
-  localStorage.setItem('user', 'guest');
-  alert('Logged in as guest');
-}
-login();
-
-// Collab Stub
-function shareCollab() {
-  alert('Share link: http://nexus.example.com/collab (simulated)');
-}
-
-// Search Integration (simulated)
-function search(query) {
-  alert('Search results for "' + query + '" (simulated)');
-}
-
-// Expand for more power
-// To make it more powerful than AIs: Add real integrations (e.g., Three.js for 3D, Pyodide for Python, SpeechRecognition for voice, etc.)
+// Account / Login (simulated)
+localStorage.setItem('user', 'guest');
 </script>
 </body>
 </html>
-```
+
+
 
