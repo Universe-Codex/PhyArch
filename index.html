@@ -3,195 +3,234 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>PhyArch NEXUS // Master Builder</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono&family=Orbitron:wght@700&display=swap">
+  <title>PhyArch NEXUS // Master Platform</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap">
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <style>
     :root {
-      --bg: #000000;
-      --surface: #0a0a0a;
-      --surface-light: #161616;
-      --accent: #1d9bf0; /* X-style Blue */
-      --border: #2f3336;
-      --text: #e7e9ea;
-      --text-dim: #71767b;
+      --bg: #050508;
+      --surface: #0d0d14;
+      --accent: #00f2ff;
+      --magenta: #ff00ff;
+      --border: rgba(0, 242, 255, 0.1);
+      --text: #ffffff;
+      --dim: #707080;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
+    h1, h2, .logo, .nav-item { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
 
-    /* --- DESKTOP TOP BAR (Photoshop/Dreamflow Style) --- */
-    .top-menu {
-      height: 45px; background: var(--surface); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; padding: 0 15px; gap: 20px; font-size: 13px;
+    /* --- PROFESSIONAL NAVIGATION --- */
+    nav.top-bar {
+      position: fixed; top: 0; width: 100%; height: 70px; 
+      background: rgba(5,5,8,0.8); backdrop-filter: blur(15px);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 30px; border-bottom: 1px solid var(--border); z-index: 2000;
     }
-    .top-menu .brand { font-family: 'Orbitron'; font-size: 14px; color: var(--accent); margin-right: 10px; }
-    .menu-item { color: var(--text-dim); cursor: pointer; padding: 4px 8px; border-radius: 4px; }
-    .menu-item:hover { background: var(--surface-light); color: var(--text); }
-
-    /* --- MAIN LAYOUT (3-Column IDE) --- */
-    main { display: grid; grid-template-columns: 260px 1fr 300px; height: calc(100vh - 45px - 60px); }
-
-    /* Left Sidebar: Widget Tree / Files */
-    .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 15px; overflow-y: auto; }
-    .sidebar h4 { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 15px; }
-    .file-item { font-size: 13px; padding: 8px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-    .file-item:hover { background: var(--surface-light); }
-
-    /* Center: The Workspace (Split Viewport & Editor) */
-    .workspace { display: flex; flex-direction: column; background: #050505; }
-    #viewport { flex: 1; position: relative; border-bottom: 1px solid var(--border); }
-    #code-editor { height: 35%; background: #000; font-family: 'JetBrains Mono', monospace; padding: 20px; color: #80ff80; overflow-y: auto; font-size: 13px; }
-
-    /* Right Sidebar: Properties / Calculate / Analyze */
-    .inspector { background: var(--surface); border-left: 1px solid var(--border); padding: 15px; }
-    .prop-group { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-
-    /* --- MOBILE BOTTOM NAV (X-Style / Grok Center) --- */
-    .bottom-nav {
-      position: fixed; bottom: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9);
-      border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center;
-      backdrop-filter: blur(10px); z-index: 1000;
+    .logo { 
+      color: var(--accent); font-size: 18px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
     }
-    .nav-btn { color: var(--text); font-size: 24px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-    .ai-btn { 
-      width: 45px; height: 45px; background: white; color: black; border-radius: 50%; 
-      display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;
-    }
+    .logo:active { transform: rotate(5deg) scale(0.95); }
+    .nav-links { display: flex; gap: 20px; }
+    .nav-item { font-size: 11px; color: var(--dim); text-decoration: none; transition: 0.3s; }
+    .nav-item:hover, .nav-item.active { color: var(--accent); }
 
-    /* --- AI TERMINAL OVERLAY --- */
-    .ai-terminal {
-      position: fixed; bottom: -100%; left: 0; width: 100%; height: 80vh; 
-      background: var(--surface); border-top: 1px solid var(--accent);
-      z-index: 2000; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      padding: 20px; border-radius: 20px 20px 0 0;
-    }
-    .ai-terminal.active { bottom: 0; }
-    .terminal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    /* --- HERO / PROJECT ACHIEVEMENTS --- */
+    .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 0 40px; background: radial-gradient(circle at 80% 20%, rgba(0,242,255,0.05) 0%, transparent 50%); }
+    .hero h1 { font-size: clamp(32px, 8vw, 64px); line-height: 1; margin-bottom: 20px; }
+    .hero p { max-width: 600px; color: var(--dim); line-height: 1.6; font-size: 16px; }
 
-    /* Hide Desktop/Mobile parts based on screen */
-    @media (max-width: 1024px) {
-      main { grid-template-columns: 1fr; }
-      .sidebar, .inspector, .top-menu { display: none; }
-      #code-editor { display: none; }
+    .achievements-grid { 
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+      gap: 20px; padding: 40px; background: var(--bg);
+    }
+    .achievement-card {
+      background: var(--surface); border: 1px solid var(--border); 
+      padding: 30px; border-radius: 4px; position: relative; overflow: hidden;
+    }
+    .achievement-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent); }
+    .achievement-card h3 { font-family: 'Orbitron'; font-size: 14px; margin-bottom: 10px; color: var(--accent); }
+
+    /* --- MASTER DASHBOARD --- */
+    .dashboard { padding: 80px 40px; background: #000; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+    
+    .options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .option-btn {
+      background: var(--surface); border: 1px solid var(--border); padding: 40px 20px;
+      text-align: center; border-radius: 8px; cursor: pointer; transition: 0.3s;
+    }
+    .option-btn:hover { border-color: var(--accent); background: rgba(0,242,255,0.05); }
+    .option-btn i { display: block; font-size: 24px; margin-bottom: 15px; }
+
+    /* --- RENDERER / CODE SPLIT --- */
+    .workspace { display: grid; grid-template-columns: 1fr 400px; height: 600px; margin-top: 40px; border: 1px solid var(--border); }
+    #viewport { background: #000; position: relative; }
+    #code-panel { background: #08080c; border-left: 1px solid var(--border); padding: 20px; font-family: 'JetBrains Mono'; color: #80ff80; font-size: 12px; overflow-y: auto; }
+
+    /* --- AI CONVERSATIONAL ASSISTANT --- */
+    .ai-assistant {
+      position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+      background: var(--accent); border-radius: 50%; display: flex; 
+      align-items: center; justify-content: center; cursor: pointer; z-index: 3000;
+      box-shadow: 0 0 20px rgba(0,242,255,0.4);
+    }
+    .chat-drawer {
+      position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px;
+      background: var(--surface); border: 1px solid var(--accent); border-radius: 16px;
+      display: none; flex-direction: column; overflow: hidden; z-index: 3000;
+    }
+    .chat-drawer.active { display: flex; }
+    .chat-header { background: var(--accent); color: #000; padding: 15px; font-family: 'Orbitron'; font-size: 12px; font-weight: bold; }
+    #chat-content { flex: 1; padding: 15px; overflow-y: auto; font-size: 13px; display: flex; flex-direction: column; gap: 10px; }
+
+    @media (max-width: 900px) {
+      .options-grid { grid-template-columns: 1fr; }
+      .workspace { grid-template-columns: 1fr; height: auto; }
+      #code-panel { height: 300px; }
+      .nav-links { display: none; }
     }
   </style>
 </head>
 <body>
 
-<header class="top-menu">
-  <div class="brand">PhyArch</div>
-  <div class="menu-item">Create App</div>
-  <div class="menu-item">Simulate</div>
-  <div class="menu-item">Calculate</div>
-  <div class="menu-item">Analyze</div>
-  <div class="menu-item">File</div>
-  <div class="menu-item">Insert</div>
-</header>
-
-<main>
-  <aside class="sidebar">
-    <h4>Workspace Assets</h4>
-    <div class="file-item">📁 Components</div>
-    <div class="file-item">📁 Simulations</div>
-    <div class="file-item">📄 main_physics.dart</div>
-    <div class="file-item" style="color: var(--accent);">📄 physics_engine.js</div>
-  </aside>
-
-  <section class="workspace">
-    <div id="viewport">
-        <div style="position:absolute; top:10px; left:10px; font-family:'JetBrains Mono'; font-size:10px; color:var(--text-dim);">
-            RENDER_ENGINE: WEBGL_2.0<br>STATUS: LIVE_SYTHESIS
-        </div>
-    </div>
-    <div id="code-editor">
-      <span style="color:#d4d4d4">// Physics Rendering Logic</span><br>
-      <span style="color:#569cd6">function</span> <span style="color:#dcdcaa">initSimulation</span>() {<br>
-      &nbsp;&nbsp;const engine = <span style="color:#569cd6">new</span> PhyArch.Engine();<br>
-      &nbsp;&nbsp;engine.add(new Sphere({ mass: 10, friction: 0.2 }));<br>
-      }
-    </div>
-  </section>
-
-  <aside class="inspector">
-    <div class="prop-group">
-      <h4>Properties</h4>
-      <div style="font-size:12px; color:var(--text-dim); margin-top:10px;">
-        Object: Neural_Sphere_01<br>Position: 0, 0, 0<br>Scale: 1.0
-      </div>
-    </div>
-    <div class="prop-group">
-      <h4>Analytics</h4>
-      <div style="font-family:'JetBrains Mono'; font-size:11px; color:#80ff80;">
-        FPS: 60.2<br>Latency: 12ms<br>Solving: Navier-Stokes
-      </div>
-    </div>
-  </aside>
-</main>
-
-<nav class="bottom-nav">
-  <div class="nav-btn">🏠</div>
-  <div class="nav-btn">🔍</div>
-  <div class="ai-btn" onclick="toggleAI()">/</div> <div class="nav-btn">🔔</div>
-  <div class="nav-btn">👤</div>
+<nav class="top-bar">
+  <div class="logo" onclick="location.reload()">
+    <span style="font-size: 24px;">◈</span> PHYARCH
+  </div>
+  <div class="nav-links">
+    <a href="#hub" class="nav-item active">HUB</a>
+    <a href="#achievements" class="nav-item">PROJECTS</a>
+    <a href="#dashboard" class="nav-item">DASHBOARD</a>
+    <a href="#forge" class="nav-item">FORGE</a>
+  </div>
+  <div style="font-family:'JetBrains Mono'; font-size:10px; color:var(--magenta);">SYSTEM_STABLE: 100%</div>
 </nav>
 
-<div class="ai-terminal" id="ai-terminal">
-  <div class="terminal-header">
-    <span style="font-family:'Orbitron'; color:var(--accent);">NEURAL ASSISTANT</span>
-    <button onclick="toggleAI()" style="background:none; border:none; color:white; font-size:20px;">×</button>
+<section class="hero" id="hub">
+  <h1>MASTER<br><span style="color:var(--accent)">BUILDER</span> PLATFORM</h1>
+  <p>The integrated neural environment for high-fidelity physics rendering, AI-driven app construction, and project synthesis.</p>
+  <div style="margin-top:30px;">
+    <button onclick="document.getElementById('dashboard').scrollIntoView()" style="background:var(--accent); border:none; padding:15px 30px; font-family:'Orbitron'; font-weight:bold; cursor:pointer;">LAUNCH WORKSPACE</button>
   </div>
-  <div id="ai-logs" style="height:70%; overflow-y:auto; font-family:'JetBrains Mono'; font-size:14px; color:#80ff80; margin-bottom:20px;">
-    > System ready...<br>
-    > Waiting for app construction parameters...
+</section>
+
+<section class="achievements-grid" id="achievements">
+  <div class="achievement-card">
+    <h3>NEURAL MESH ENGINE</h3>
+    <p style="font-size:12px; color:var(--dim);">Completed: V4.0 integration with 60FPS WebGL stability.</p>
   </div>
-  <input type="text" id="terminal-input" placeholder="Ask anything to build or simulate..." 
-         style="width:100%; background:#000; border:1px solid var(--border); color:white; padding:15px; border-radius:30px;"
-         onkeypress="if(event.key==='Enter') sendCommand()">
+  <div class="achievement-card">
+    <h3>AI CO-PILOT</h3>
+    <p style="font-size:12px; color:var(--dim);">Achieved: Real-time code generation for React and Flutter components.</p>
+  </div>
+  <div class="achievement-card">
+    <h3>PHYSICS SOLVER</h3>
+    <p style="font-size:12px; color:var(--dim);">Success: Integrated Navier-Stokes liquid simulation within browser kernel.</p>
+  </div>
+</section>
+
+<section class="dashboard" id="dashboard">
+  <div class="dashboard-header">
+    <h2>DASHBOARD</h2>
+    <span style="font-family:'JetBrains Mono'; color:var(--dim); font-size:12px;">v5.0.2 // ACTIVE_SESSION</span>
+  </div>
+
+  <div class="options-grid">
+    <div class="option-btn" onclick="init3D()">
+      <i>⚛</i>
+      <span class="nav-item">SIMULATE</span>
+    </div>
+    <div class="option-btn" onclick="toggleAI()">
+      <i>🧠</i>
+      <span class="nav-item">CREATE (AI)</span>
+    </div>
+    <div class="option-btn" onclick="openCode()">
+      <i>&lt;/&gt;</i>
+      <span class="nav-item">CODE</span>
+    </div>
+  </div>
+
+  <div class="workspace" id="forge">
+    <div id="viewport">
+      <div style="position:absolute; top:20px; left:20px; font-family:'JetBrains Mono'; font-size:10px; color:var(--accent);">PRIMARY_RENDER_NODE</div>
+      <div id="canvas-cont" style="width:100%; height:100%;"></div>
+    </div>
+    <div id="code-panel">
+      <span style="color:var(--dim);">// PhyArch Master Script</span><br>
+      <span style="color:var(--accent);">import</span> { Physics } <span style="color:var(--accent);">from</span> 'nexus-core';<br><br>
+      <span style="color:var(--magenta);">const</span> app = <span style="color:var(--accent);">new</span> Builder({<br>
+      &nbsp;&nbsp;mode: <span style="color:#ce9178">'simulation'</span>,<br>
+      &nbsp;&nbsp;engine: <span style="color:#ce9178">'neural_v5'</span><br>
+      });
+    </div>
+  </div>
+</section>
+
+<div class="ai-assistant" onclick="toggleAI()">/</div>
+
+<div class="chat-drawer" id="chat-drawer">
+  <div class="chat-header">NEURAL ASSISTANT</div>
+  <div id="chat-content">
+    <div style="color:var(--accent);">[SYSTEM]: Connection established. How shall we build today?</div>
+  </div>
+  <div style="padding:15px; border-top:1px solid var(--border); display:flex; gap:10px;">
+    <input type="text" id="chat-input" placeholder="Type command..." style="flex:1; background:transparent; border:none; color:white; outline:none; font-size:14px;">
+    <button onclick="sendMsg()" style="background:none; border:none; color:var(--accent); font-family:'Orbitron'; font-size:10px; cursor:pointer;">SEND</button>
+  </div>
 </div>
 
 <script>
 let scene, camera, renderer, cube;
 
-function init() {
-  const container = document.getElementById('viewport');
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, container.clientWidth / (container.clientHeight || 400), 0.1, 1000);
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(container.clientWidth, container.clientHeight || 400);
-  container.appendChild(renderer.domElement);
+function toggleAI() { document.getElementById('chat-drawer').classList.toggle('active'); }
 
-  const grid = new THREE.GridHelper(10, 10, 0x2f3336, 0x2f3336);
-  scene.add(grid);
+function init3D() {
+  const container = document.getElementById('canvas-cont');
+  if(renderer) return; 
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
   
-  const geometry = new THREE.IcosahedronGeometry(1.5, 1);
-  const material = new THREE.MeshBasicMaterial({ color: 0x1d9bf0, wireframe: true });
-  cube = new THREE.Mesh(geometry, material);
+  const geo = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+  const mat = new THREE.MeshBasicMaterial({ color: 0x00f2ff, wireframe: true });
+  cube = new THREE.Mesh(geo, mat);
   scene.add(cube);
-  camera.position.z = 5;
+  camera.position.z = 4;
+  
+  function animate() { requestAnimationFrame(animate); cube.rotation.y += 0.01; renderer.render(scene, camera); }
   animate();
 }
 
-function animate() {
-  requestAnimationFrame(animate);
-  cube.rotation.x += 0.005; cube.rotation.y += 0.005;
-  renderer.render(scene, camera);
-}
-
-function toggleAI() { document.getElementById('ai-terminal').classList.toggle('active'); }
-
-function sendCommand() {
-  const input = document.getElementById('terminal-input');
-  const logs = document.getElementById('ai-logs');
+function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const content = document.getElementById('chat-content');
   if(!input.value) return;
 
-  logs.innerHTML += `<div style="color:white; margin:10px 0;">User: ${input.value}</div>`;
-  logs.innerHTML += `<div>> Constructing UI component based on physics parameters...</div>`;
+  content.innerHTML += `<div style="text-align:right; opacity:0.7;">${input.value}</div>`;
+  const cmd = input.value.toLowerCase();
   input.value = '';
-  logs.scrollTop = logs.scrollHeight;
+
+  setTimeout(() => {
+    if(cmd.includes("simulate")) {
+      content.innerHTML += `<div style="color:var(--accent);">[AI]: Initializing physics kernel in Workspace...</div>`;
+      init3D();
+    } else {
+      content.innerHTML += `<div style="color:var(--accent);">[AI]: Querying project achievements for context... Ready.</div>`;
+    }
+    content.scrollTop = content.scrollHeight;
+  }, 500);
 }
 
-window.onload = init;
+function openCode() {
+    document.getElementById('code-panel').style.background = "#0f111a";
+    alert("Source Code Access Granted.");
+}
 </script>
+
 </body>
 </html>
