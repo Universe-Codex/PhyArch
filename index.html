@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f0f12" />
+  <meta name="description" content="The ultimate futuristic science hub for 3D rendering, simulations, AI creation, and data analysis." />
   <title>PhyArch NEXUS — MasterAppBuilder</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Icons (replace with real ones later) -->
+  <link rel="icon" href="https://via.placeholder.com/32/3b82f6/ffffff?text=N" />
+  <link rel="apple-touch-icon" href="https://via.placeholder.com/180/3b82f6/ffffff?text=N" />
+
+  <!-- Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+
+  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.3/full/pyodide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.min.js"></script>
+
   <style>
     :root {
       --bg: #0f0f12;
@@ -18,357 +31,314 @@
       --accent: #3b82f6;
       --border: #2a2a35;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      background:var(--bg);
-      color:var(--text);
-      font-family:'Inter', system-ui, sans-serif;
-      height:100vh;
-      display:flex;
-      overflow:hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     #sidebar {
-      width:240px;
-      background:var(--surface);
-      border-right:1px solid var(--border);
-      padding:24px;
-      overflow-y:auto;
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 32px;
     }
     .sidebar-group h4 {
-      font-size:12px;
-      color:var(--dim);
-      text-transform:uppercase;
-      margin-bottom:12px;
+      font-size: 12px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 12px;
     }
     .sidebar-item {
-      display:flex;
-      align-items:center;
-      padding:10px 16px;
-      color:var(--dim);
-      text-decoration:none;
-      font-weight:500;
-      border-radius:8px;
-      transition:all 0.2s;
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      color: var(--dim);
+      text-decoration: none;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.2s;
     }
-    .sidebar-item:hover, .sidebar-item.active {
-      background:var(--elevated);
-      color:var(--text);
+    .sidebar-item:hover,
+    .sidebar-item.active {
+      background: var(--elevated);
+      color: var(--text);
     }
 
     #main {
-      flex:1;
-      display:flex;
-      flex-direction:column;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
+
     #topbar {
-      background:var(--surface);
-      border-bottom:1px solid var(--border);
-      padding:12px 24px;
-      display:flex;
-      align-items:center;
-      gap:16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
     }
     .topbar-logo {
-      font-size:20px;
-      font-weight:700;
-      color:var(--accent);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
     }
     .topbar-search {
-      flex:1;
-      background:var(--elevated);
-      border:1px solid var(--border);
-      border-radius:8px;
-      padding:10px 16px;
-      color:var(--text);
-      font-size:14px;
-      outline:none;
+      flex: 1;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    .topbar-button {
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
     #content {
-      flex:1;
-      overflow-y:auto;
-      padding:24px;
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
     }
+
     .dashboard-grid {
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
-      gap:24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
     }
     .dashboard-card {
-      background:var(--elevated);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:24px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .dashboard-card h3 {
-      font-size:18px;
-      margin-bottom:12px;
+      font-size: 18px;
+      margin-bottom: 12px;
     }
 
     #viewport {
-      height:500px;
-      background:var(--elevated);
-      border:1px solid var(--border);
-      border-radius:12px;
-      margin-bottom:24px;
+      height: 500px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      position: relative;
     }
 
     #bottom-bar {
-      background:var(--surface);
-      border-top:1px solid var(--border);
-      display:flex;
-      justify-content:space-around;
-      padding:12px 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      flex-shrink: 0;
     }
     .bar-icon {
-      font-size:24px;
-      color:var(--dim);
-      cursor:pointer;
-      transition:all 0.2s;
+      font-size: 24px;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .bar-icon:active {
-      color:var(--accent);
-      transform:scale(1.1);
+    .bar-icon.active,
+    .bar-icon:hover {
+      color: var(--accent);
+    }
+    #ai-center {
+      background: var(--accent);
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -28px;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.4);
     }
 
-    #ai-terminal {
-      position:fixed;
-      bottom:80px;
-      left:24px;
-      right:24px;
-      background:var(--elevated);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:16px;
-      display:none;
-      z-index:1000;
+    #ai-panel {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 24px;
     }
     #ai-input {
-      width:100%;
-      background:transparent;
-      border:none;
-      color:var(--text);
-      font-family:monospace;
-      font-size:16px;
-      outline:none;
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 16px;
+      outline: none;
+      margin-bottom: 12px;
     }
   </style>
 </head>
 <body>
 
-<div id="sidebar">
-  <div style="font-size:24px;font-weight:700;margin-bottom:32px;color:var(--accent);">NEXUS</div>
-  <div class="sidebar-group">
-    <h4>Tools</h4>
-    <a href="#" class="sidebar-item active">Dashboard</a>
-    <a href="#" class="sidebar-item">Create App</a>
-    <a href="#" class="sidebar-item">Simulate</a>
-    <a href="#" class="sidebar-item">Calculate</a>
-    <a href="#" class="sidebar-item">Analyze</a>
-  </div>
-  <div class="sidebar-group">
-    <h4>File</h4>
-    <a href="#" class="sidebar-item">Files</a>
-    <a href="#" class="sidebar-item">Save</a>
-    <a href="#" class="sidebar-item">Insert</a>
-  </div>
-  <div class="sidebar-group">
-    <h4>System</h4>
-    <a href="#" class="sidebar-item">Settings</a>
-  </div>
-</div>
+  <!-- Sidebar Navigation -->
+  <div id="sidebar">
+    <div class="logo">NEXUS</div>
 
-<div id="main">
-  <div id="topbar">
-    <div class="topbar-logo">PhyArch NEXUS</div>
-    <input type="text" class="topbar-search" placeholder="Search or AI prompt...">
-    <button onclick="selfUpdate()" style="padding:8px 16px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;">Update</button>
-  </div>
-
-  <div id="content">
-    <div class="dashboard-grid">
-      <div class="dashboard-card">
-        <h3>System Status</h3>
-        <p>Stable • 100% Sync</p>
-      </div>
-      <div class="dashboard-card">
-        <h3>Projected Achievements</h3>
-        <p>Simulation Master: 40% complete</p>
-      </div>
+    <div class="sidebar-group">
+      <h4>Tools</h4>
+      <a href="#" class="sidebar-item active"><span class="sidebar-icon">🏠</span> Dashboard</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">🛠️</span> Create App</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">🔬</span> Simulate</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">🧮</span> Calculate</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">📊</span> Analyze</a>
     </div>
 
-    <div id="viewport"></div>
+    <div class="sidebar-group">
+      <h4>File</h4>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">📂</span> Files</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">💾</span> Save</a>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">➕</span> Insert</a>
+    </div>
 
-    <div class="dashboard-card">
-      <h3>AI Forge</h3>
-      <input type="text" id="ai-input" placeholder="Enter prompt..." style="width:100%;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;">
-      <button onclick="processAI()" style="width:100%;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;">Generate</button>
-      <div id="ai-output" style="margin-top:12px;color:var(--dim);font-family:monospace;"></div>
+    <div class="sidebar-group">
+      <h4>System</h4>
+      <a href="#" class="sidebar-item"><span class="sidebar-icon">⚙️</span> Settings</a>
     </div>
   </div>
 
-  <div id="bottom-bar">
-    <span class="bar-icon" onclick="alert('Home')">🏠</span>
-    <span class="bar-icon" onclick="alert('Search')">🔍</span>
-    <span class="bar-icon" onclick="toggleAI()" style="background:var(--accent);color:white;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:-28px;">🧠</span>
-    <span class="bar-icon" onclick="alert('Notifications')">🔔</span>
-    <span class="bar-icon" onclick="alert('Profile')">👤</span>
+  <!-- Main Area -->
+  <div id="main">
+    <!-- Top Bar -->
+    <div id="topbar">
+      <div class="topbar-logo">PhyArch NEXUS</div>
+      <input type="text" class="topbar-search" placeholder="Search or AI prompt..." />
+      <button class="topbar-button">Update</button>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <h3>System Status</h3>
+          <p>Stable • 100% Sync</p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Projected Achievements</h3>
+          <p>Simulation Master: 40% complete</p>
+        </div>
+      </div>
+
+      <!-- 3D Viewport -->
+      <div id="viewport"></div>
+
+      <!-- AI Forge Panel -->
+      <div id="ai-panel">
+        <h3>AI Forge</h3>
+        <input type="text" id="ai-input" placeholder="Ask anything..." />
+        <button onclick="processAI()">Generate</button>
+        <div id="ai-output" style="margin-top:12px; color:var(--dim); font-family:monospace;"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (X-like) -->
+    <div id="bottom-bar">
+      <span class="bar-icon">🏠</span>
+      <span class="bar-icon">🔍</span>
+      <span id="ai-center">🧠</span>
+      <span class="bar-icon">🔔</span>
+      <span class="bar-icon">👤</span>
+    </div>
   </div>
-</div>
 
-<div id="ai-terminal" style="display:none;">
-  <input type="text" id="ai-input" placeholder="Ask anything...">
-</div>
+  <!-- Scripts -->
+  <script>
+    // 3D Viewport with Three.js
+    let scene, camera, renderer, controls;
+    function init3D() {
+      const vp = document.getElementById('viewport');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x111116);
+      camera = new THREE.PerspectiveCamera(75, vp.clientWidth / vp.clientHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(vp.clientWidth, vp.clientHeight);
+      vp.appendChild(renderer.domElement);
 
-<script>
-// Real 3D Viewport with Three.js
-let scene, camera, renderer, controls;
-function init3D() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0a0f);
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  renderer = new THREE.WebGLRenderer({antialias:true});
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.getElementById('viewport').appendChild(renderer.domElement);
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  camera.position.z = 5;
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      camera.position.set(0, 2, 5);
+      controls.update();
 
-  // Grid
-  const grid = new THREE.GridHelper(10, 10, 0x3b82f6, 0x1a1a20);
-  scene.add(grid);
+      // Simple scene: grid + cube
+      const grid = new THREE.GridHelper(10, 10, 0x3b82f6, 0x22222a);
+      scene.add(grid);
 
-  function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-  }
-  animate();
-}
-init3D();
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
 
-// Temporal Projection (in 3D)
-let temporalLead = 0.4;
-document.getElementById('lead').addEventListener('input', e => temporalLead = e.target.value / 100);
+      function animate() {
+        requestAnimationFrame(animate);
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
 
-// Self-Analysis & Self-Update
-const backgroundTerminal = document.createElement('div');
-backgroundTerminal.id = 'background-terminal';
-backgroundTerminal.style = 'position:fixed; bottom:0; left:0; right:0; background:var(--surface); padding:8px; font-size:12px; color:var(--success); display:none;';
-document.body.appendChild(backgroundTerminal);
-function logToTerminal(msg) {
-  backgroundTerminal.innerText += msg + '\n';
-  backgroundTerminal.scrollTop = backgroundTerminal.scrollHeight;
-}
-function selfAnalyze() {
-  logToTerminal('Analyzing app...');
-  // Simulate analysis
-  setTimeout(() => {
-    logToTerminal('Missing: Pyodide. Suggest modify to integrate.');
-    // Self-modify (simulate)
-    logToTerminal('Modifying code in background...');
-  }, 1000);
-}
-function selfUpdate() {
-  if (confirm('Allow self-update? (Period: 7 days)')) {
-    logToTerminal('Searching for updates...');
-    // Simulate search
-    setTimeout(() => {
-      logToTerminal('Found update. Installing...');
-      alert('App updated!');
-    }, 2000);
-  }
-}
-backgroundTerminal.style.display = 'block';
-setInterval(selfAnalyze, 60000); // Every minute for demo
+    // AI Forge (simulated)
+    function processAI() {
+      const prompt = document.getElementById('ai-input').value;
+      document.getElementById('ai-output').innerText = `Generated response for: "${prompt}"\n(simulated — ready for real LLM integration)`;
+      document.getElementById('ai-input').value = '';
+    }
 
-// Search Feature
-function search(query) {
-  logToTerminal('Searching: ' + query);
-  return 'Results for "' + query + '" (integrated from web)';
-}
+    // Init on load
+    window.onload = init3D;
+    window.onresize = () => {
+      if (renderer) {
+        renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+        camera.aspect = viewport.clientWidth / viewport.clientHeight;
+        camera.updateProjectionMatrix();
+      }
+    };
+  </script>
 
-// Python with Pyodide
-async function executePython() {
-  logToTerminal('Loading Pyodide...');
-  let pyodide = await loadPyodide();
-  const code = document.getElementById('python-input').value;
-  try {
-    const result = await pyodide.runPythonAsync(code);
-    document.getElementById('python-output').innerText = result;
-  } catch (e) {
-    document.getElementById('python-output').innerText = 'Error: ' + e.message;
-  }
-}
-
-// AI Forge
-function processAI() {
-  const prompt = document.getElementById('ai-input').value;
-  logToTerminal('AI processing: ' + prompt);
-  const response = `Generated from prompt: "${prompt}" (self-integrated into simulation)`;
-  document.getElementById('ai-output').innerText = response;
-}
-
-// Voice Input
-function toggleVoice() {
-  logToTerminal('Voice activated');
-  // Simulate speech recognition
-  alert('Voice command processed (e.g., "inject nodes")');
-}
-
-// Data Feeds
-function fetchDataFeed() {
-  logToTerminal('Fetching data feed');
-  alert('Weather/stock data loaded (influencing simulation)');
-}
-
-// Molecular Viewer
-function fetchMolecule() {
-  logToTerminal('Fetching molecule');
-  alert('Molecular structure rendered in viewport');
-}
-
-// GLTF Import
-function importGLTF(file) {
-  logToTerminal('Importing GLTF: ' + file.name);
-  // Render in Three.js (simulate)
-  const loader = new THREE.GLTFLoader();
-  loader.load(URL.createObjectURL(file), gltf => {
-    scene.add(gltf.scene);
-  });
-}
-
-// Save/Load
-function saveProject() {
-  logToTerminal('Saving project');
-  localStorage.setItem('nexus-project', JSON.stringify(scene.toJSON()));
-  alert('Project saved');
-}
-function loadProject() {
-  logToTerminal('Loading project');
-  const data = localStorage.getItem('nexus-project');
-  if (data) {
-    const loader = new THREE.ObjectLoader();
-    loader.parse(JSON.parse(data), obj => {
-      scene = obj;
-    });
-  }
-  alert('Project loaded');
-}
-
-// Account
-function login() {
-  logToTerminal('Logging in');
-  localStorage.setItem('user', 'user');
-  alert('Logged in');
-}
-login();
-
-// Collab
-function shareCollab() {
-  logToTerminal('Generating collab link');
-  alert('Collab link: http://nexus.collab');
-}
-</script>
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered'))
+          .catch(err => console.log('Service Worker failed:', err));
+      });
+    }
+  </script>
 </body>
 </html>
