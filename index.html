@@ -3,102 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PhyArch Builder IDE</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <title>PhyArch MasterBuilder AI v2.1</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 
     <style>
-        :root { --bg: #0a0a0c; --panel: #1a1a20; --text: #e0e0e0; --accent: #00ff88; --border: #333; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px; display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; z-index: 10; }
-        .status-light { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: red; margin-right: 5px; }
-        .active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-
-        #viewport { flex-grow: 1; position: relative; width: 100%; background: #000; }
-        canvas { display: block; width: 100%; height: 100%; }
-
-        #console-panel { background: var(--panel); border-top: 1px solid var(--border); height: 35%; display: flex; flex-direction: column; z-index: 10; }
-        #log-output { flex-grow: 1; padding: 10px; overflow-y: auto; font-size: 12px; color: #aaa; border-bottom: 1px solid var(--border); background: #111; }
-        .input-area { display: flex; padding: 10px; gap: 10px; }
-        input[type="text"] { flex-grow: 1; background: #222; border: 1px solid var(--border); color: var(--accent); padding: 10px; border-radius: 4px; font-size: 14px; outline: none; }
-        button { background: #333; color: white; border: 1px solid var(--border); padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-        button:active { background: var(--accent); color: black; }
+        :root { --bg: #0a0a0c; --panel: #1a1a20; --accent: #00ff88; --border: #333; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Courier New',monospace; }
+        body { background:var(--bg); color:#e0e0e0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+        header { background:var(--panel); border-bottom:1px solid var(--border); padding:12px 15px; display:flex; justify-content:space-between; align-items:center; font-weight:bold; z-index:10; }
+        .status-light { display:inline-block; width:10px; height:10px; border-radius:50%; background:#333; margin-right:6px; }
+        .active { background:var(--accent); box-shadow:0 0 12px var(--accent); }
+        #viewport { flex-grow:1; position:relative; background:#000; }
+        #console-panel { background:var(--panel); border-top:1px solid var(--border); height:35%; display:flex; flex-direction:column; }
+        #log-output { flex-grow:1; padding:12px; overflow-y:auto; font-size:13px; background:#111; line-height:1.45; color:#aaa; }
+        .input-area { display:flex; padding:10px; gap:10px; background:rgba(0,0,0,0.4); }
+        input[type="text"] { flex-grow:1; background:#222; border:1px solid var(--border); color:var(--accent); padding:12px; border-radius:4px; font-size:14px; outline:none; }
+        button { background:#333; color:white; border:1px solid var(--border); padding:12px 20px; border-radius:4px; cursor:pointer; font-weight:bold; text-transform:uppercase; }
+        button:active { background:var(--accent); color:black; }
+        .button-row { display:flex; gap:8px; padding:10px; flex-wrap:wrap; justify-content:center; background:rgba(0,0,0,0.3); }
+        .btn-special { min-width:110px; font-size:13px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>PhyArch Builder v1.0</div>
-        <div>
-            <span id="indicator-py" class="status-light"></span> Pyodide
-            <span id="indicator-gh" class="status-light" style="margin-left: 10px;"></span> Factory
-        </div>
-    </header>
+<header>
+    <div>PhyArch <span style="color:#00ff88">MasterBuilder AI</span> v2.1</div>
+    <div>
+        <span id="indicator-py" class="status-light"></span> Pyodide
+        <span id="indicator-physics" class="status-light" style="margin-left:12px;"></span> Physics Engine
+    </div>
+</header>
 
-    <main id="viewport"></main>
+<main id="viewport"></main>
 
-    <section id="console-panel">
-        <div id="log-output">
-            <div>> System Initializing...</div>
-            <div>> Loading WebGL Framework...</div>
-        </div>
-        <div class="input-area">
-            <input type="text" id="physics-input" placeholder="Enter LLM Prompt or Equation (e.g., F = m * a)" autocomplete="off">
-            <button onclick="executeLogic()">Inject</button>
-        </div>
-        <div style="display: flex; gap: 10px; padding: 10px; flex-wrap: wrap; justify-content: center; background: rgba(0,0,0,0.3);">
-            <button onclick="quickInvent('AI', 'ai')" style="background:#004422;border:1px solid #00ff88;color:white;">+ AI Bot</button>
-            <button onclick="quickInvent('Fixer', 'architect')" style="background:#442200;border:1px solid #ff8800;color:white;">+ Fixer</button>
-            <button onclick="quickInvent('Social', 'social')" style="background:#002244;border:1px solid #0088ff;color:white;">+ Social</button>
-            <button onclick="quickInvent('Doc', 'writer')" style="background:#440044;border:1px solid #ff00ff;color:white;">+ Writer</button>
-            <button onclick="quickInvent('Search', 'researcher')" style="background:#004444;border:1px solid #00ffff;color:white;">+ Search</button>
-        </div>
-    </section>
+<section id="console-panel">
+    <div id="log-output">
+        <div>> System Initializing...</div>
+        <div>> Loading Master AI Builder...</div>
+    </div>
+    
+    <div class="input-area">
+        <input type="text" id="physics-input" placeholder="Master AI Prompt → build solar system, solve x^2=9, spawn 20 spheres, create city..." autocomplete="off">
+        <button onclick="executeLogic()">INJECT TO MASTERBUILDER</button>
+    </div>
 
-    <script type="module">
-        /* ==========================================
-           UI & LOGGING
-        ========================================== */
-        const logWindow = document.getElementById('log-output');
-        function systemLog(message, color = "#aaa") {
-            logWindow.innerHTML += `<div style="color:${color}">> ${message}</div>`;
-            logWindow.scrollTop = logWindow.scrollHeight;
-        }
+    <div class="button-row">
+        <button onclick="quickInvent('AI Bot','ai')" class="btn-special" style="background:#004422;border:1px solid #00ff88;color:white;">+ AI BOT</button>
+        <button onclick="quickInvent('Fixer','architect')" class="btn-special" style="background:#442200;border:1px solid #ff8800;color:white;">+ FIXER</button>
+        <button onclick="quickInvent('Social','social')" class="btn-special" style="background:#002244;border:1px solid #0088ff;color:white;">+ SOCIAL</button>
+        <button onclick="quickInvent('Writer','writer')" class="btn-special" style="background:#440044;border:1px solid #ff00ff;color:white;">+ WRITER</button>
+        <button onclick="quickInvent('Search','researcher')" class="btn-special" style="background:#004444;border:1px solid #00ffff;color:white;">+ SEARCH</button>
+    </div>
+</section>
 
-        /* ==========================================
-           THREE.JS ENGINE
-        ========================================== */
-        import { Octokit } from "https://esm.sh/@octokit/rest";
+<script>
+    // ====================== LOGGING ======================
+    const logWindow = document.getElementById('log-output');
+    function systemLog(msg, color = "#aaa") {
+        const div = document.createElement('div');
+        div.style.color = color;
+        div.innerHTML = `> ${msg}`;
+        logWindow.appendChild(div);
+        logWindow.scrollTop = logWindow.scrollHeight;
+    }
 
-        async function deployInvention(name, content) {
-            systemLog(`Initiating Factory Build for: ${name}...`, "yellow");
-        }
+    // ====================== THREE.JS + ADVANCED PHYSICS ======================
+    let scene, camera, renderer, physicsObjects = [], coreMesh;
+    const GRAVITY = -0.022;
 
-        const viewport = document.getElementById('viewport');
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.05);
-        scene.add(new THREE.GridHelper(20, 20, 0x444444, 0x222222));
-        scene.add(new THREE.AxesHelper(5));
+    function initThree() {
+        const vp = document.getElementById('viewport');
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x111122, 0.035);
 
-        const camera = new THREE.PerspectiveCamera(60, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
-        camera.position.set(5, 5, 5);
-        camera.lookAt(0, 0, 0);
+        camera = new THREE.PerspectiveCamera(60, vp.clientWidth / vp.clientHeight, 0.1, 200);
+        camera.position.set(12, 18, 22);
+        camera.lookAt(0, 5, 0);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(viewport.clientWidth, viewport.clientHeight);
-        viewport.appendChild(renderer.domElement);
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(vp.clientWidth, vp.clientHeight);
+        vp.appendChild(renderer.domElement);
 
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff88, wireframe: true });
-        const coreMesh = new THREE.Mesh(geometry, material);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffeecc, 1);
+        dirLight.position.set(20, 30, 15);
+        scene.add(dirLight);
+
+        // Floor
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(80, 80),
+            new THREE.MeshPhongMaterial({ color: 0x222233, shininess: 5 })
+        );
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        // Central Core (Master Builder Heart)
+        const coreGeo = new THREE.IcosahedronGeometry(3.2, 1);
+        const coreMat = new THREE.MeshPhongMaterial({ color: 0x00ff88, wireframe: true, emissive: 0x00ff88, emissiveIntensity: 0.3 });
+        coreMesh = new THREE.Mesh(coreGeo, coreMat);
         scene.add(coreMesh);
+
+        document.getElementById('indicator-physics').classList.add('active');
+        systemLog("Master Physics Engine + AI Geometry Mapper Online", "#00ff88");
 
         function animate() {
             requestAnimationFrame(animate);
+
+            // Physics update
+            for (let i = physicsObjects.length - 1; i >= 0; i--) {
+                const o = physicsObjects[i];
+                o.velocity.y += GRAVITY;
+                o.mesh.position.add(o.velocity);
+
+                if (o.mesh.position.y < o.size * 0.6) {
+                    o.mesh.position.y = o.size * 0.6;
+                    o.velocity.y *= -0.82;
+                    o.velocity.x *= 0.95;
+                    o.velocity.z *= 0.95;
+                }
+                o.mesh.rotation.x += 0.02;
+                o.mesh.rotation.y += 0.03;
+            }
+
+            coreMesh.rotation.y += 0.005;
             renderer.render(scene, camera);
+        }
+        animate();
+    }
+
+    function spawn(type = 'box', size = 1.5, color = 0xffffff, vx = 0, vy = 1.2, vz = 0, count = 1) {
+        for (let i = 0; i < count; i++) {
+            let geo;
+            if (type === 'sphere') geo = new THREE.SphereGeometry(size, 32, 32);
+            else if (type === 'torus') geo = new THREE.TorusGeometry(size, size * 0.35, 24, 64);
+            else if (type === 'icosa') geo = new THREE.IcosahedronGeometry(size, 1);
+            else geo = new THREE.BoxGeometry(size, size, size);
+
+            const mat = new THREE.MeshPhongMaterial({ color: color || Math.random() * 0xffffff | 0, wireframe: true });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set((Math.random() - 0.5) * 12, 12 + Math.random() * 8, (Math.random() - 0.5) * 12);
+            scene.add(mesh);
+
+            physicsObjects.push({
+                mesh: mesh,
+                velocity: new THREE.Vector3(vx + (Math.random() - 0.5) * 0.6, vy, vz + (Math.random() - 0.5) * 0.6),
+                size: size
+            });
+        }
+        systemLog(`Master AI spawned ${count}× ${type}(s)`, "#00ff88");
+    }
+
+    // ====================== PYODIDE ======================
+    let pyodideInstance;
+    async function initPython() {
+        systemLog("Booting SymPy Arithmetic → Geometry Engine...", "yellow");
+        try {
+            pyodideInstance = await loadPyodide();
+            await pyodideInstance.loadPackage("micropip");
+            const mp = pyodideInstance.pyimport("micropip");
+            await mp.install('sympy');
+            await mp.install('numpy');
+            document.getElementById('indicator-py').classList.add('active');
+            systemLog("SymPy + NumPy Linked to 3D MasterBuilder", "#00ff88");
+        } catch(e) { systemLog("Pyodide: " + e.message, "red"); }
+    }
+
+    // ====================== FULL MASTER CREATOR AI INVENTIONS ======================
+    const MasterCreator = {
+        researcher: `
+            const searchWiki = async (q) => {
+                const res = await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent(q) + '&format=json&origin=*');
+                const data = await res.json();
+                document.getElementById('results').innerHTML = data.query.search.map(s => 
+                    '<div style="padding:12px;border-bottom:1px solid #222"><b>' + s.title + '</b><br><small>' + s.snippet + '</small></div>'
+                ).join('');
+            };
+            document.body.innerHTML = \`
+                <div style="background:#050507;color:#0f0;padding:30px;height:100vh;font-family:monospace">
+                    <h1>🌐 Knowledge Architect</h1>
+                    <input id="q" placeholder="Ask the universe..." style="width:100%;padding:15px;background:#111;border:1px solid #0f0;color:#0f0;font-size:16px;">
+                    <button onclick="searchWiki(document.getElementById('q').value)" style="margin-top:15px;padding:15px 30px;background:#0f0;color:#000;border:none;font-weight:bold;">SEARCH KNOWLEDGE</button>
+                    <div id="results" style="margin-top:25px;max-height:65vh;overflow:auto;"></div>
+                </div>
+            \`;
+        `,
+
+        writer: `
+            document.body.innerHTML = \`
+                <div style="background:#050507;color:#0f0;height:100vh;padding:30px;display:flex;flex-direction:column;font-family:monospace">
+                    <h1 contenteditable="true">Sovereign Manuscript</h1>
+                    <div id="editor" contenteditable="true" style="flex:1;background:#111;border:1px solid #0f0;padding:25px;font-size:16px;line-height:1.7;outline:none;margin-top:20px;">Write the future here...</div>
+                </div>
+            \`;
+        `,
+
+        map: `
+            const link = document.createElement('link'); link.rel='stylesheet'; link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(link);
+            const scr = document.createElement('script'); scr.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            scr.onload = () => {
+                document.body.innerHTML = '<div id="map" style="height:100vh;"></div>';
+                const m = L.map('map').setView([51.505, -0.09], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
+            };
+            document.head.appendChild(scr);
+        `,
+
+        ai: `
+            let history = [];
+            function send() {
+                const q = document.getElementById('q').value.trim();
+                if (!q) return;
+                history.push({role:'user', content:q});
+                document.getElementById('chat').innerHTML += '<div style="color:#0ff;margin:10px 0;">You: ' + q + '</div>';
+                document.getElementById('q').value = '';
+                document.getElementById('chat').scrollTop = 999999;
+                setTimeout(() => {
+                    const reply = "Master AI Builder: " + q.toUpperCase().replace(/ /g, " ✨ ") + " — Reality constructed. What shall we build next?";
+                    history.push({role:'assistant', content:reply});
+                    document.getElementById('chat').innerHTML += '<div style="color:#0f0;margin:10px 0;">' + reply + '</div>';
+                    document.getElementById('chat').scrollTop = 999999;
+                }, 700);
+            }
+            document.body.innerHTML = \`
+                <div style="background:#050507;color:#0f0;height:100vh;display:flex;flex-direction:column;padding:25px;font-family:monospace">
+                    <h1>🧠 Master AI Builder Terminal</h1>
+                    <div id="chat" style="flex:1;background:#111;border:1px solid #0f0;padding:20px;overflow:auto;margin:15px 0;font-size:15px;"></div>
+                    <div style="display:flex;">
+                        <input id="q" placeholder="Tell the Master AI what to build..." style="flex:1;padding:15px;background:#222;border:1px solid #0f0;color:#0f0;">
+                        <button onclick="send()" style="margin-left:10px;padding:15px 40px;background:#0f0;color:#000;border:none;font-weight:bold;">BUILD</button>
+                    </div>
+                </div>
+            \`;
+        `,
+
+        fixer: `
+            document.body.innerHTML = \`
+                <div style="background:#050507;color:#ff8800;height:100vh;padding:30px;font-family:monospace;display:flex;flex-direction:column">
+                    <h1>🔧 Master Architect Fixer</h1>
+                    <textarea id="code" style="flex:1;background:#111;border:2px solid #ff8800;color:#ff8800;padding:20px;font-family:monospace;resize:none;">// Paste any broken invention here...</textarea>
+                    <button onclick="alert('Master AI has fixed your code and rebuilt it perfectly. (Full LLM version would return corrected file)')" style="margin-top:15px;padding:18px;background:#ff8800;color:#000;border:none;font-weight:bold;width:100%;">FIX + REBUILD INVENTION</button>
+                </div>
+            \`;
+        `,
+
+        social: `
+            document.body.innerHTML = \`
+                <div style="background:#050507;color:#0088ff;height:100vh;padding:30px;font-family:monospace">
+                    <h1>🌐 Social Pulse Network</h1>
+                    <div style="background:#111;padding:20px;border:1px solid #0088ff;margin-bottom:15px;">
+                        <b>@masterbuilder</b> · now<br>Just birthed a new universe with PhyArch AI.
+                    </div>
+                    <div style="background:#111;padding:20px;border:1px solid #0088ff;margin-bottom:15px;">
+                        <b>@phyarch</b> · 42s ago<br>The simulation is becoming the simulator.
+                    </div>
+                </div>
+            \`;
+        `
+    };
+
+    function exportInvention(name, logic) {
+        systemLog("Master AI synthesizing " + name + "...", "yellow");
+        let injected = '';
+        if (logic.includes('leaflet')) injected = '<scr' + 'ipt src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></scr' + 'ipt>';
+
+        const content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${name} — PhyArch Master Invention</title>
+    ${injected}
+    <style>body{background:#050507;color:#0f0;font-family:monospace;margin:0;overflow:hidden;} .glass{background:rgba(10,30,10,0.95);border:2px solid #0f0;margin:50px;padding:40px;border-radius:12px;}</style>
+</head>
+<body>
+    <div class="glass">
+        <h1>${name}</h1>
+        <hr style="border-color:#222;margin:20px 0;">
+        <div id="app-root"></div>
+    </div>
+    <script>${logic}</script>
+</body>
+</html>`;
+
+        const blob = new Blob([content], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = name.replace(/ /g, '_') + ".html";
+        link.click();
+        systemLog(name + " successfully birthed by Master AI ✓", "#00ff88");
+    }
+
+    // ====================== MASTER AI BUILDER CORE ======================
+    async function executeLogic() {
+        let input = document.getElementById('physics-input').value.trim();
+        if (!input) return;
+        const lower = input.toLowerCase();
+
+        systemLog("Master AI Builder processing: " + input, "#fff");
+
+        // MASTER BUILDER NATURAL LANGUAGE AI
+        if (lower.includes("build") || lower.includes("create") || lower.includes("make") || lower.includes("spawn") || lower.includes("solar") || lower.includes("city") || lower.includes("orbit")) {
+            systemLog("🛠️ MASTER AI SYNTHESIZING SCENE...", "#00ff88");
+            if (lower.includes("solar")) {
+                spawn('sphere', 4, 0xffff00, 0, 0, 0, 1); // sun
+                for (let i = 0; i < 8; i++) spawn('sphere', 0.8 + Math.random() * 1.2, 0x88ccff, 0, 0, 0, 1);
+            } else if (lower.includes("city")) {
+                spawn('box', 2.5, 0x888888, 0, 0, 0, 25);
+            } else if (lower.includes("orbit")) {
+                spawn('torus', 1.8, 0xff00ff, 0, 0.8, 0, 12);
+            } else {
+                spawn('icosa', 2, 0x00ffff, 0, 1.5, 0, 8);
+            }
+        }
+        else if (lower.includes("drop") || lower.includes("fall")) {
+            spawn('sphere', 2.2, 0xff8800, 0, 2, 0, 5);
+        }
+        else if (lower.includes("explode")) {
+            spawn('box', 0.9, 0xff0088, 0, 2, 0, 30);
+        }
+        // MATH → GEOMETRY
+        else if (pyodideInstance && /[\+\-\*\/\^=]/.test(lower)) {
+            try {
+                let expr = input.replace(/\^/g, '**');
+                const res = await pyodideInstance.runPythonAsync(`from sympy import *\nprint(simplify(${expr}))`);
+                systemLog(`SymPy → ${res} | Mapping to geometry...`, "#00ff88");
+                let val = Math.abs(parseFloat(res)) || 5;
+                spawn('box', 1.2, 0x00ff88, 0, 1.5, 0, Math.min(Math.floor(val), 15));
+            } catch(e) {
+                systemLog("Math → Geometry mapping failed", "orange");
+            }
+        }
+        // INVENTION COMMANDS
+        else if (lower.includes("search") || lower.includes("wiki")) {
+            exportInvention("Knowledge Architect", MasterCreator.researcher);
+        } else if (lower.includes("write") || lower.includes("note")) {
+            exportInvention("Sovereign Writer", MasterCreator.writer);
+        } else if (lower.includes("map") || lower.includes("atlas")) {
+            exportInvention("Global Map", MasterCreator.map);
+        } else if (lower.includes("ai") || lower.includes("chat")) {
+            exportInvention("Master AI Terminal", MasterCreator.ai);
+        } else if (lower.includes("fix") || lower.includes("architect")) {
+            exportInvention("Code Fixer Architect", MasterCreator.fixer);
+        } else if (lower.includes("social")) {
+            exportInvention("Social Pulse", MasterCreator.social);
+        }
+        else {
+            systemLog("Master AI interpreting as freeform prompt...", "#aaa");
+            spawn('sphere', 1.6, 0x00ffcc, 0, 1.8, 0, 6);
+        }
+
+        // Core visual pulse
+        if (coreMesh) {
+            coreMesh.scale.setScalar(1.6);
+            setTimeout(() => { if (coreMesh) coreMesh.scale.setScalar(1); }, 280);
+        }
+
+        document.getElementById('physics-input').value = "";
+    }
+
+    window.quickInvent = function(name, type) {
+        document.getElementById('physics-input').value = `create ${name} with Master AI`;
+        executeLogic();
+        spawn('icosa', 1.4, 0x00ffff); // birth visual
+    };
+
+    // Resize
+    window.addEventListener('resize', () => {
+        if (camera && renderer) {
+            camera.aspect = document.getElementById('viewport').clientWidth / document.getElementById('viewport').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('viewport').clientWidth, document.getElementById('viewport').clientHeight);
+        }
+    });
+
+    // Enter key
+    document.getElementById('physics-input').addEventListener('keypress', e => { if (e.key === 'Enter') executeLogic(); });
+
+    // ====================== FINAL BOOT ======================
+    systemLog("PhyArch MasterBuilder AI v2.1 — Reality is now editable", "#00ff88");
+    initThree();
+    initPython();
+</script>
+</body>
+</html>            renderer.render(scene, camera);
         }
         animate();
 
