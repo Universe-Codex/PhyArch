@@ -12,14 +12,15 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Courier New',monospace; }
         body { background:var(--bg); color:#e0e0e0; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
         header { background:var(--panel); border-bottom:1px solid var(--border); padding:12px 15px; display:flex; justify-content:space-between; align-items:center; font-weight:bold; z-index:10; }
-        .status-light { display:inline-block; width:10px; height:10px; border-radius:50%; background:#333; margin-right:6px; }
+        .status-light { display:inline-block; width:10px; height:10px; border-radius:50%; background:#333; margin-right:6px; transition: 0.3s; }
         .active { background:var(--accent); box-shadow:0 0 12px var(--accent); }
         #viewport { flex-grow:1; position:relative; background:#000; }
         #console-panel { background:var(--panel); border-top:1px solid var(--border); height:35%; display:flex; flex-direction:column; }
         #log-output { flex-grow:1; padding:12px; overflow-y:auto; font-size:13px; background:#111; line-height:1.45; color:#aaa; }
         .input-area { display:flex; padding:10px; gap:10px; background:rgba(0,0,0,0.4); }
         input[type="text"] { flex-grow:1; background:#222; border:1px solid var(--border); color:var(--accent); padding:12px; border-radius:4px; font-size:14px; outline:none; }
-        button { background:#333; color:white; border:1px solid var(--border); padding:12px 20px; border-radius:4px; cursor:pointer; font-weight:bold; text-transform:uppercase; }
+        button { background:#333; color:white; border:1px solid var(--border); padding:12px 20px; border-radius:4px; cursor:pointer; font-weight:bold; text-transform:uppercase; transition: 0.2s; }
+        button:hover { filter: brightness(1.2); }
         button:active { background:var(--accent); color:black; }
         .button-row { display:flex; gap:8px; padding:10px; flex-wrap:wrap; justify-content:center; background:rgba(0,0,0,0.3); }
         .btn-special { min-width:110px; font-size:13px; }
@@ -38,14 +39,11 @@
 <main id="viewport"></main>
 
 <section id="console-panel">
-    <div id="log-output">
-        <div>> System Initializing...</div>
-        <div>> Loading Master AI Builder...</div>
-    </div>
+    <div id="log-output"></div>
     
     <div class="input-area">
-        <input type="text" id="physics-input" placeholder="Master AI Prompt → build solar system, solve x^2=9, spawn 20 spheres, create city..." autocomplete="off">
-        <button onclick="executeLogic()">INJECT TO MASTERBUILDER</button>
+        <input type="text" id="physics-input" placeholder="Prompt: build solar system, solve x^2=9, create AI..." autocomplete="off">
+        <button onclick="executeLogic()">INJECT</button>
     </div>
 
     <div class="button-row">
@@ -58,7 +56,9 @@
 </section>
 
 <script>
-    // ====================== LOGGING ======================
+    /* =====================================================================
+       1. UTILITIES & LOGGING
+    ===================================================================== */
     const logWindow = document.getElementById('log-output');
     function systemLog(msg, color = "#aaa") {
         const div = document.createElement('div');
@@ -68,11 +68,14 @@
         logWindow.scrollTop = logWindow.scrollHeight;
     }
 
-    // ====================== THREE.JS + ADVANCED PHYSICS ======================
+    /* =====================================================================
+       2. THREE.JS PHYSICS ENGINE
+    ===================================================================== */
     let scene, camera, renderer, physicsObjects = [], coreMesh;
     const GRAVITY = -0.022;
 
     function initThree() {
+        systemLog("System Initializing...", "#aaa");
         const vp = document.getElementById('viewport');
         scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x111122, 0.035);
@@ -90,7 +93,6 @@
         dirLight.position.set(20, 30, 15);
         scene.add(dirLight);
 
-        // Floor
         const floor = new THREE.Mesh(
             new THREE.PlaneGeometry(80, 80),
             new THREE.MeshPhongMaterial({ color: 0x222233, shininess: 5 })
@@ -98,14 +100,202 @@
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
-        // Central Core (Master Builder Heart)
         const coreGeo = new THREE.IcosahedronGeometry(3.2, 1);
         const coreMat = new THREE.MeshPhongMaterial({ color: 0x00ff88, wireframe: true, emissive: 0x00ff88, emissiveIntensity: 0.3 });
         coreMesh = new THREE.Mesh(coreGeo, coreMat);
         scene.add(coreMesh);
 
         document.getElementById('indicator-physics').classList.add('active');
-        systemLog("Master Physics Engine + AI Geometry Mapper Online", "#00ff88");
+        systemLog("Master Physics Engine Online", "#00ff88");
+
+        function animate() {
+            requestAnimationFrame(animate);
+            for (let i = physicsObjects.length - 1; i >= 0; i--) {
+                const o = physicsObjects[i];
+                o.velocity.y += GRAVITY;
+                o.mesh.position.add(o.velocity);
+                if (o.mesh.position.y < o.size * 0.6) {
+                    o.mesh.position.y = o.size * 0.6;
+                    o.velocity.y *= -0.82;
+                    o.velocity.x *= 0.95;
+                    o.velocity.z *= 0.95;
+                }
+                o.mesh.rotation.x += 0.02;
+                o.mesh.rotation.y += 0.03;
+            }
+            if(coreMesh) coreMesh.rotation.y += 0.005;
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+
+    function spawn(type = 'box', size = 1.5, color = 0xffffff, vx = 0, vy = 1.2, vz = 0, count = 1) {
+        for (let i = 0; i < count; i++) {
+            let geo;
+            if (type === 'sphere') geo = new THREE.SphereGeometry(size, 32, 32);
+            else if (type === 'torus') geo = new THREE.TorusGeometry(size, size * 0.35, 24, 64);
+            else if (type === 'icosa') geo = new THREE.IcosahedronGeometry(size, 1);
+            else geo = new THREE.BoxGeometry(size, size, size);
+
+            const mat = new THREE.MeshPhongMaterial({ color: color || Math.random() * 0xffffff | 0, wireframe: true });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set((Math.random() - 0.5) * 12, 12 + Math.random() * 8, (Math.random() - 0.5) * 12);
+            scene.add(mesh);
+
+            physicsObjects.push({ mesh: mesh, velocity: new THREE.Vector3(vx + (Math.random() - 0.5) * 0.6, vy, vz + (Math.random() - 0.5) * 0.6), size: size });
+        }
+        systemLog(`Spawned ${count}× ${type}(s)`, "#00ff88");
+    }
+
+    /* =====================================================================
+       3. PYODIDE ENGINE
+    ===================================================================== */
+    let pyodideInstance;
+    async function initPython() {
+        systemLog("Booting SymPy Arithmetic...", "yellow");
+        try {
+            pyodideInstance = await loadPyodide();
+            await pyodideInstance.loadPackage("micropip");
+            const mp = pyodideInstance.pyimport("micropip");
+            await mp.install('sympy');
+            await mp.install('numpy');
+            document.getElementById('indicator-py').classList.add('active');
+            systemLog("SymPy + NumPy Linked", "#00ff88");
+        } catch(e) { systemLog("Pyodide Error: " + e.message, "red"); }
+    }
+
+    /* =====================================================================
+       4. MASTER BUILDER TEMPLATES
+    ===================================================================== */
+    const MasterCreator = {
+        researcher: `
+            const searchWiki = async (q) => {
+                const res = await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent(q) + '&format=json&origin=*');
+                const data = await res.json();
+                document.getElementById('results').innerHTML = data.query.search.map(s => 
+                    '<div style="padding:12px;border-bottom:1px solid #222"><b>' + s.title + '</b><br><small>' + s.snippet + '</small></div>'
+                ).join('');
+            };
+            document.body.innerHTML = '<div style="background:#050507;color:#0f0;padding:30px;height:100vh;font-family:monospace"><h1>🌐 Knowledge Architect</h1><input id="q" placeholder="Ask the universe..." style="width:100%;padding:15px;background:#111;border:1px solid #0f0;color:#0f0;font-size:16px;"><button onclick="searchWiki(document.getElementById(\\'q\\').value)" style="margin-top:15px;padding:15px 30px;background:#0f0;color:#000;border:none;font-weight:bold;">SEARCH</button><div id="results" style="margin-top:25px;max-height:65vh;overflow:auto;"></div></div>';
+        `,
+        writer: `
+            document.body.innerHTML = '<div style="background:#050507;color:#0f0;height:100vh;padding:30px;display:flex;flex-direction:column;font-family:monospace"><h1 contenteditable="true">Sovereign Manuscript</h1><div id="editor" contenteditable="true" style="flex:1;background:#111;border:1px solid #0f0;padding:25px;font-size:16px;line-height:1.7;outline:none;margin-top:20px;">Write the future here...</div></div>';
+        `,
+        map: `
+            const link = document.createElement('link'); link.rel='stylesheet'; link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(link);
+            const scr = document.createElement('script'); scr.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            scr.onload = () => { document.body.innerHTML = '<div id="map" style="height:100vh;"></div>'; const m = L.map('map').setView([51.505, -0.09], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m); };
+            document.head.appendChild(scr);
+        `,
+        ai: `
+            function send() {
+                const q = document.getElementById('q').value;
+                if(!q) return;
+                document.getElementById('chat').innerHTML += '<div style="color:#0ff;margin:10px 0;">You: ' + q + '</div>';
+                document.getElementById('q').value = '';
+                setTimeout(() => {
+                    document.getElementById('chat').innerHTML += '<div style="color:#0f0;margin:10px 0;">AI: ' + q.toUpperCase() + ' - Reality constructed.</div>';
+                }, 700);
+            }
+            document.body.innerHTML = '<div style="background:#050507;color:#0f0;height:100vh;display:flex;flex-direction:column;padding:25px;font-family:monospace"><h1>🧠 Master AI Builder</h1><div id="chat" style="flex:1;background:#111;border:1px solid #0f0;padding:20px;overflow:auto;margin:15px 0;font-size:15px;"></div><div style="display:flex;"><input id="q" style="flex:1;padding:15px;background:#222;border:1px solid #0f0;color:#0f0;"><button onclick="send()" style="margin-left:10px;padding:15px;background:#0f0;color:#000;font-weight:bold;">BUILD</button></div></div>';
+        `,
+        fixer: `
+            document.body.innerHTML = '<div style="background:#050507;color:#ff8800;height:100vh;padding:30px;font-family:monospace;display:flex;flex-direction:column"><h1>🔧 Architect Fixer</h1><textarea id="code" style="flex:1;background:#111;border:2px solid #ff8800;color:#ff8800;padding:20px;"></textarea><button onclick="alert(\\'Rebuilt perfectly.\\')" style="margin-top:15px;padding:18px;background:#ff8800;color:#000;font-weight:bold;">FIX CODE</button></div>';
+        `,
+        social: `
+            document.body.innerHTML = '<div style="background:#050507;color:#0088ff;height:100vh;padding:30px;font-family:monospace"><h1>🌐 Social Pulse</h1><div style="background:#111;padding:20px;border:1px solid #0088ff;"><b>@masterbuilder</b><br>Just birthed a universe.</div></div>';
+        `
+    };
+
+    function exportInvention(name, logic) {
+        systemLog("Synthesizing " + name + "...", "yellow");
+        
+        // Carefully splitting script tags to avoid breaking the master document
+        const content = '<!DOCTYPE html><html><head><title>' + name + '</title></head><body>' +
+            '<script>' + logic + '<\\/script>'.replace('\\/', '/') +
+            '</body></html>';
+
+        const blob = new Blob([content], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = name.replace(/ /g, '_') + ".html";
+        link.click();
+        systemLog(name + " birthed successfully ✓", "#00ff88");
+    }
+
+    /* =====================================================================
+       5. LOGIC CONTROLLER
+    ===================================================================== */
+    async function executeLogic() {
+        const inputField = document.getElementById('physics-input');
+        const input = inputField.value.trim();
+        if (!input) return;
+        
+        const lower = input.toLowerCase();
+        systemLog("Processing: " + input, "#fff");
+
+        // 3D Scene Generation
+        if (lower.includes("build") || lower.includes("create") || lower.includes("spawn")) {
+            if (lower.includes("solar")) { spawn('sphere', 4, 0xffff00); spawn('sphere', 1, 0x88ccff, 0,0,0, 8); } 
+            else if (lower.includes("city")) spawn('box', 2.5, 0x888888, 0,0,0, 25);
+            else spawn('icosa', 2, 0x00ffff, 0, 1.5, 0, 8);
+        }
+        else if (lower.includes("explode")) spawn('box', 0.9, 0xff0088, 0, 2, 0, 30);
+        
+        // Math -> Geometry via Pyodide
+        else if (pyodideInstance && /[\+\-\*\/\^=]/.test(lower)) {
+            try {
+                let expr = input.replace(/\\^/g, '**');
+                const res = await pyodideInstance.runPythonAsync('from sympy import *\\nprint(simplify(' + expr + '))');
+                systemLog(`Math: ${res} -> Geometry`, "#00ff88");
+                spawn('box', 1.2, 0x00ff88, 0, 1.5, 0, 5);
+            } catch(e) { systemLog("Math error.", "orange"); }
+        }
+        
+        // App Generation Commands
+        else if (lower.includes("search") || lower.includes("wiki")) exportInvention("Knowledge", MasterCreator.researcher);
+        else if (lower.includes("write") || lower.includes("note")) exportInvention("Writer", MasterCreator.writer);
+        else if (lower.includes("map")) exportInvention("Map", MasterCreator.map);
+        else if (lower.includes("ai")) exportInvention("AI Terminal", MasterCreator.ai);
+        else if (lower.includes("fix")) exportInvention("Fixer", MasterCreator.fixer);
+        else if (lower.includes("social")) exportInvention("Social Pulse", MasterCreator.social);
+        
+        // Default
+        else spawn('sphere', 1.6, 0x00ffcc, 0, 1.8, 0, 3);
+
+        if (coreMesh) {
+            coreMesh.scale.setScalar(1.6);
+            setTimeout(() => { if (coreMesh) coreMesh.scale.setScalar(1); }, 280);
+        }
+        inputField.value = "";
+    }
+
+    window.quickInvent = function(name, type) {
+        document.getElementById('physics-input').value = `create ${name} with AI`;
+        executeLogic();
+        if(type && MasterCreator[type]) exportInvention(name, MasterCreator[type]);
+    };
+
+    window.addEventListener('resize', () => {
+        if (camera && renderer) {
+            const vp = document.getElementById('viewport');
+            camera.aspect = vp.clientWidth / vp.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(vp.clientWidth, vp.clientHeight);
+        }
+    });
+
+    document.getElementById('physics-input').addEventListener('keypress', e => { if (e.key === 'Enter') executeLogic(); });
+
+    /* =====================================================================
+       6. SYSTEM BOOT
+    ===================================================================== */
+    initThree();
+    initPython();
+
+</script>
+</body>
+</html>        systemLog("Master Physics Engine + AI Geometry Mapper Online", "#00ff88");
 
         function animate() {
             requestAnimationFrame(animate);
