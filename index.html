@@ -3,106 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PhyArch NEXUS v13 — Sensory Singularity</title>
+  <title>PhyArch NEXUS v16 — Sovereign OS</title>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
 
   <style>
-    :root { --accent: #00ffb2; --bg: #010105; --ui-glass: rgba(5, 5, 12, 0.9); }
+    :root { --accent: #00ffb2; --bg: #000; --glass: rgba(5, 5, 10, 0.85); }
     * { margin:0; padding:0; box-sizing:border-box; cursor: none !important; }
     body { background:var(--bg); color:#fff; font-family: 'JetBrains Mono', monospace; overflow:hidden; }
 
-    /* --- PERMISSION OVERLAY --- */
-    #neural-link {
-      position: fixed; inset: 0; background: #000; z-index: 20000;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 1s;
+    /* --- GLOBAL UI COMPONENTS --- */
+    #cursor { position: fixed; width: 18px; height: 18px; border: 1px solid var(--accent); border-radius: 50%; pointer-events: none; z-index: 10000; }
+    
+    #os-header {
+      position: fixed; top: 0; width: 100%; height: 50px; background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; padding: 0 20px; z-index: 5000;
+      border-bottom: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px);
     }
 
-    #cursor { position: fixed; width: 20px; height: 20px; border: 1px solid var(--accent); border-radius: 50%; pointer-events: none; z-index: 10000; }
+    /* --- MODULAR WIDGETS --- */
+    .widget {
+      position: fixed; background: var(--glass); backdrop-filter: blur(30px);
+      border: 1px solid rgba(0,255,178,0.2); border-radius: 8px; padding: 15px;
+      z-index: 1000; display: none; /* Hidden by default */
+      transition: opacity 0.3s;
+    }
+    .widget.visible { display: block; }
 
-    .widget { position: fixed; background: var(--ui-glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; z-index: 1000; }
-    #sensor-widget { top: 20px; left: 20px; width: 300px; }
-    
-    .btn { background: var(--accent); color: #000; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: 800; cursor: pointer; margin-top: 10px; }
-    .sensor-led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #333; }
-    .led-active { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+    #pref-matrix { top: 60px; right: 20px; width: 220px; }
+    #omni-forge { top: 60px; left: 20px; width: 340px; }
+    #ai-observer { bottom: 20px; left: 20px; width: 400px; height: 120px; overflow-y: auto; font-size: 11px; }
 
-    .scanline { position:fixed; inset:0; background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,255,178,0.03) 2px, rgba(0,255,178,0.03) 4px); pointer-events:none; }
+    /* --- STYLING --- */
+    .toggle-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10px; align-items: center; }
+    input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+    textarea { width: 100%; background: #000; border: 1px solid #222; color: var(--accent); padding: 8px; font-size: 11px; margin: 10px 0; border-radius: 4px; }
+    .btn { background: var(--accent); color: #000; border: none; padding: 8px; width: 100%; border-radius: 4px; font-weight: 800; cursor: pointer; }
+    .ai-line { color: var(--accent); opacity: 0.8; margin-bottom: 4px; border-left: 2px solid var(--accent); padding-left: 8px; }
   </style>
 </head>
 <body>
 
-<div id="neural-link">
-  <div style="text-align:center; max-width: 400px;">
-    <h1 style="letter-spacing: 15px; color: var(--accent); margin-bottom: 20px;">NEXUS_v13</h1>
-    <p style="font-size: 10px; opacity: 0.6; line-height: 2;">AUTHORIZE SENSORY INPUTS FOR NEURAL SOUNDSCAPE AND SPATIAL ACCELEROMETER MAPPING</p>
-    <button class="btn" onclick="initSensors()">INITIALIZE NEURAL LINK</button>
-  </div>
-</div>
-
 <div id="cursor"></div>
 
-<div id="sensor-widget" class="widget">
-  <span style="font-size: 10px; letter-spacing: 2px; opacity: 0.7;">SENSORY TELEMETRY</span>
-  <div style="margin-top:15px; font-size: 11px;">
-    <div><span id="led-audio" class="sensor-led"></span> AUDIO_ENGINE</div>
-    <div><span id="led-gyro" class="sensor-led"></span> MOTION_SENSING</div>
-    <div style="margin-top:10px; opacity: 0.5;">Tilt device to warp gravity</div>
-  </div>
-  <button class="btn" style="background:#fff;" onclick="spawn(20)">SPAWN RESONANT MATTER</button>
+<header id="os-header">
+  <div style="color:var(--accent); font-weight:900; cursor:pointer;" onclick="toggleWidget('pref-matrix')">NEXUS_OS // MENU</div>
+</header>
+
+<div id="pref-matrix" class="widget visible">
+  <span style="font-size: 10px; opacity: 0.5;">PREFERENCES MATRIX</span>
+  <hr style="border:0; border-top:1px solid #222; margin:10px 0;">
+  <div class="toggle-row"><span>FORGE KERNEL</span> <input type="checkbox" checked onclick="toggleWidget('omni-forge')"></div>
+  <div class="toggle-row"><span>AI OBSERVER</span> <input type="checkbox" checked onclick="toggleWidget('ai-observer')"></div>
+  <div class="toggle-row"><span>THERMAL VISION</span> <input type="checkbox" id="thermal-toggle" checked></div>
+  <div class="toggle-row"><span>SOUNDSCAPE</span> <input type="checkbox" id="audio-toggle"></div>
+  <button class="btn" style="margin-top:10px;" onclick="saveConfig()">SAVE CONFIG</button>
+</div>
+
+<div id="omni-forge" class="widget visible">
+  <span style="font-size: 10px; opacity: 0.5;">OMNI-FORGE</span>
+  <textarea id="forge-cmd" rows="3" placeholder="Model: 'Black Hole', 'Fluidity'..."></textarea>
+  <button class="btn" onclick="runForge()">EXECUTE</button>
+</div>
+
+<div id="ai-observer" class="widget visible">
+  <div class="ai-line">System initialized. Waiting for matter...</div>
 </div>
 
 <div id="viewport"></div>
-<div class="scanline"></div>
 
 <script>
-let scene, camera, renderer, world, entities = [];
-let audioCtx, osc, mainGain;
-let gyroActive = false;
+let scene, camera, renderer, world, entities = [], audioCtx = null;
+let raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2();
 
-// --- INITIALIZE SENSORS & AUDIO ---
-async function initSensors() {
-  // 1. Audio Context Initialization
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  mainGain = audioCtx.createGain();
-  mainGain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-  mainGain.connect(audioCtx.destination);
-  document.getElementById('led-audio').classList.add('led-active');
-
-  // 2. Motion/Gyroscope Permissions (iOS 13+ specific)
-  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    try {
-      const response = await DeviceOrientationEvent.requestPermission();
-      if (response === 'granted') {
-        window.addEventListener('deviceorientation', handleMotion);
-        gyroActive = true;
-      }
-    } catch (e) { console.error("Motion rejected"); }
-  } else {
-    window.addEventListener('deviceorientation', handleMotion);
-    gyroActive = true;
-  }
-  
-  if(gyroActive) document.getElementById('led-gyro').classList.add('led-active');
-
-  // 3. Clear Overlay
-  document.getElementById('neural-link').style.opacity = '0';
-  setTimeout(() => document.getElementById('neural-link').style.display = 'none', 1000);
-  
-  bootEngine();
-}
-
-function handleMotion(e) {
-  // Map phone tilt to world gravity
-  const gx = e.gamma / 5; // Tilt left/right
-  const gy = e.beta / 5;  // Tilt forward/back
-  world.gravity.set(gx, -9.81, gy);
-}
-
-function bootEngine() {
+function init() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 5000);
   camera.position.set(100, 100, 100);
@@ -113,8 +89,7 @@ function bootEngine() {
 
   new THREE.OrbitControls(camera, renderer.domElement);
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.81, 0) });
-
-  scene.add(new THREE.GridHelper(500, 50, 0x00ffb2, 0x050515));
+  scene.add(new THREE.GridHelper(500, 50, 0x00ffb2, 0x050510));
 
   window.onmousemove = (e) => {
     document.getElementById('cursor').style.left = e.clientX + 'px';
@@ -122,6 +97,29 @@ function bootEngine() {
   };
 
   animate();
+  observe("NEXUS Kernel online. Version 16.0 Ready.");
+}
+
+function toggleWidget(id) {
+  document.getElementById(id).classList.toggle('visible');
+}
+
+function observe(text) {
+  const container = document.getElementById('ai-observer');
+  const line = document.createElement('div');
+  line.className = 'ai-line';
+  line.innerText = `> ${text}`;
+  container.prepend(line);
+}
+
+function runForge() {
+  const input = document.getElementById('forge-cmd').value;
+  if(input.includes('spawn')) {
+    spawn(10);
+    observe("Injecting matter into local space.");
+  } else {
+    observe(`Reconfiguring reality model: ${input}`);
+  }
 }
 
 function spawn(count) {
@@ -129,18 +127,9 @@ function spawn(count) {
     const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(2, 1), new THREE.MeshPhongMaterial({ wireframe: true, color: 0x00ffb2 }));
     const body = new CANNON.Body({ mass: 1, shape: new CANNON.Sphere(2) });
     body.position.set((Math.random()-0.5)*80, 50, (Math.random()-0.5)*80);
-    
-    // Assign a unique oscillator for soundscape
-    const g = audioCtx.createGain();
-    const o = audioCtx.createOscillator();
-    o.type = 'sine';
-    o.connect(g).connect(mainGain);
-    o.start();
-    g.gain.setValueAtTime(0, audioCtx.currentTime);
-
     scene.add(mesh);
     world.addBody(body);
-    entities.push({ mesh, body, osc: o, gain: g });
+    entities.push({ mesh, body });
   }
 }
 
@@ -148,27 +137,33 @@ function animate() {
   requestAnimationFrame(animate);
   world.step(1/60);
   
+  const useThermal = document.getElementById('thermal-toggle').checked;
+
   entities.forEach(e => {
     e.mesh.position.copy(e.body.position);
     e.mesh.quaternion.copy(e.body.quaternion);
 
-    // NEURAL SOUNDSCAPE MAPPING
-    // Map velocity to pitch and volume
-    const speed = e.body.velocity.length();
-    if(speed > 0.5) {
-      const pitch = 100 + (speed * 20);
-      e.osc.frequency.setTargetAtTime(pitch, audioCtx.currentTime, 0.1);
-      e.gain.gain.setTargetAtTime(Math.min(speed / 100, 0.05), audioCtx.currentTime, 0.1);
+    if(useThermal) {
+      const speed = e.body.velocity.length();
+      e.mesh.material.color.setHSL(0.6 - (speed * 0.02), 1, 0.5);
     } else {
-      e.gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+      e.mesh.material.color.setHex(0x00ffb2);
     }
-    
-    // Visual Pulse based on pitch
-    e.mesh.scale.setScalar(1 + (speed * 0.05));
   });
-  
+
   renderer.render(scene, camera);
 }
+
+function saveConfig() {
+  const config = {
+    thermal: document.getElementById('thermal-toggle').checked,
+    audio: document.getElementById('audio-toggle').checked
+  };
+  localStorage.setItem('NEXUS_CONFIG', JSON.stringify(config));
+  observe("Configuration saved to local memory.");
+}
+
+init();
 </script>
 </body>
 </html>
