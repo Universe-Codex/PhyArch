@@ -199,7 +199,7 @@ const getLib = (name) => '<scr' + 'ipt src="' + LIBS[name] + '"></scr' + 'ipt>';
 const MasterCreator = {
     researcher: `
         const searchWiki = async (query) => {
-            const response = await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + query + '&format=json&origin=*');
+            const const getLib = (name) => '<scr' + 'ipt src="' + LIBS[name] + '"></scr' + 'ipt>';
             const data = await response.json();
             document.getElementById('results').innerHTML = data.query.search.map(s => '<div><b>'+s.title+'</b><br>'+s.snippet+'</div>').join('');
         };
@@ -228,48 +228,48 @@ const MasterCreator = {
         // Logic for native app assembly goes here
     },
 
-    exportInvention: function(name, logic) {
+exportInvention: function(name, logic) {
         let injectedLibs = '';
         if (logic.includes('THREE')) injectedLibs += getLib('THREE');
         if (logic.includes('L.map')) injectedLibs += getLib('MAP');
         if (logic.includes('math.')) injectedLibs += getLib('MATH');
-        if (logic.includes('db.')) injectedLibs += getLib('DEXIE');
+        if (logic.includes('db.'))   injectedLibs += getLib('DEXIE');
 
-        const content = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>\${name} - Generated</title>
-    \${injectedLibs}
-    <style>
-        body { background: #050507; color: #00ff88; font-family: monospace; margin: 0; padding: 20px; }
-        .glass-card { background: rgba(20,20,25,0.8); border: 1px solid #333; padding: 20px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,255,136,0.1); }
-        #status-node { position: fixed; top: 0; left: 0; width: 100%; background: #000; border-bottom: 1px solid #00ff88; padding: 5px; font-size: 10px; display: flex; justify-content: space-between; }
-    </style>
-</head>
-<body>
-    <div id="status-node"><span>SYSTEM ACTIVE</span><span id="boot-status">Waking...</span></div>
-    <div class="glass-card">
-        <h1>\${name}</h1>
-        <hr style="border: 0; border-top: 1px solid #222;">
-        <div id="app-root"></div>
-    </div>
-    <scr` + `ipt>
-        window.onload = () => {
-            document.getElementById('boot-status').innerText = (performance.now()/1000).toFixed(2) + 's Boot';
-            \${logic}
-        };
-    </scr` + `ipt>
-</body>
-</html>`;
+        var content = '<!DOCTYPE html>' +
+            '<html>' +
+            '<head>' +
+            '<meta charset="UTF-8">' +
+            '<title>' + name + ' - Generated</title>' +
+            injectedLibs +
+            '<style>' +
+            'body { background:#050507; color:#00ff88; font-family:monospace; margin:0; padding:20px; }' +
+            '.glass-card { background:rgba(20,20,25,0.8); border:1px solid #333; padding:20px; border-radius:8px; }' +
+            '#status-node { position:fixed; top:0; left:0; width:100%; background:#000; border-bottom:1px solid #00ff88; padding:5px; font-size:10px; display:flex; justify-content:space-between; z-index:1000; }' +
+            '</style>' +
+            '</head>' +
+            '<body>' +
+            '<div id="status-node"><span>SYSTEM ACTIVE</span><span id="boot-status">Waking...</span></div>' +
+            '<div class="glass-card">' +
+            '<h1>' + name + '</h1>' +
+            '<hr style="border:0; border-top:1px solid #222;">' +
+            '<div id="app-root"></div>' +
+            '</div>' +
+            '<scr' + 'ipt>' +
+            'window.onload = () => {' +
+            'const time = (performance.now()/1000).toFixed(2);' +
+            'document.getElementById("boot-status").innerText = time + "s Boot";' +
+            logic + 
+            '};' +
+            '</scr' + 'ipt>' +
+            '</body>' +
+            '</html>';
 
         const blob = new Blob([content], { type: 'text/html' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = \`\${name}.html\`;
+        link.download = name + ".html";
         link.click();
-        systemLog(\`Invention \${name} birthed successfully.\`, "#00ff88");
+        systemLog("Invention " + name + " birthed successfully.", "#00ff88");
     }
 };
 
