@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch NEXUS v3.1 — Quantum Spatial Lab</title>
+    <title>PhyArch NEXUS v4.1 — Quantum Spatial Lab</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         :root {
@@ -14,390 +15,215 @@
             --accent: #00ff9d;
             --accent2: #00d0ff;
             --danger: #ff3366;
-            --ui-font: 'JetBrains Mono', 'Fira Code', monospace;
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: var(--ui-font); }
-        body { background:var(--bg); color:#fff; overflow:hidden; height:100vh; display:flex; flex-direction:column; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:#fff; overflow:hidden; height:100vh; display:flex; flex-direction:column; font-family:'JetBrains Mono', monospace; }
         
-        /* Layout */
+        #loader {
+            position:fixed; inset:0; background:var(--bg); z-index:1000;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            transition:opacity 0.6s;
+        }
+
         header {
-            height:50px; background:#000; border-bottom:1px solid #222;
+            height:56px; background:#000; border-bottom:1px solid #222;
             display:flex; align-items:center; padding:0 20px; justify-content:space-between; z-index:200;
         }
-        .workspace { flex:1; display:flex; position:relative; overflow:hidden; }
-        #viewport { flex:1; background:radial-gradient(circle at center, #0a0a15 0%, #020205 100%); }
+        .logo { font-size:20px; font-weight:900; letter-spacing:4px; }
+        .logo span { color:var(--accent); }
+
+        .workspace { flex:1; display:flex; }
+        #viewport { flex:1; background:#000; cursor: crosshair; }
         
-        /* Sidebar & Tabs */
         .sidebar { width:340px; background:var(--panel); border-left:1px solid #222; display:flex; flex-direction:column; }
-        .tab-bar { display:flex; background:#05050a; border-bottom:1px solid #222; }
-        .tab { flex:1; padding:12px; text-align:center; font-size:10px; cursor:pointer; color:#666; transition: 0.2s; }
-        .tab-active { color:var(--accent); border-bottom:2px solid var(--accent); background:rgba(0,255,157,0.05); }
+        .tab-bar { display:flex; background:#0a0a12; }
+        .tab { flex:1; padding:14px; text-align:center; font-size:12px; cursor:pointer; border-bottom:3px solid transparent; opacity: 0.6; }
+        .tab-active { border-color:var(--accent); color:var(--accent); opacity: 1; }
         
-        .panel { flex:1; padding:15px; overflow-y:auto; display:none; }
+        .panel { flex:1; padding:18px; overflow:auto; display:none; }
         .panel-active { display:block; }
-
-        /* Component Styles */
-        .glass { background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:4px; padding:12px; margin-bottom:10px; }
-        .btn { 
-            background:transparent; border:1px solid #444; color:var(--accent); padding:6px 12px; 
-            border-radius:4px; cursor:pointer; font-size:11px; transition: 0.2s;
-        }
-        .btn:hover { border-color:var(--accent); background:rgba(0,255,157,0.1); }
-        .btn-danger { color:var(--danger); border-color: #422; }
         
-        textarea { 
-            width:100%; background:#000; border:1px solid #333; color:var(--accent2); 
-            padding:10px; font-size:11px; resize:none; outline:none;
-        }
-
-        #console { height:200px; background:#000; border-top:1px solid #222; display:flex; flex-direction:column; }
-        #log { flex:1; padding:10px; overflow-y:auto; font-size:11px; color:#777; line-height:1.4; }
-        .cmd-row { display:flex; background:#050508; padding:5px; border-top:1px solid #111; }
-        input[type="text"] { 
-            flex:1; background:transparent; border:none; color:var(--accent); padding:10px; outline:none;
-        }
+        .glass { background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px; padding:14px; margin-bottom:16px; }
+        
+        #console { height:180px; background:#000; border-top:1px solid #222; display:flex; flex-direction:column; }
+        #log { flex:1; padding:12px; overflow-y:auto; font-size:11px; color:#555; font-family: monospace; }
+        .cmd-row { display:flex; padding:8px; gap:8px; background:#0a0a12; }
+        input { flex:1; background:#111; border:1px solid #444; color:var(--accent); padding:10px; border-radius:4px; outline: none; }
+        button { cursor: pointer; transition: 0.2s; }
     </style>
 </head>
 <body>
 
+<div id="loader">
+    <div style="width:40px;height:40px;border:3px solid #222;border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;"></div>
+    <div style="font-size:10px; color:var(--accent); letter-spacing:2px; margin-top:15px;">SYNCING UNIVERSE...</div>
+</div>
+
 <header>
-    <div style="font-weight:900; letter-spacing:3px;">PHY<span style="color:var(--accent)">ARCH</span> NEXUS 3.1</div>
-    <div style="display:flex; gap:10px;">
-        <button class="btn" onclick="toggleField()" id="fieldBtn">FIELD: OFF</button>
-        <button class="btn" onclick="screenshot()">CAPTURE</button>
-        <button class="btn btn-danger" onclick="resetSim()">WIPE</button>
+    <div class="logo">PHY<span>ARCH</span> NEXUS 4.1</div>
+    <div class="header-btns">
+        <button class="glass" style="padding:5px 15px; color:var(--accent)" onclick="App.saveScene()">EXPORT .JSON</button>
+        <button class="glass" style="padding:5px 15px; color:var(--danger)" onclick="App.resetSim()">WIPE</button>
     </div>
 </header>
 
 <div class="workspace">
     <div id="viewport"></div>
-
+    
     <aside class="sidebar">
         <div class="tab-bar">
-            <div class="tab tab-active" onclick="setTab(0)">ANALYTICS</div>
-            <div class="tab" onclick="setTab(1)">AI FORGE</div>
-            <div class="tab" onclick="setTab(2)">PYTHON</div>
+            <div class="tab tab-active" onclick="switchTab(0)">ANALYTICS</div>
+            <div class="tab" onclick="switchTab(1)">AI FORGE</div>
+            <div class="tab" onclick="switchTab(2)">PY LAB</div>
         </div>
-
-        <div id="p0" class="panel panel-active">
-            <h5 style="color:var(--accent2); margin-bottom:10px;">PROBE DATA</h5>
-            <div id="inspector" class="glass">Select an entity to probe...</div>
+        
+        <div id="panel-0" class="panel panel-active">
+            <h4 style="color:var(--accent2); font-size: 12px; margin-bottom:10px">REAL-TIME PROBE</h4>
+            <div id="inspector" class="glass" style="font-size: 11px; line-height: 1.6;">Awaiting object selection...</div>
+            
+            <h4 style="color:var(--accent2); font-size: 12px; margin-bottom:10px">WORLD CONSTANTS</h4>
             <div class="glass">
-                <div id="sim-stats">Entities: 0 | Grid: Active</div>
+                <label style="font-size: 10px; color: #888;">GRAVITY: <span id="grav-val">-9.8</span> m/s²</label>
+                <input id="gravity" type="range" min="-30" max="10" value="-9.8" step="0.1" style="width:100%; margin-top:10px;">
             </div>
         </div>
-
-        <div id="p1" class="panel">
-            <h5 style="color:var(--accent); margin-bottom:10px;">GENERATIVE ARCHITECT</h5>
-            <div id="ai-messages" style="height:250px; overflow:auto; margin-bottom:10px; font-size:11px;"></div>
-            <div style="display:flex; gap:5px;">
-                <input type="text" id="ai-in" placeholder="Structure name..." style="background:#111; border:1px solid #333; color:#fff; padding:8px; flex:1;">
-                <button class="btn" onclick="runAI()">FORGE</button>
+        
+        <div id="panel-1" class="panel">
+            <div id="ai-log" style="height:280px; overflow:auto; font-size:11px; margin-bottom:10px; border-bottom: 1px solid #222;"></div>
+            <div style="display:flex; gap: 5px;">
+                <input id="ai-input" placeholder="Pattern (e.g. lorenz, dna, solar)...">
+                <button onclick="forgeWithAI()" style="background:var(--accent); border:none; padding:0 10px; border-radius:4px;">GO</button>
             </div>
         </div>
-
-        <div id="p2" class="panel">
-            <h5 style="color:var(--accent2); margin-bottom:10px;">PYTHON KERNEL</h5>
-            <textarea id="py-code" style="height:300px;">
+        
+        <div id="panel-2" class="panel">
+            <textarea id="py-code" style="width:100%; height:300px; background:#000; color:var(--accent2); border:1px solid #333; font-size:11px; padding:10px;">
+# Chaos Theory: Lorenz Attractor
 import math
-for i in range(100):
-    y = math.sin(i * 0.2) * 5 + 15
-    Omni.spawn('box', 1, {
-        'pos': {'x': i-50, 'y': y, 'z': 0},
-        'color': 0x00d0ff,
-        'size': 0.8
-    })</textarea>
-            <button class="btn" style="width:100%; margin-top:10px;" onclick="runPy()">RUN SCRIPT</button>
+Omni.log("Calculating strange attractor...")
+x, y, z = 0.1, 0, 0
+s, r, b = 10, 28, 8/3
+for i in range(500):
+    dt = 0.01
+    dx = s * (y - x) * dt
+    dy = (x * (r - z) - y) * dt
+    dz = (x * y - b * z) * dt
+    x, y, z = x+dx, y+dy, z+dz
+    Omni.spawn('sphere', 1, {'pos':{'x':x, 'y':y, 'z':z-20}, 'size':0.3, 'color':0x00ffcc})
+            </textarea>
+            <button onclick="runPython()" style="width:100%; margin-top:10px; padding:10px; background:var(--accent2); border:none; font-weight:bold;">RUN KERNEL</button>
         </div>
     </aside>
 </div>
 
 <div id="console">
     <div id="log"></div>
-    <div class="cmd-row">
-        <input type="text" id="cmd" placeholder="Quick command (e.g. 'solar', 'grid 10')...">
-    </div>
 </div>
 
 <script>
-// ====================== CORE SETTINGS ======================
-let scene, camera, renderer, controls, core;
-let entities = [];
-let selected = null;
-let field = false;
-let pyodide;
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-// ====================== PHYSICS & OBJECTS ======================
-class Entity {
-    constructor(mesh, size, opts) {
-        this.mesh = mesh;
-        this.size = size;
-        this.vel = new THREE.Vector3(
-            (Math.random()-0.5)*0.2, 
-            opts.vY || 0, 
-            (Math.random()-0.5)*0.2
-        );
-        this.acc = new THREE.Vector3();
-        this.mass = size;
-        
-        // Momentum Vector Visualizer
-        const dir = new THREE.Vector3(1,0,0);
-        this.arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(), size*2, 0x00ff9d);
-        this.arrow.visible = false;
-        scene.add(this.arrow);
+class NexusApp {
+    constructor() {
+        this.entities = [];
+        this.selected = null;
+        this.pyodide = null;
     }
 
-    update() {
-        if (field) {
-            const pull = new THREE.Vector3().subVectors(new THREE.Vector3(0,0,0), this.mesh.position);
-            this.acc.add(pull.normalize().multiplyScalar(0.05));
-        } else {
-            this.acc.y -= 0.02; // Gravity
+    async init() {
+        const vp = document.getElementById('viewport');
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 2000);
+        this.camera.position.set(60, 60, 60);
+        
+        this.renderer = new THREE.WebGLRenderer({antialias:true});
+        this.renderer.setSize(vp.clientWidth, vp.clientHeight);
+        vp.appendChild(this.renderer.domElement);
+        
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.world = new CANNON.World({gravity: new CANNON.Vec3(0, -9.8, 0)});
+
+        // Ground Plane
+        const groundBody = new CANNON.Body({mass: 0, shape: new CANNON.Plane()});
+        groundBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+        this.world.addBody(groundBody);
+        this.scene.add(new THREE.GridHelper(200, 40, 0x00ff88, 0x111111));
+
+        this.animate();
+        this.log("NEXUS 4.1: Rigid Body Physics Engine Bound.", "#00ff9d");
+
+        window.addEventListener('resize', () => this.resize());
+        document.getElementById('gravity').addEventListener('input', (e) => {
+            this.world.gravity.y = parseFloat(e.target.value);
+            document.getElementById('grav-val').textContent = e.target.value;
+        });
+
+        setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        this.world.fixedStep();
+        this.entities.forEach(e => {
+            e.mesh.position.copy(e.body.position);
+            e.mesh.quaternion.copy(e.body.quaternion);
+        });
+        this.renderer.render(this.scene, this.camera);
+        this.controls.update();
+    }
+
+    spawn(type, count, opts = {}) {
+        for (let i = 0; i < count; i++) {
+            const size = opts.size || 2;
+            const geo = type === 'sphere' ? new THREE.SphereGeometry(size, 16, 16) : new THREE.BoxGeometry(size, size, size);
+            const shape = type === 'sphere' ? new CANNON.Sphere(size) : new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
+            
+            const mat = new THREE.MeshPhongMaterial({color: opts.color || 0x00d0ff, wireframe: true});
+            const mesh = new THREE.Mesh(geo, mat);
+            const body = new CANNON.Body({
+                mass: opts.mass || 1,
+                shape: shape,
+                position: new CANNON.Vec3(opts.pos?.x || 0, opts.pos?.y || 20, opts.pos?.z || 0)
+            });
+            if (opts.vel) body.velocity.set(opts.vel.x, opts.vel.y, opts.vel.z);
+
+            this.scene.add(mesh);
+            this.world.addBody(body);
+            this.entities.push({mesh, body});
         }
+    }
 
-        this.vel.add(this.acc);
-        this.mesh.position.add(this.vel);
-        this.acc.set(0,0,0);
+    log(m, c = "#555") {
+        const l = document.getElementById('log');
+        l.innerHTML += `<div><span style="color:${c}">>> ${m}</span></div>`;
+        l.scrollTop = l.scrollHeight;
+    }
 
-        // Ground Collision
-        if (this.mesh.position.y < this.size/2) {
-            this.mesh.position.y = this.size/2;
-            this.vel.y *= -0.7;
-            this.vel.multiplyScalar(0.98);
-        }
-
-        // Vector Sync
-        if (this.arrow.visible) {
-            this.arrow.position.copy(this.mesh.position);
-            if (this.vel.length() > 0.01) {
-                this.arrow.setDirection(this.vel.clone().normalize());
-                this.arrow.setLength(this.vel.length() * 10 + 1);
-            }
-        }
-
-        // Kinetic Energy Heat Map (Shader Simulation)
-        const speed = this.vel.length();
-        this.mesh.material.emissiveIntensity = speed * 2;
+    resetSim() {
+        this.entities.forEach(e => { this.scene.remove(e.mesh); this.world.removeBody(e.body); });
+        this.entities = [];
     }
 }
 
-// ====================== ENGINE ======================
-const Omni = {
-    init() {
-        const vp = document.getElementById('viewport');
-        scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x020205, 0.01);
-        
-        camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 2000);
-        camera.position.set(60, 50, 60);
-
-        renderer = new THREE.WebGLRenderer({ antialias:true });
-        renderer.setSize(vp.clientWidth, vp.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        vp.appendChild(renderer.domElement);
-
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-
-        scene.add(new THREE.AmbientLight(0x404040));
-        const pLight = new THREE.PointLight(0x00ff9d, 1, 100);
-        pLight.position.set(20, 40, 20);
-        scene.add(pLight);
-
-        scene.add(new THREE.GridHelper(200, 40, 0x111122, 0x050510));
-
-        // Pulsing Quantum Core
-        const coreGeo = new THREE.IcosahedronGeometry(6, 4);
-        const coreMat = new THREE.MeshPhongMaterial({ 
-            color: 0x00ff9d, wireframe: true, transparent: true, opacity: 0.6,
-            emissive: 0x00ff9d, emissiveIntensity: 0.5
-        });
-        core = new THREE.Mesh(coreGeo, coreMat);
-        scene.add(core);
-
-        this.animate();
-        this.log("NEXUS Core Ready. Pyodide loading in background...", "#00ff9d");
-    },
-
-    spawn(type, count, opts = {}) {
-        for(let i=0; i<count; i++) {
-            const size = opts.size || 2;
-            let geo;
-            switch(type) {
-                case 'sphere': geo = new THREE.SphereGeometry(size, 16, 16); break;
-                case 'torus': geo = new THREE.TorusGeometry(size, size/3, 12, 32); break;
-                default: geo = new THREE.BoxGeometry(size, size, size);
-            }
-            
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: opts.color || 0x00d0ff, 
-                wireframe: true,
-                emissive: opts.color || 0x00d0ff,
-                emissiveIntensity: 0
-            });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(
-                opts.pos ? opts.pos.x : (Math.random()-0.5)*50,
-                opts.pos ? opts.pos.y : 30 + (Math.random()*20),
-                opts.pos ? opts.pos.z : (Math.random()-0.5)*50
-            );
-            
-            scene.add(mesh);
-            entities.push(new Entity(mesh, size, opts));
-        }
-    },
-
-    animate() {
-        requestAnimationFrame(() => Omni.animate());
-        const t = performance.now() * 0.001;
-        core.rotation.y += 0.005;
-        core.scale.setScalar(1 + Math.sin(t*2)*0.05);
-        
-        entities.forEach(e => e.update());
-        
-        // Simple N^2 collision check (replace with spatial hash for >500 objs)
-        if(entities.length < 300) {
-            for(let i=0; i<entities.length; i++) {
-                for(let j=i+1; j<entities.length; j++) {
-                    const d = entities[i].mesh.position.distanceTo(entities[j].mesh.position);
-                    const min = (entities[i].size + entities[j].size)/2;
-                    if(d < min) {
-                        const push = entities[i].mesh.position.clone().sub(entities[j].mesh.position).normalize();
-                        entities[i].vel.add(push.multiplyScalar(0.05));
-                        entities[j].vel.sub(push.multiplyScalar(0.05));
-                    }
-                }
-            }
-        }
-
-        controls.update();
-        renderer.render(scene, camera);
-        document.getElementById('sim-stats').innerText = `Entities: ${entities.length} | Gravity: ${field ? 'OFF' : '9.8m/s'}`;
-    },
-
-    log(m, c="#777") {
-        const l = document.getElementById('log');
-        const d = document.createElement('div');
-        d.innerHTML = `<span style="color:#333">[${new Date().toLocaleTimeString()}]</span> <span style="color:${c}">${m}</span>`;
-        l.appendChild(d);
-        l.scrollTop = l.scrollHeight;
-    }
-};
-
-// ====================== INTERFACE & AI ======================
-function setTab(n) {
+// Global Logic
+function switchTab(n) {
     document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('tab-active', i===n));
     document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('panel-active', i===n));
 }
 
-function runAI() {
-    const input = document.getElementById('ai-in').value.toLowerCase();
-    const m = document.getElementById('ai-messages');
-    m.innerHTML += `<div style="color:var(--accent2)">> Request: ${input}</div>`;
-    
-    if(input.includes('dna')) {
-        for(let i=0; i<40; i++) {
-            const a = i * 0.5;
-            Omni.spawn('sphere', 1, {pos: {x: Math.cos(a)*8, y: i*1.2, z: Math.sin(a)*8}, size: 0.8, color: 0x00ff9d});
-            Omni.spawn('sphere', 1, {pos: {x: Math.cos(a+3.14)*8, y: i*1.2, z: Math.sin(a+3.14)*8}, size: 0.8, color: 0xff3366});
-        }
-    } else if(input.includes('solar')) {
-        Omni.spawn('sphere', 1, {size: 10, color: 0xffcc00, pos: {x:0, y:0, z:0}});
-        for(let i=0; i<5; i++) Omni.spawn('sphere', 1, {size: 1.5, pos: {x: 20+i*10, y:0, z:0}, vY: 0.2});
-    } else {
-        Omni.spawn('box', 10);
-    }
-    m.scrollTop = m.scrollHeight;
+async function runPython() {
+    if (!App.pyodide) { App.log("Kernel booting...", "#ff0"); return; }
+    try { await App.pyodide.runPythonAsync(document.getElementById('py-code').value); }
+    catch(e) { App.log(e.message, "#f36"); }
 }
 
-async function runPy() {
-    if(!pyodide) { Omni.log("Wait for Python kernel...", "#ff0"); return; }
-    try {
-        await pyodide.runPythonAsync(document.getElementById('py-code').value);
-        Omni.log("Script executed.", var(--accent));
-    } catch(e) { Omni.log(e, var(--danger)); }
-}
-
-function toggleField() {
-    field = !field;
-    const btn = document.getElementById('fieldBtn');
-    btn.innerText = `FIELD: ${field ? 'ON' : 'OFF'}`;
-    btn.classList.toggle('tab-active', field);
-    Omni.log(`Gravitational Singularity ${field ? 'Activated' : 'Stabilized'}`);
-}
-
-function resetSim() {
-    entities.forEach(e => { scene.remove(e.mesh); scene.remove(e.arrow); });
-    entities = [];
-    Omni.log("Sim wiped.", "#f36");
-}
-
-function screenshot() {
-    renderer.render(scene, camera);
-    const link = document.createElement('a');
-    link.download = 'nexus_capture.png';
-    link.href = renderer.domElement.toDataURL();
-    link.click();
-}
-
-// ====================== INTERACTION ======================
-window.addEventListener('mousedown', (e) => {
-    const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    
-    raycaster.setFromCamera(mouse, camera);
-    const hits = raycaster.intersectObjects(entities.map(e => e.mesh));
-    
-    if(hits.length > 0) {
-        if(selected) {
-            selected.mesh.material.wireframe = true;
-            selected.arrow.visible = false;
-        }
-        selected = entities.find(ent => ent.mesh === hits[0].object);
-        selected.mesh.material.wireframe = false;
-        selected.arrow.visible = true;
-        
-        document.getElementById('inspector').innerHTML = `
-            <b>UUID:</b> ${selected.mesh.uuid.slice(0,8)}<br>
-            <b>MASS:</b> ${selected.mass.toFixed(2)}<br>
-            <b>VELOCITY:</b> ${selected.vel.length().toFixed(3)}<br>
-            <button class="btn btn-danger" style="margin-top:10px; width:100%" onclick="deleteEntity()">DELETE</button>
-        `;
-    }
-});
-
-window.deleteEntity = () => {
-    if(!selected) return;
-    scene.remove(selected.mesh);
-    scene.remove(selected.arrow);
-    entities = entities.filter(e => e !== selected);
-    selected = null;
-    document.getElementById('inspector').innerHTML = "Entity removed.";
-}
-
-// ====================== BOOT ======================
+const App = new NexusApp();
 (async () => {
-    Omni.init();
-    
-    // Commands
-    document.getElementById('cmd').addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') {
-            const val = e.target.value.toLowerCase();
-            if(val === 'solar') runAI();
-            else if(val.startsWith('grid')) Omni.spawn('box', parseInt(val.split(' ')[1]) || 5);
-            else Omni.log("Command not recognized", "#f66");
-            e.target.value = '';
-        }
+    await App.init();
+    App.pyodide = await loadPyodide();
+    App.pyodide.globals.set("Omni", { 
+        spawn: (t,c,o) => App.spawn(t,c,o.toJs ? o.toJs() : o), 
+        log: (m) => App.log(m, "#00ff9d") 
     });
-
-    // Lazy load Python
-    pyodide = await loadPyodide();
-    window.Omni = Omni;
-    pyodide.globals.set("js", window);
-    Omni.log("Python Scientific Kernel Online.", "#0ff");
+    App.log("Python Data-Science Kernel Ready.", "#00ff9d");
 })();
 </script>
 </body>
