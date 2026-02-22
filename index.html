@@ -267,12 +267,6 @@
         };
 
         systemLog("PhyArch Builder v1.0 ready.", "#00ff88");
-    </script>
-</body>
-</html>            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        }
-        animate();
 
         /* ==========================================
            PYODIDE ENGINE
@@ -674,6 +668,16 @@ window.quickInvent = function(name, type) {
         executeLogic();
     }
 };
+// ... all your previous logic (Pyodide, MasterCreator, etc.) ...
+
+    function animate() {
+        requestAnimationFrame(animate);
+        if (window.renderer && window.scene && window.camera) {
+            renderer.render(scene, camera);
+        }
+    }
+animate(); // This starts the loop once everything is loaded
+
 </script>
 </body>
 </html>
