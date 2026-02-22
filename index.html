@@ -1,225 +1,588 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch NEXUS v4.3 — Quantum Spatial OS</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
-    <style>
-        :root { --accent: #00ff9d; --bg: #020205; --panel: rgba(10,10,18,0.98); }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--bg); color:#fff; font-family:'Inter', system-ui, sans-serif; overflow:hidden; height:100vh; }
-        
-        #boot { position:fixed; inset:0; background:#000; z-index:10000; display:flex; align-items:center; justify-content:center; transition:opacity 1.2s; }
-        .boot-logo { font-size:42px; font-weight:900; letter-spacing:18px; color:#111; }
-        .boot-logo span { color:var(--accent); }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PhyArch NEXUS v8.0 — Quantum Spatial Workstation</title>
 
-        #hub, #feed, #workspace { position:fixed; inset:0; transition:transform 0.8s cubic-bezier(0.4,0,0.2,1); }
-        #hub { padding:40px 60px; overflow-y:auto; background:radial-gradient(circle at center, #001a0d 0%, #000 80%); }
-        #feed { scroll-snap-type:y mandatory; overflow-y:scroll; display:none; }
-        .feed-item { height:100vh; scroll-snap-align:start; padding:80px; display:flex; align-items:flex-end; background:radial-gradient(circle at bottom left, #002211 0%, #000 70%); }
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/TransformControls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/loaders/GLTFLoader.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.3/full/pyodide.js"></script>
 
-        .billboard { height:52vh; border-radius:16px; background:linear-gradient(135deg,#001a0d,#05050a); padding:80px; margin-bottom:50px; position:relative; overflow:hidden; }
-        .billboard::after { content:''; position:absolute; inset:0; background:linear-gradient(transparent,#00000088); pointer-events:none; }
+  <style>
+    :root {
+      --bg: #050508;
+      --panel: rgba(12,12,22,0.96);
+      --accent: #00ffb2;
+      --accent-glow: 0 0 40px #00ffb266;
+      --text: #e8f5ff;
+      --danger: #ff4d6d;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui, sans-serif;
+      overflow:hidden;
+      height:100vh;
+      image-rendering: crisp-edges;
+    }
 
-        .project-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
-        .project-card { background:var(--panel); border:1px solid #222; height:160px; border-radius:12px; padding:24px; cursor:pointer; transition:0.3s; }
-        .project-card:hover { border-color:var(--accent); transform:scale(1.04); }
+    #boot {
+      position:fixed; inset:0; background:#000; z-index:9999;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      transition:opacity 1.6s ease;
+    }
+    .boot-logo {
+      font-size:7rem;
+      font-weight:900;
+      letter-spacing:1.1em;
+      color:#111;
+      text-shadow:var(--accent-glow);
+    }
+    .boot-logo span { color:var(--accent); }
 
-        #workspace { transform:translateX(100%); background:#000; display:flex; }
-        #viewport { flex:1; }
-        .side-lab { width:380px; background:var(--panel); padding:30px; overflow-y:auto; border-left:1px solid #1a1a1a; }
+    #ui-layer {
+      position:fixed; inset:0; pointer-events:none;
+    }
+    header {
+      height:64px;
+      background:rgba(0,0,0,0.75);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid #1a1a2e;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 36px;
+      z-index:200;
+      pointer-events:auto;
+    }
+    .logo {
+      font-size:2rem;
+      font-weight:800;
+      letter-spacing:0.4em;
+    }
+    .logo span { color:var(--accent); }
 
-        .neon { text-shadow:0 0 20px var(--accent); }
-        button.cta { background:var(--accent); color:#000; border:none; padding:14px 32px; border-radius:6px; font-weight:700; cursor:pointer; }
-        .scanline { position:fixed; inset:0; background:repeating-linear-gradient(transparent 0px, transparent 4px, rgba(0,255,157,0.03) 4px, rgba(0,255,157,0.03) 6px); pointer-events:none; z-index:999; display:none; }
-    </style>
+    #viewport {
+      flex:1;
+      background:#000;
+      position:relative;
+    }
+
+    #side-panel {
+      position:fixed;
+      top:0; right:0; bottom:0;
+      width:440px;
+      background:var(--panel);
+      backdrop-filter:blur(12px);
+      border-left:1px solid #1a1a2e;
+      color:var(--text);
+      overflow-y:auto;
+      transform:translateX(100%);
+      transition:transform 0.7s cubic-bezier(0.23,1,0.32,1);
+      z-index:150;
+      pointer-events:auto;
+    }
+    #side-panel.open { transform:translateX(0); }
+
+    .panel-head {
+      padding:28px 32px;
+      border-bottom:1px solid #1a1a2e;
+      font-size:1.4rem;
+      font-weight:600;
+      color:var(--accent);
+    }
+
+    .section {
+      padding:24px 32px;
+    }
+    textarea, input {
+      width:100%;
+      padding:14px;
+      background:#0f0f1a;
+      border:1px solid #222;
+      color:#d0ffea;
+      font-family:'Consolas', monospace;
+      border-radius:8px;
+      margin:12px 0;
+      resize:vertical;
+    }
+    button {
+      background:var(--accent);
+      color:#000;
+      border:none;
+      padding:14px 28px;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      transition:0.2s;
+    }
+    button:hover { filter:brightness(1.18); box-shadow:var(--accent-glow); }
+
+    .mic-btn {
+      position:fixed;
+      bottom:48px;
+      right:48px;
+      width:76px;
+      height:76px;
+      background:var(--accent);
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:32px;
+      box-shadow:0 0 60px #00ffb244;
+      cursor:pointer;
+      animation:pulse 2.4s infinite;
+      z-index:300;
+    }
+
+    .selection-glow {
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      box-shadow:0 0 30px var(--accent);
+      opacity:0;
+      transition:opacity 0.4s;
+      border:2px solid var(--accent);
+      border-radius:12px;
+    }
+
+    .scanlines {
+      position:fixed;
+      inset:0;
+      background:repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,255,178,0.04) 2px,
+        rgba(0,255,178,0.04) 4px
+      );
+      pointer-events:none;
+      z-index:50;
+      opacity:0.7;
+    }
+
+    @keyframes pulse {
+      0%,100% { transform:scale(1); opacity:0.85; }
+      50% { transform:scale(1.16); opacity:1; }
+    }
+  </style>
 </head>
 <body>
 
-<div id="boot">
-    <div class="boot-logo">PHY<span>ARCH</span></div>
+<div id="boot-screen">
+  <div class="boot-logo">PHY<span>ARCH</span></div>
 </div>
 
-<div id="hub">
-    <div class="nav-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;">
-        <div style="font-weight:900;letter-spacing:6px;font-size:24px;">NEXUS</div>
-        <div style="display:flex;gap:12px;">
-            <button class="mode-btn active" onclick="switchMode('hub')">GRID</button>
-            <button class="mode-btn" onclick="switchMode('feed')">FEED</button>
-            <button class="cta" onclick="openWorkspace()">ENTER LAB</button>
-        </div>
+<div id="ui-layer">
+  <header>
+    <div class="logo">NEXUS <span style="font-size:0.8em;opacity:0.7;">v8.0</span></div>
+    <div style="display:flex;gap:16px;">
+      <button onclick="togglePanel()">LAB PANEL</button>
+      <button onclick="resetLab()" style="background:var(--danger);">RESET ALL</button>
+    </div>
+  </header>
+
+  <div id="viewport"></div>
+
+  <div id="side-panel">
+    <div class="panel-head">WORKSTATION CORE</div>
+
+    <div class="section">
+      <label style="font-size:0.9rem;opacity:0.65;display:block;margin-bottom:10px;">VOICE / TEXT FORGE</label>
+      <textarea id="forge-input" rows="3" placeholder="dna double helix, caffeine molecule, solar system with 8 planets, explode 120 spheres..."></textarea>
+      <div style="display:flex;gap:16px;margin-top:16px;">
+        <button onclick="forge()" style="flex:1;">CREATE</button>
+        <div id="voice-trigger" class="mic-btn" onclick="toggleVoice()">🎤</div>
+      </div>
     </div>
 
-    <div class="billboard">
-        <h1 class="neon" style="font-size:58px;line-height:1.1;">QUANTUM<span style="font-size:0.6em;opacity:0.6;">LAB</span></h1>
-        <p style="max-width:460px;font-size:18px;opacity:0.7;">Real-time physics • Live Python • AI matter forge</p>
-        <button class="cta" onclick="openWorkspace()">LAUNCH DIRECT WORK</button>
+    <div class="section">
+      <label style="font-size:0.9rem;opacity:0.65;display:block;margin-bottom:10px;">PYTHON CONSOLE</label>
+      <textarea id="py-console" rows="8" placeholder="// Examples:\nOmni.spawn('sphere', 50, {'color':0xff3366})\n# or fetch real data:\ndata = await Omni.fetch('https://api.example.com/data')\nOmni.spawn('box', data.length)"></textarea>
+      <button onclick="executePython()" style="width:100%;margin-top:16px;">RUN CODE</button>
     </div>
 
-    <h3 style="color:var(--accent);margin-bottom:20px;">RECENT PROJECTS</h3>
-    <div class="project-grid">
-        <div class="project-card" onclick="loadProject(0)"><h3>Helix-V4</h3><p style="opacity:0.5;font-size:13px;">DNA procedural generation</p></div>
-        <div class="project-card" onclick="loadProject(1)"><h3>Solar Drift</h3><p style="opacity:0.5;font-size:13px;">Orbital mechanics test</p></div>
-        <div class="project-card" onclick="loadProject(2)"><h3>Market Collapse</h3><p style="opacity:0.5;font-size:13px;">Physics-driven trading sim</p></div>
+    <div class="section">
+      <label style="font-size:0.9rem;opacity:0.65;display:block;margin-bottom:10px;">IMPORT 3D ASSET</label>
+      <input type="file" id="asset-import" accept=".gltf,.glb" style="width:100%;padding:12px;background:#111;border:1px solid #333;border-radius:8px;"/>
+      <div style="font-size:0.8rem;opacity:0.6;margin-top:10px;">or drag & drop .gltf / .glb files anywhere</div>
     </div>
+  </div>
 </div>
 
-<div id="feed">
-    <!-- TikTok-style vertical feed items -->
-    <div class="feed-item"><div><h1>HELIX V4</h1><p>Automated genetic structuralism</p><button class="cta" onclick="openWorkspace()">WORK ON THIS</button></div></div>
-    <div class="feed-item"><div><h1>SOLAR DRIFT</h1><p>Stable multi-body orbits</p><button class="cta" onclick="openWorkspace()">WORK ON THIS</button></div></div>
-</div>
-
-<div id="workspace">
-    <div id="viewport"></div>
-    <div class="side-lab">
-        <button onclick="closeWorkspace()" style="background:transparent;border:1px solid #333;color:#888;padding:8px 16px;margin-bottom:30px;">← BACK TO HUB</button>
-        
-        <h2 style="color:var(--accent);margin-bottom:30px;">LAB CORE</h2>
-        
-        <!-- AI FORGE -->
-        <div style="margin-bottom:40px;">
-            <label style="font-size:11px;opacity:0.5;">AI FORGE PROMPT</label>
-            <textarea id="ai-prompt" rows="3" placeholder="dna helix, solar system, lorenz attractor..."></textarea>
-            <button class="cta" style="width:100%" onclick="forgeAI()">GENERATE MATTER</button>
-        </div>
-        
-        <!-- PYTHON -->
-        <div>
-            <label style="font-size:11px;opacity:0.5;">PYTHON KERNEL</label>
-            <textarea id="py-code" rows="7" placeholder="# Omni.spawn('sphere', 20)"></textarea>
-            <button class="cta" style="width:100%;background:#fff;" onclick="runPython()">EXECUTE</button>
-        </div>
-    </div>
-</div>
-
-<div class="scanline"></div>
+<div class="scanlines"></div>
 
 <script>
-// ====================== FULL ENGINE (embedded) ======================
-let scene, camera, renderer, controls, world, entities = [], selected = null, pyodide = null;
+// ──────────────────────────────────────────────
+//  STATE & CORE REFERENCES
+// ──────────────────────────────────────────────
 
-async function initEngine() {
-    const vp = document.getElementById('viewport');
-    scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x020205, 0.016);
-    
-    camera = new THREE.PerspectiveCamera(52, vp.clientWidth/vp.clientHeight, 0.1, 3000);
-    camera.position.set(70, 60, 80);
-    
-    renderer = new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(vp.clientWidth, vp.clientHeight);
-    vp.appendChild(renderer.domElement);
-    
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    
-    world = new CANNON.World({gravity: new CANNON.Vec3(0,-9.8,0)});
-    world.broadphase = new CANNON.SAPBroadphase(world);
-    
-    // Ground
-    const ground = new CANNON.Body({mass:0, shape:new CANNON.Plane()});
-    ground.quaternion.setFromEuler(-Math.PI/2,0,0);
-    world.addBody(ground);
-    
-    scene.add(new THREE.GridHelper(300,60,0x00ff88,0x001122));
-    
-    // Core
-    const coreMat = new THREE.MeshPhongMaterial({color:0x00ff9d, wireframe:true});
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(9,4), coreMat);
-    scene.add(core);
-    
-    function animate() {
-        requestAnimationFrame(animate);
-        world.step(1/60);
-        core.rotation.y += 0.003;
-        entities.forEach(e => {
-            e.mesh.position.copy(e.body.position);
-            e.mesh.quaternion.copy(e.body.quaternion);
-        });
-        controls.update();
-        renderer.render(scene, camera);
-    }
-    animate();
-    
-    // Click to select
-    vp.addEventListener('click', e => {
-        // Raycasting code omitted for brevity — full version has it
+const $ = id => document.getElementById(id);
+
+let App = {
+  scene: null,
+  camera: null,
+  renderer: null,
+  controls: null,
+  transform: null,
+  world: null,
+  entities: [],
+  pyodide: null,
+  selected: null,
+  voiceActive: false,
+  undoStack: []
+};
+
+// ──────────────────────────────────────────────
+//  3D + PHYSICS ENGINE
+// ──────────────────────────────────────────────
+
+async function bootEngine() {
+  const vp = $('viewport');
+
+  App.scene = new THREE.Scene();
+  App.scene.background = new THREE.Color(0x050508);
+  App.scene.fog = new THREE.FogExp2(0x050508, 0.011);
+
+  App.camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 6000);
+  App.camera.position.set(110, 90, 130);
+
+  App.renderer = new THREE.WebGLRenderer({ antialias:true });
+  App.renderer.setSize(vp.clientWidth, vp.clientHeight);
+  App.renderer.setPixelRatio(window.devicePixelRatio);
+  vp.appendChild(App.renderer.domElement);
+
+  App.controls = new THREE.OrbitControls(App.camera, App.renderer.domElement);
+  App.controls.enableDamping = true;
+
+  App.transform = new THREE.TransformControls(App.camera, App.renderer.domElement);
+  App.transform.setMode('translate');
+  App.scene.add(App.transform);
+
+  App.transform.addEventListener('dragging-changed', e => {
+    App.controls.enabled = !e.value;
+  });
+
+  App.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.81, 0) });
+
+  const ground = new CANNON.Body({ mass:0, shape:new CANNON.Plane() });
+  ground.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+  App.world.addBody(ground);
+
+  App.scene.add(new THREE.GridHelper(800, 160, 0x00ffb2, 0x001122));
+
+  // Holographic core
+  const core = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(16, 6),
+    new THREE.MeshPhongMaterial({ color:0x00ffb2, wireframe:true })
+  );
+  App.scene.add(core);
+
+  function renderLoop() {
+    requestAnimationFrame(renderLoop);
+    App.world.step(1/60);
+    core.rotation.y += 0.0018;
+    App.entities.forEach(e => {
+      if (e.mesh && e.body) {
+        e.mesh.position.copy(e.body.position);
+        e.mesh.quaternion.copy(e.body.quaternion);
+      }
     });
-}
+    App.controls.update();
+    App.renderer.render(App.scene, App.camera);
+  }
+  renderLoop();
 
-function spawn(type, count, opts = {}) {
-    for (let i = 0; i < count; i++) {
-        const size = opts.size || 2.5;
-        const geo = type === 'sphere' ? new THREE.SphereGeometry(size) : new THREE.BoxGeometry(size,size,size);
-        const shape = type === 'sphere' ? new CANNON.Sphere(size) : new CANNON.Box(new CANNON.Vec3(size/2,size/2,size/2));
-        const mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:opts.color||0x00d0ff, wireframe:true}));
-        const body = new CANNON.Body({mass:opts.mass||size*2, shape});
-        body.position.set(opts.pos?.x||(Math.random()-0.5)*60, opts.pos?.y||30, opts.pos?.z||(Math.random()-0.5)*60);
-        scene.add(mesh);
-        world.addBody(body);
-        entities.push({mesh, body});
+  window.addEventListener('resize', () => {
+    App.camera.aspect = vp.clientWidth / vp.clientHeight;
+    App.camera.updateProjectionMatrix();
+    App.renderer.setSize(vp.clientWidth, vp.clientHeight);
+  });
+
+  // Selection & transform
+  vp.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    const rect = vp.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera({x,y}, App.camera);
+
+    const hits = ray.intersectObjects(App.entities.map(e => e.mesh), false);
+
+    if (hits.length > 0) {
+      const obj = hits[0].object;
+      App.transform.attach(obj);
+      App.selected = obj;
+      // Glow effect
+      obj.material.emissive?.set(0x00ffb2);
+    } else {
+      App.transform.detach();
+      App.selected = null;
     }
+  });
+
+  // Drag & drop GLTF/GLB
+  vp.addEventListener('dragover', e => e.preventDefault());
+  vp.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    const loader = new THREE.GLTFLoader();
+    loader.load(url, gltf => {
+      const model = gltf.scene;
+      model.scale.setScalar(6);
+      model.position.set(0, 20, 0);
+      App.scene.add(model);
+
+      const bbox = new THREE.Box3().setFromObject(model);
+      const size = bbox.getSize(new THREE.Vector3());
+      const shape = new CANNON.Box(new CANNON.Vec3(size.x/2, size.y/2, size.z/2));
+      const body = new CANNON.Body({ mass:10, shape });
+      body.position.set(0, 20, 0);
+      App.world.addBody(body);
+      App.entities.push({ mesh:model, body });
+    });
+  });
 }
 
-// ====================== UI MODES ======================
-function switchMode(mode) {
-    document.getElementById('hub').style.display = mode === 'hub' ? 'block' : 'none';
-    document.getElementById('feed').style.display = mode === 'feed' ? 'block' : 'none';
+// ──────────────────────────────────────────────
+//  SPAWN & SCIENTIFIC HELPERS
+// ──────────────────────────────────────────────
+
+function spawn(type = 'sphere', count = 1, opts = {}) {
+  for (let i = 0; i < count; i++) {
+    const size = opts.size || 2.8;
+    let geo, shape;
+
+    if (type === 'sphere') {
+      geo = new THREE.SphereGeometry(size, 32, 32);
+      shape = new CANNON.Sphere(size);
+    } else {
+      geo = new THREE.BoxGeometry(size, size, size);
+      shape = new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
+    }
+
+    const mat = new THREE.MeshPhongMaterial({
+      color: opts.color || 0x00ffb2,
+      wireframe: true
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    const body = new CANNON.Body({
+      mass: opts.mass || size * 3.5,
+      shape,
+      position: new CANNON.Vec3(
+        opts.pos?.x ?? (Math.random()-0.5)*100,
+        opts.pos?.y ?? 50,
+        opts.pos?.z ?? (Math.random()-0.5)*100
+      )
+    });
+
+    App.scene.add(mesh);
+    App.world.addBody(body);
+    App.entities.push({ mesh, body });
+  }
 }
 
-function openWorkspace() {
-    document.getElementById('workspace').style.transform = 'translateX(0)';
-    if (!scene) initEngine(); // lazy init
+// ──────────────────────────────────────────────
+//  VOICE ENGINE v8
+// ──────────────────────────────────────────────
+
+let recognition;
+let voiceContinuous = false;
+
+function toggleVoice() {
+  voiceContinuous = !voiceContinuous;
+  const btn = document.getElementById('voice-trigger');
+  btn.style.background = voiceContinuous ? '#ff4d6d' : var(--accent);
+  btn.innerHTML = voiceContinuous ? '■' : '🎤';
+
+  if (voiceContinuous) startListening();
+  else if (recognition) recognition.stop();
 }
 
-function closeWorkspace() {
-    document.getElementById('workspace').style.transform = 'translateX(100%)';
+function startListening() {
+  if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+    alert("Voice not supported");
+    return;
+  }
+
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = e => {
+    const transcript = Array.from(e.results)
+      .map(r => r[0].transcript)
+      .join('')
+      .toLowerCase()
+      .trim();
+
+    if (transcript) {
+      document.getElementById('forge-prompt').value = transcript;
+      // Auto-execute short clear commands
+      if (transcript.includes('reset') || transcript.includes('clear')) resetLab();
+      else if (transcript.includes('spawn') || transcript.includes('create') || transcript.includes('make')) forge(transcript);
+    }
+  };
+
+  recognition.onerror = e => console.warn('Voice error:', e.error);
+  recognition.onend = () => { if (voiceContinuous) startListening(); };
+  recognition.start();
 }
 
-function loadProject(n) {
-    openWorkspace();
-    setTimeout(() => {
-        if (n === 0) { // Helix
-            for (let i = 0; i < 60; i++) {
-                const a = i * 0.42;
-                spawn('sphere',1,{pos:{x:Math.cos(a)*10, y:i*0.8-20, z:Math.sin(a)*10}, size:1.1, color:0x00ff9d});
-                spawn('sphere',1,{pos:{x:Math.cos(a+3.14)*10, y:i*0.8-20, z:Math.sin(a+3.14)*10}, size:1.1, color:0xff3366});
-            }
-        } else if (n === 1) { // Solar
-            spawn('sphere',1,{size:14,color:0xffee00,mass:1200});
-            for (let i=0;i<7;i++) spawn('sphere',1,{size:3-i*0.3,color:0x88ccff,vel:{z:Math.sqrt(32/(22+i*16))*9}});
+// ──────────────────────────────────────────────
+//  COMMAND / FORGE PARSER
+// ──────────────────────────────────────────────
+
+function forge(inputStr = null) {
+  const raw = (inputStr || document.getElementById('forge-prompt').value).toLowerCase().trim();
+  if (!raw) return;
+
+  let count = parseInt(raw.match(/\d+/)?.[0]) || 1;
+  if (raw.includes('many') || raw.includes('lot')) count = 50;
+
+  if (raw.includes('dna') || raw.includes('helix') || raw.includes('double helix')) {
+    for (let i = 0; i < 100; i++) {
+      const a = i * 0.35;
+      spawn('sphere', 1, {
+        pos: { x: Math.cos(a)*14, y: i*0.65-30, z: Math.sin(a)*14 },
+        size: 1.3,
+        color: 0x00ffb2
+      });
+      spawn('sphere', 1, {
+        pos: { x: Math.cos(a+Math.PI)*14, y: i*0.65-30, z: Math.sin(a+Math.PI)*14 },
+        size: 1.3,
+        color: 0xff4d6d
+      });
+    }
+  } else if (raw.includes('solar') || raw.includes('planet') || raw.includes('system')) {
+    spawn('sphere', 1, { size:20, color:0xffee00, mass:2800 });
+    for (let i = 0; i < 8; i++) {
+      const r = 35 + i*24;
+      spawn('sphere', 1, {
+        size: 4.2 - i*0.5,
+        color: 0x88ddff,
+        vel: { z: Math.sqrt(55/r)*14 }
+      });
+    }
+  } else if (raw.includes('molecule') || raw.includes('caffeine') || raw.includes('benzene')) {
+    fetchMolecule(raw.includes('caffeine') ? 'caffeine' : 'benzene');
+  } else if (raw.includes('explode') || raw.includes('burst') || raw.includes('blast')) {
+    spawn('sphere', count, { size:1, color:0xff3366 });
+  } else {
+    spawn('sphere', count);
+  }
+
+  document.getElementById('forge-prompt').value = '';
+}
+
+// ──────────────────────────────────────────────
+//  MOLECULE (enhanced)
+// ──────────────────────────────────────────────
+
+async function fetchMolecule(name) {
+  try {
+    const cidRes = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${name}/cids/JSON`);
+    const cidData = await cidRes.json();
+    const cid = cidData.IdentifierList.CID[0];
+
+    const sdfRes = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/SDF`);
+    const sdf = await sdfRes.text();
+
+    const lines = sdf.split('\n');
+    let atomsSection = false;
+    const positions = [];
+    const colors = [];
+
+    for (const line of lines) {
+      if (line.includes('V2000')) { atomsSection = true; continue; }
+      if (atomsSection && line.trim() === '') break;
+      if (atomsSection) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 4) {
+          const x = parseFloat(parts[0]);
+          const y = parseFloat(parts[1]);
+          const z = parseFloat(parts[2]);
+          const element = parts[3];
+          positions.push(new THREE.Vector3(x*4, y*4, z*4));
+
+          // Simple element coloring
+          let col = 0xffffff;
+          if (element === 'C') col = 0x888888;
+          else if (element === 'O') col = 0xff4444;
+          else if (element === 'N') col = 0x4488ff;
+          else if (element === 'H') col = 0xeeeeee;
+          colors.push(col);
         }
-    }, 800);
+      }
+    }
+
+    positions.forEach((pos, i) => {
+      const geo = new THREE.SphereGeometry(1.1, 16, 16);
+      const mat = new THREE.MeshPhongMaterial({ color: colors[i] });
+      const atom = new THREE.Mesh(geo, mat);
+      atom.position.copy(pos);
+      App.scene.add(atom);
+    });
+
+    alert(`Loaded ${name} structure • ${positions.length} atoms`);
+  } catch (err) {
+    console.error(err);
+    alert("Molecule load failed — check name or connection");
+  }
 }
 
-async function forgeAI() {
-    const prompt = document.getElementById('ai-prompt').value.toLowerCase();
-    if (prompt.includes('dna') || prompt.includes('helix')) loadProject(0);
-    else if (prompt.includes('solar')) loadProject(1);
-    else spawn('sphere', 30, {size:1.4});
+// ──────────────────────────────────────────────
+//  UI & CONTROL BINDINGS
+// ──────────────────────────────────────────────
+
+function togglePanel() {
+  document.getElementById('side-panel').classList.toggle('open');
+}
+
+function resetLab() {
+  App.entities.forEach(e => {
+    App.scene.remove(e.mesh);
+    App.world.removeBody(e.body);
+  });
+  App.entities = [];
+  App.transform.detach();
+  App.selected = null;
 }
 
 async function runPython() {
-    if (!pyodide) {
-        pyodide = await loadPyodide();
-        pyodide.globals.set("Omni", {spawn: spawn, log: console.log});
-    }
-    await pyodide.runPythonAsync(document.getElementById('py-code').value);
+  if (!App.pyodide) {
+    App.pyodide = await loadPyodide();
+    App.pyodide.globals.set("Omni", { spawn });
+  }
+  try {
+    await App.pyodide.runPythonAsync(document.getElementById('py-code').value);
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-// Boot
+// Boot sequence
 (async () => {
-    await new Promise(r => setTimeout(r, 1800));
-    document.getElementById('boot').style.opacity = 0;
-    setTimeout(() => {
-        document.getElementById('boot').style.display = 'none';
-        document.getElementById('hub').style.display = 'block';
-    }, 800);
+  await new Promise(r => setTimeout(r, 1600));
+  document.getElementById('boot-screen').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('boot-screen').style.display = 'none';
+  }, 1400);
+
+  await bootEngine();
 })();
 </script>
 </body>
