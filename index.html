@@ -3,86 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NEXUS v8.1 — Temporal Offset Lead</title>
+  <title>NEXUS v9.0 — Temporal Projection Core</title>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
 
   <style>
-    :root { --quantum: #00e5ff; --neural: #ff00ff; --bg: #000; }
+    :root {
+      --quantum: #00e5ff;
+      --neural: #ff00ff;
+      --bg: #000;
+      --text: #e0ffff;
+    }
     * { margin:0; padding:0; box-sizing:border-box; cursor: none !important; }
-    body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
+    body { background:var(--bg); color:var(--text); font-family:'JetBrains Mono', monospace; overflow:hidden; }
 
     #cursor {
-      position: fixed;
-      width: 14px;
-      height: 14px;
-      border: 1px solid #fff;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 10000;
-      mix-blend-mode: difference;
+      position:fixed;
+      width:16px; height:16px;
+      border:1px solid #fff;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:10000;
+      mix-blend-mode:difference;
+      box-shadow:0 0 12px #fff;
     }
 
-    .widget {
-      position: fixed;
-      background: rgba(5,5,15,0.92);
-      backdrop-filter: blur(30px);
-      border: 1px solid rgba(255,255,255,0.08);
-      padding: 20px;
-      border-radius: 8px;
-      z-index: 1000;
+    .hud-widget {
+      position:fixed;
+      background:rgba(5,5,15,0.94);
+      backdrop-filter:blur(32px);
+      border:1px solid rgba(255,255,255,0.08);
+      padding:24px;
+      border-radius:8px;
+      z-index:1000;
     }
     
-    #temporal-ctrl { top: 24px; left: 24px; width: 360px; border-top: 3px solid var(--neural); }
-    #parallel-stats { bottom: 24px; left: 24px; width: 360px; font-size: 10px; }
+    #temporal-lead { top:32px; left:32px; width:380px; border-top:4px solid var(--neural); }
+    #parallel-monitor { bottom:32px; left:32px; width:380px; font-size:11px; }
 
     input[type=range] {
-      width: 100%;
-      accent-color: var(--neural);
-      margin-top: 12px;
+      width:100%;
+      height:12px;
+      margin:16px 0 12px;
+      accent-color:var(--neural);
+      background:linear-gradient(to right, var(--quantum) 0%, var(--neural) 100%);
+      border-radius:6px;
     }
-    .label {
-      font-size: 9px;
-      color: var(--quantum);
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
+    .label-row {
+      display:flex;
+      justify-content:space-between;
+      font-size:9px;
+      color:var(--quantum);
+      letter-spacing:2px;
+      text-transform:uppercase;
+      margin-bottom:8px;
     }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--quantum);
-      color: #000;
-      border: none;
-      font-weight: 900;
-      cursor: pointer;
-      margin-top: 18px;
-      border-radius: 6px;
-      transition: all 0.2s;
+    .btn-inject {
+      width:100%;
+      padding:16px;
+      background:var(--quantum);
+      color:#000;
+      border:none;
+      font-weight:900;
+      font-size:14px;
+      border-radius:6px;
+      cursor:pointer;
+      margin-top:20px;
+      transition:all 0.2s;
     }
-    .btn:hover { background: #00ffff; box-shadow: 0 0 30px #00ffff44; }
+    .btn-inject:hover {
+      background:#00ffff;
+      box-shadow:0 0 40px #00ffff66;
+    }
 
-    #viewport { width: 100vw; height: 100vh; }
+    #viewport { width:100vw; height:100vh; }
   </style>
 </head>
 <body>
 
 <div id="cursor"></div>
 
-<div id="temporal-ctrl" class="widget">
-  <span class="label">NEURAL PROJECTION LEAD</span>
-  <input type="range" id="dilation" min="0" max="100" value="30">
-  <div style="display:flex; justify-content: space-between; font-size: 9px; margin-top:8px;">
+<div id="temporal-lead" class="hud-widget">
+  <span class="label" style="font-size:11px;letter-spacing:3px;">NEURAL PROJECTION LEAD</span>
+  <input type="range" id="lead-slider" min="0" max="100" value="35">
+  <div class="label-row">
     <span>REAL-TIME</span>
     <span>FUTURE_OFFSET</span>
   </div>
-  <button class="btn" onclick="spawn(20)">INJECT TEMPORAL NODES</button>
+  <button class="btn-inject" onclick="injectNodes(24)">INJECT TEMPORAL NODES</button>
 </div>
 
-<div id="parallel-stats" class="widget">
-  <div id="thread-readout">THREADS: ACTIVE // PARALLEL_SYNC: <span id="sync-pct">100</span>%</div>
-  <div style="color:var(--neural); margin-top:8px;" id="prediction-info">Neural Lead: 0.0s</div>
+<div id="parallel-monitor" class="hud-widget">
+  <div id="thread-status">THREADS: ACTIVE // PARALLEL_SYNC: <span id="sync-val">100</span>%</div>
+  <div id="lead-time" style="color:var(--neural);margin-top:12px;font-size:11px;">
+    Neural Lead: <span id="lead-val">0.0</span>s
+  </div>
 </div>
 
 <div id="viewport"></div>
@@ -92,19 +109,19 @@ let scene, camera, renderer, world, entities = [];
 
 function init() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 5000);
-  camera.position.set(140, 120, 140);
+  camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 8000);
+  camera.position.set(160, 140, 160);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(innerWidth, innerHeight);
   document.getElementById('viewport').appendChild(renderer.domElement);
 
   new THREE.OrbitControls(camera, renderer.domElement);
 
-  world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.81, 0) });
+  world = new CANNON.World({gravity:new CANNON.Vec3(0,-9.81,0)});
 
-  const ground = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
-  ground.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+  const ground = new CANNON.Body({mass:0, shape:new CANNON.Plane()});
+  ground.quaternion.setFromEuler(-Math.PI/2,0,0);
   world.addBody(ground);
 
   window.onmousemove = e => {
@@ -115,91 +132,106 @@ function init() {
   animate();
 }
 
-function spawn(count) {
-  const geo = new THREE.SphereGeometry(2.2, 24, 24);
-  for(let i = 0; i < count; i++) {
-    const mat = new THREE.MeshStandardMaterial({ 
-      color: 0x00e5ff, 
-      metalness: 0.6, 
-      roughness: 0.15,
-      emissive: 0x00aaff,
-      emissiveIntensity: 0.4
+function injectNodes(count = 20) {
+  const geo = new THREE.SphereGeometry(2.4, 24, 24);
+  for(let i=0; i<count; i++) {
+    const mat = new THREE.MeshStandardMaterial({
+      color:0x00e5ff,
+      metalness:0.7,
+      roughness:0.15,
+      emissive:0x00aaff,
+      emissiveIntensity:0.5
     });
     const mesh = new THREE.Mesh(geo, mat);
-    
-    const body = new CANNON.Body({ 
-      mass: 1.2, 
-      shape: new CANNON.Sphere(2.2),
-      linearDamping: 0.02,
-      angularDamping: 0.02
+
+    const body = new CANNON.Body({
+      mass:1.4,
+      shape:new CANNON.Sphere(2.4),
+      linearDamping:0.01,
+      angularDamping:0.02
     });
     body.position.set(
-      (Math.random()-0.5)*140,
-      80 + (i*6),
-      (Math.random()-0.5)*140
+      (Math.random()-0.5)*180,
+      100 + i*8,
+      (Math.random()-0.5)*180
     );
 
-    // Neural ghost (predictive future)
+    // Predictive ghost
     const ghostMat = new THREE.MeshBasicMaterial({
-      color: 0xff00ff,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.35
+      color:0xff00ff,
+      wireframe:true,
+      transparent:true,
+      opacity:0.4
     });
     const ghost = new THREE.Mesh(geo, ghostMat);
 
+    // Trail line for ghost path
+    const trailPoints = [];
+    const trailGeo = new THREE.BufferGeometry().setFromPoints(trailPoints);
+    const trailMat = new THREE.LineBasicMaterial({color:0xff00ff, transparent:true, opacity:0.6});
+    const trail = new THREE.Line(trailGeo, trailMat);
+
     scene.add(mesh);
     scene.add(ghost);
+    scene.add(trail);
     world.addBody(body);
 
-    // Simple spawn animation
+    // Spawn scale animation
     mesh.scale.set(0.01,0.01,0.01);
     ghost.scale.set(0.01,0.01,0.01);
     let t = 0;
-    const anim = setInterval(() => {
-      t += 0.08;
+    const grow = setInterval(() => {
+      t += 0.1;
       const s = Math.min(1, t);
       mesh.scale.set(s,s,s);
       ghost.scale.set(s,s,s);
-      if (t >= 1) clearInterval(anim);
+      if (t >= 1) clearInterval(grow);
     }, 16);
 
-    entities.push({ mesh, body, ghost });
+    entities.push({mesh, body, ghost, trail, trailPoints});
   }
 }
 
 function animate() {
   requestAnimationFrame(animate);
 
-  const dilation = document.getElementById('dilation').value / 100; // 0..1
-  const leadTime = dilation * 12; // max 12 seconds lead
-  document.getElementById('prediction-info').innerText = `Neural Lead: ${leadTime.toFixed(1)}s`;
-  document.getElementById('sync-pct').innerText = Math.round(100 - dilation*40); // fake desync
+  const leadPct = document.getElementById('lead-slider').value / 100; // 0..1
+  const leadSeconds = leadPct * 15; // max 15s projection
+  document.getElementById('lead-val').innerText = leadSeconds.toFixed(1);
+  document.getElementById('sync-val').innerText = Math.round(100 - leadPct*65); // desync grows with lead
 
-  // Dilated real physics (slower when slider is right)
-  world.step(1/60 * (1 - dilation*0.8));
+  // Dilated real physics step
+  world.step(1/60 * (1 - leadPct*0.85));
 
   entities.forEach((e, idx) => {
     e.mesh.position.copy(e.body.position);
     e.mesh.quaternion.copy(e.body.quaternion);
 
-    // Predictive ghost: integrate velocity + gravity over lead time
+    // Predictive ghost: ballistic integration
     const vel = e.body.velocity;
     const pos = e.body.position;
 
-    let futureX = pos.x + vel.x * leadTime;
-    let futureY = pos.y + vel.y * leadTime - 0.5 * 9.81 * leadTime**2;
-    let futureZ = pos.z + vel.z * leadTime;
+    let fx = pos.x + vel.x * leadSeconds;
+    let fy = pos.y + vel.y * leadSeconds - 0.5 * 9.81 * leadSeconds**2;
+    let fz = pos.z + vel.z * leadSeconds;
 
-    // Clamp to ground (simple)
-    futureY = Math.max(futureY, 2.2);
+    fy = Math.max(fy, 2.4); // ground clamp
 
-    e.ghost.position.set(futureX, futureY, futureZ);
+    e.ghost.position.set(fx, fy, fz);
 
-    // Cleanup far below ground
-    if (pos.y < -80) {
+    // Trail behind ghost
+    e.trailPoints.push(e.ghost.position.clone());
+    if (e.trailPoints.length > 40) e.trailPoints.shift();
+    e.trail.geometry.setFromPoints(e.trailPoints);
+
+    // Fade trail opacity with age
+    e.trail.material.opacity = 0.6 * (1 - leadPct*0.7);
+
+    // Cleanup
+    if (pos.y < -120) {
       scene.remove(e.mesh);
       scene.remove(e.ghost);
+      scene.remove(e.trail);
       world.removeBody(e.body);
       entities.splice(idx, 1);
     }
