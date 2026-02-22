@@ -2,198 +2,384 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>PhyArch // NEXUS</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap">
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PhyArch NEXUS — Futuristic Engineering Hub</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide@0.24.1/full/pyodide.js"></script>
   <style>
     :root {
-      --bg: #030305;
-      --surface: #0a0a0c;
-      --accent: #00f2ff;
-      --border: rgba(255, 255, 255, 0.04);
-      --text: #ffffff;
-      --text-dim: #606065;
+      --bg: #101010;
+      --surface: #1c1c1c;
+      --elevated: #242424;
+      --text: #e0e0e0;
+      --text-dim: #a0a0a0;
+      --accent: #007bff;
+      --warning: #ffc107;
+      --error: #dc3545;
+      --success: #28a745;
+      --border: #2a2a2a;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Inter', sans-serif;
+      overflow:hidden;
+      height:100vh;
+      display:flex;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; }
-
-    /* --- CLEAN HEADER (GLASS) --- */
-    nav {
-      position: fixed; top: 0; width: 100%; height: 80px; 
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0 50px; z-index: 2000; transition: background 0.3s;
+    #sidebar {
+      width:240px;
+      background:var(--surface);
+      border-right:1px solid var(--border);
+      padding:16px;
+      overflow-y:auto;
+      z-index:1000;
     }
-    .logo { 
-      font-family: 'Orbitron'; color: var(--text); font-size: 14px; font-weight: 700; 
-      letter-spacing: 4px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+    .sidebar-group {
+      margin-bottom:32px;
     }
-    .logo span { color: var(--accent); font-size: 20px; }
-    .nav-links { display: flex; gap: 40px; }
-    .nav-item { 
-      font-family: 'Orbitron'; font-size: 10px; color: var(--text-dim); 
-      text-decoration: none; letter-spacing: 2px; transition: 0.3s;
+    .sidebar-group h4 {
+      font-size:12px;
+      color:var(--text-dim);
+      text-transform:uppercase;
+      margin-bottom:8px;
     }
-    .nav-item:hover, .nav-item.active { color: var(--accent); }
-
-    /* --- HERO SECTION (ULTRA CLEAN) --- */
-    .hero {
-      height: 100vh; display: flex; flex-direction: column; justify-content: center;
-      padding: 0 10%; background: radial-gradient(circle at 90% 10%, rgba(0,242,255,0.03) 0%, transparent 60%);
+    .sidebar-item {
+      display:flex;
+      align-items:center;
+      padding:8px 12px;
+      color:var(--text-dim);
+      text-decoration:none;
+      font-size:14px;
+      font-weight:500;
+      border-radius:4px;
+      transition:all 0.2s;
     }
-    .hero h1 { 
-      font-family: 'Orbitron'; font-size: clamp(40px, 10vw, 80px); 
-      line-height: 0.9; margin-bottom: 30px; letter-spacing: -2px;
+    .sidebar-item:hover, .sidebar-item.active {
+      background:var(--elevated);
+      color:var(--text);
     }
-    .hero p { max-width: 500px; color: var(--text-dim); font-size: 16px; font-weight: 300; line-height: 1.8; }
-
-    /* --- MASTER DASHBOARD (GRID-BASED) --- */
-    .dashboard-section { padding: 100px 10%; background: #000; }
-    .grid-layout { 
-      display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; 
-    }
-    
-    .card {
-      background: var(--surface); border: 1px solid var(--border); 
-      padding: 40px; border-radius: 2px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .card:hover { border-color: var(--accent); background: #0e0e12; }
-    .card-label { font-family: 'JetBrains Mono'; color: var(--accent); font-size: 10px; margin-bottom: 20px; display: block; }
-    .card h2 { font-family: 'Orbitron'; font-size: 20px; margin-bottom: 10px; }
-
-    .col-6 { grid-column: span 6; }
-    .col-12 { grid-column: span 12; }
-
-    /* --- WORKSPACE VIEWPORT --- */
-    .viewport-box { 
-      height: 500px; background: #050505; position: relative; 
-      border: 1px solid var(--border); overflow: hidden; 
-    }
-    #three-canvas { width: 100%; height: 100%; }
-
-    /* --- FLOATING AI COMMAND (CLEAN) --- */
-    .ai-trigger {
-      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-      background: #fff; color: #000; padding: 12px 40px; border-radius: 40px;
-      font-family: 'Orbitron'; font-size: 11px; font-weight: 900; cursor: pointer;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 3000;
+    .sidebar-icon {
+      margin-right:12px;
+      font-size:16px;
     }
 
-    .ai-drawer {
-      position: fixed; bottom: -100%; left: 0; width: 100%; height: 50vh;
-      background: #000; border-top: 1px solid var(--border); padding: 50px 10%;
-      z-index: 4000; transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    #main {
+      flex:1;
+      display:flex;
+      flex-direction:column;
     }
-    .ai-drawer.active { bottom: 0; }
-    #ai-input {
-      width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--border);
-      color: #fff; font-size: 32px; font-family: 'Inter'; padding: 20px 0; outline: none;
+    #topbar {
+      background:var(--surface);
+      border-bottom:1px solid var(--border);
+      padding:12px 24px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+    }
+    .topbar-logo {
+      font-size:20px;
+      font-weight:600;
+      color:var(--accent);
+    }
+    .topbar-search {
+      flex:1;
+      background:var(--elevated);
+      border:1px solid var(--border);
+      border-radius:4px;
+      padding:8px 12px;
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+    }
+    .topbar-button {
+      padding:8px 16px;
+      background:var(--accent);
+      color:white;
+      border:none;
+      border-radius:4px;
+      font-weight:500;
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    .topbar-button:hover {
+      background:#0056b3;
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 900px) {
-      nav { padding: 0 20px; }
-      .nav-links { display: none; }
-      .col-6 { grid-column: span 12; }
+    #content {
+      flex:1;
+      overflow-y:auto;
+      padding:24px;
+    }
+    .dashboard-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+      gap:24px;
+    }
+    .dashboard-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:24px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      transition:all 0.2s;
+    }
+    .dashboard-card:hover {
+      box-shadow:0 4px 16px rgba(0,0,0,0.3);
+    }
+    .dashboard-card h3 {
+      font-size:18px;
+      margin-bottom:16px;
+    }
+
+    #viewport {
+      height:500px;
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:8px;
+      margin-bottom:24px;
+    }
+
+    #ai-panel, #python-panel {
+      background:var(--elevated);
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:16px;
+      margin-bottom:24px;
+    }
+    #ai-input, #python-input {
+      width:100%;
+      background:transparent;
+      border:none;
+      color:var(--text);
+      font-family:monospace;
+      font-size:14px;
+      outline:none;
+      margin-bottom:12px;
+    }
+    #ai-output, #python-output {
+      color:var(--text-dim);
+      font-family:monospace;
+      font-size:14px;
+    }
+
+    #bottom-status {
+      background:var(--surface);
+      border-top:1px solid var(--border);
+      padding:8px 24px;
+      font-size:12px;
+      color:var(--text-dim);
+      display:flex;
+      justify-content:space-between;
     }
   </style>
 </head>
 <body>
 
-<nav id="navbar">
-  <div class="logo" onclick="location.reload()"><span>◈</span> PHYARCH</div>
-  <div class="nav-links">
-    <a href="#" class="nav-item active">HUB</a>
-    <a href="#projects" class="nav-item">PROJECTS</a>
-    <a href="#build" class="nav-item">BUILD</a>
-    <a href="#docs" class="nav-item">DOCS</a>
+<div id="sidebar">
+  <div class="sidebar-group">
+    <h4>Tools</h4>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">🛠️</span>Create App</a>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">🔬</span>Simulate</a>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">📊</span>Calculate</a>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">📈</span>Analyze</a>
   </div>
-</nav>
+  <div class="sidebar-group">
+    <h4>File</h4>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">📂</span>Files</a>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">💾</span>Save</a>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">➕</span>Insert</a>
+  </div>
+  <div class="sidebar-group">
+    <h4>System</h4>
+    <a href="#" class="sidebar-item"><span class="sidebar-icon">⚙️</span>Settings</a>
+  </div>
+</div>
 
-<section class="hero">
-  <p style="color:var(--accent); font-family:'JetBrains Mono'; margin-bottom: 10px;">V.2026.02 // CORE_INIT</p>
-  <h1>BUILDING THE<br>NEXT PHYSICS.</h1>
-  <p>An integrated master platform for neural app construction, achievement tracking, and real-time physics synthesis.</p>
-</section>
+<div id="main">
+  <div id="topbar">
+    <div class="topbar-logo">PhyArch NEXUS</div>
+    <input type="text" class="topbar-search" placeholder="Search or AI prompt...">
+    <button class="topbar-button" onclick="selfUpdate()">Update App</button>
+  </div>
 
-<section class="dashboard-section" id="projects">
-  <div class="grid-layout">
-    <div class="card col-6">
-      <span class="card-label">PROJECT ACHIEVEMENT // 01</span>
-      <h2>NEURAL RENDERER</h2>
-      <p style="color:var(--text-dim); font-size:14px; margin-top:10px;">Successfully achieved 120Hz refresh rates on 10k particle simulations within the browser kernel.</p>
-    </div>
-    <div class="card col-6">
-      <span class="card-label">PROJECT ACHIEVEMENT // 02</span>
-      <h2>MASTER APP GEN</h2>
-      <p style="color:var(--text-dim); font-size:14px; margin-top:10px;">Integrated direct-to-APK compilation for Flutter and React Native build targets.</p>
-    </div>
-    
-    <div class="card col-12" id="build">
-      <span class="card-label">WORKSPACE // VIEWPORT</span>
-      <div class="viewport-box">
-        <div id="three-canvas"></div>
-        <div style="position:absolute; bottom:20px; right:20px; font-family:'JetBrains Mono'; color:var(--accent); font-size:10px;">
-          AXIS: X_Y_Z // RENDER: ACTIVE
-        </div>
+  <div id="content">
+    <div class="dashboard-grid">
+      <div class="dashboard-card">
+        <h3>Dashboard</h3>
+        <p>System Status: Stable</p>
+        <p>Achievements Projected: 80% to Pro</p>
       </div>
-      <div style="display:flex; gap:20px; margin-top:30px;">
-        <button onclick="initSim()" style="background:var(--accent); border:none; padding:15px 40px; font-family:'Orbitron'; font-size:11px; font-weight:bold; cursor:pointer;">START SIMULATION</button>
-        <button style="background:transparent; border:1px solid var(--border); color:#fff; padding:15px 40px; font-family:'Orbitron'; font-size:11px; cursor:pointer;">OPEN SOURCE CODE</button>
+      <div class="dashboard-card">
+        <h3>Recent Projects</h3>
+        <p>Simulation 1: 40% complete</p>
+        <p>App Build 2: 80% complete</p>
       </div>
     </div>
-  </div>
-</section>
 
-<div class="ai-trigger" onclick="toggleAI()">FORGE COMMAND</div>
+    <div id="viewport"></div>
 
-<div class="ai-drawer" id="ai-drawer">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
-    <span style="font-family:'Orbitron'; font-size:12px; letter-spacing:4px;">NEURAL COMMAND</span>
-    <span onclick="toggleAI()" style="cursor:pointer; font-size:24px;">×</span>
+    <div id="ai-panel">
+      <h3>AI Forge</h3>
+      <input type="text" id="ai-input" placeholder="Enter prompt...">
+      <button onclick="processAI()">Generate</button>
+      <div id="ai-output"></div>
+    </div>
+
+    <div id="python-panel">
+      <h3>Python Kernel</h3>
+      <input type="text" id="python-input" placeholder="Enter Python code...">
+      <button onclick="executePython()">Run</button>
+      <div id="python-output"></div>
+    </div>
   </div>
-  <input type="text" id="ai-input" placeholder="What shall we build?" onkeypress="if(event.key==='Enter') runForge()">
-  <div id="forge-output" style="margin-top:30px; font-family:'JetBrains Mono'; font-size:12px; color:var(--accent);"></div>
+
+  <div id="bottom-status">
+    <span>Sync: 100% • Lead: 0.0s</span>
+    <span>Voice: Ready • Search: Online</span>
+  </div>
 </div>
 
 <script>
-let scene, camera, renderer, mesh;
-
-function toggleAI() { document.getElementById('ai-drawer').classList.toggle('active'); }
-
-window.onscroll = () => {
-  const nav = document.getElementById('navbar');
-  if(window.scrollY > 50) nav.style.background = "rgba(0,0,0,0.9)";
-  else nav.style.background = "transparent";
-};
-
-function initSim() {
-  const container = document.getElementById('three-canvas');
-  if(renderer) return;
+// Three.js 3D Viewport
+let scene, camera, renderer;
+function initViewport() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  container.appendChild(renderer.domElement);
-  
-  const geo = new THREE.IcosahedronGeometry(2, 1);
-  const mat = new THREE.MeshBasicMaterial({ color: 0x00f2ff, wireframe: true });
-  mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.getElementById('viewport').appendChild(renderer.domElement);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
   camera.position.z = 5;
-  
-  function animate() { requestAnimationFrame(animate); mesh.rotation.y += 0.005; renderer.render(scene, camera); }
+  function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
   animate();
 }
+initViewport();
 
-function runForge() {
-  const input = document.getElementById('ai-input');
-  const out = document.getElementById('forge-output');
-  out.innerText = "> PARSING PARAMETERS... INITIALIZING BUILD SEQUENCE FOR: " + input.value.toUpperCase();
-  input.value = "";
+// Self-Analysis & Self-Update
+const backgroundTerminal = document.createElement('div');
+backgroundTerminal.id = 'background-terminal';
+backgroundTerminal.style = 'position:fixed; bottom:0; left:0; right:0; background:var(--surface); padding:8px; font-size:12px; color:var(--success); display:none;';
+document.body.appendChild(backgroundTerminal);
+function logToTerminal(msg) {
+  backgroundTerminal.innerText += msg + '\n';
+  backgroundTerminal.scrollTop = backgroundTerminal.scrollHeight;
+}
+function selfAnalyze() {
+  logToTerminal('Analyzing app...');
+  // Simulate analysis
+  setTimeout(() => {
+    logToTerminal('Missing: Pyodide. Suggest modify to integrate.');
+    // Self-modify (simulate)
+    logToTerminal('Modifying code in background...');
+  }, 1000);
+}
+function selfUpdate() {
+  if (confirm('Allow self-update? (Period: 7 days)')) {
+    logToTerminal('Searching for updates...');
+    // Simulate search
+    setTimeout(() => {
+      logToTerminal('Found update. Installing...');
+      alert('App updated!');
+    }, 2000);
+  }
+}
+backgroundTerminal.style.display = 'block';
+setInterval(selfAnalyze, 60000); // Every minute for demo
+
+// Search Feature
+function search(query) {
+  logToTerminal('Searching: ' + query);
+  return 'Results for "' + query + '" (integrated from web)';
+}
+
+// Python with Pyodide
+async function executePython() {
+  logToTerminal('Loading Pyodide...');
+  let pyodide = await loadPyodide();
+  const code = document.getElementById('python-input').value;
+  try {
+    const result = await pyodide.runPythonAsync(code);
+    document.getElementById('python-output').innerText = result;
+  } catch (e) {
+    document.getElementById('python-output').innerText = 'Error: ' + e.message;
+  }
+}
+
+// AI Forge (with self-integration)
+function processAI() {
+  const prompt = document.getElementById('ai-input').value;
+  logToTerminal('AI processing: ' + prompt);
+  const response = `Generated: ${prompt} (self-integrated into app)`;
+  document.getElementById('ai-output').innerText = response;
+}
+
+// Voice Input
+function toggleVoice() {
+  logToTerminal('Voice activated');
+  // Simulate speech recognition
+  alert('Voice command processed (e.g., "inject nodes")');
+}
+
+// Data Feeds
+function fetchDataFeed() {
+  logToTerminal('Fetching data feed');
+  alert('Weather/stock data loaded (influencing simulation)');
+}
+
+// Molecular Viewer
+function fetchMolecule() {
+  logToTerminal('Fetching molecule');
+  alert('Molecular structure rendered in viewport');
+}
+
+// GLTF Import
+function importGLTF(file) {
+  logToTerminal('Importing GLTF: ' + file.name);
+  // Render in Three.js (simulate)
+  const loader = new THREE.GLTFLoader();
+  loader.load(URL.createObjectURL(file), gltf => {
+    scene.add(gltf.scene);
+  });
+}
+
+// Save/Load
+function saveProject() {
+  logToTerminal('Saving project');
+  localStorage.setItem('nexus-project', JSON.stringify(scene.toJSON()));
+  alert('Project saved');
+}
+function loadProject() {
+  logToTerminal('Loading project');
+  const data = localStorage.getItem('nexus-project');
+  if (data) {
+    const loader = new THREE.ObjectLoader();
+    loader.parse(JSON.parse(data), obj => {
+      scene = obj;
+    });
+  }
+  alert('Project loaded');
+}
+
+// Account
+function login() {
+  logToTerminal('Logging in');
+  localStorage.setItem('user', 'user');
+  alert('Logged in');
+}
+login();
+
+// Collab
+function shareCollab() {
+  logToTerminal('Generating collab link');
+  alert('Collab link: http://nexus.collab');
 }
 </script>
-
 </body>
 </html>
