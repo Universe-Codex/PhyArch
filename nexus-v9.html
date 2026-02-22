@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NEXUS v9.0 — Temporal Projection Core</title>
+  <title>NEXUS v9.1 — Temporal Projection Core</title>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.min.js"></script>
@@ -11,46 +11,73 @@
 
   <style>
     :root {
+      --bg: #000;
+      --panel: rgba(8,8,18,0.92);
       --quantum: #00e5ff;
       --neural: #ff00ff;
-      --bg: #000;
-      --text: #e0ffff;
+      --glow-q: 0 0 30px #00e5ff66;
+      --glow-n: 0 0 30px #ff00ff44;
     }
-    * { margin:0; padding:0; box-sizing:border-box; cursor: none !important; }
-    body { background:var(--bg); color:var(--text); font-family:'JetBrains Mono', monospace; overflow:hidden; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:var(--bg);
+      overflow:hidden;
+      height:100vh;
+      font-family:'JetBrains Mono', monospace;
+      color:#e0ffff;
+      cursor:none;
+    }
 
     #cursor {
       position:fixed;
-      width:16px; height:16px;
-      border:1px solid #fff;
+      width:18px; height:18px;
+      border:2px solid #fff;
       border-radius:50%;
       pointer-events:none;
-      z-index:10000;
+      z-index:9999;
       mix-blend-mode:difference;
-      box-shadow:0 0 12px #fff;
+      box-shadow:0 0 15px #fff;
+      transition:transform 0.1s;
     }
 
-    .hud-widget {
+    .hud {
       position:fixed;
-      background:rgba(5,5,15,0.94);
-      backdrop-filter:blur(32px);
-      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(5,5,15,0.88);
+      backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px;
       padding:24px;
-      border-radius:8px;
+      box-shadow:var(--glow-q);
       z-index:1000;
+      transition:all 0.4s ease;
     }
-    
-    #temporal-lead { top:32px; left:32px; width:380px; border-top:4px solid var(--neural); }
-    #parallel-monitor { bottom:32px; left:32px; width:380px; font-size:11px; }
+    #temporal-hud {
+      top:32px; left:32px; width:380px;
+      border-top:4px solid var(--neural);
+    }
+    #status-hud {
+      bottom:32px; left:32px; width:380px;
+      font-size:11px;
+      opacity:0.9;
+    }
 
     input[type=range] {
       width:100%;
-      height:12px;
-      margin:16px 0 12px;
-      accent-color:var(--neural);
+      height:10px;
+      margin:16px 0;
       background:linear-gradient(to right, var(--quantum) 0%, var(--neural) 100%);
-      border-radius:6px;
+      border-radius:5px;
+      -webkit-appearance:none;
     }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none;
+      width:24px; height:24px;
+      background:var(--neural);
+      border-radius:50%;
+      cursor:pointer;
+      box-shadow:var(--glow-n);
+    }
+
     .label-row {
       display:flex;
       justify-content:space-between;
@@ -58,46 +85,47 @@
       color:var(--quantum);
       letter-spacing:2px;
       text-transform:uppercase;
-      margin-bottom:8px;
     }
+
     .btn-inject {
       width:100%;
       padding:16px;
-      background:var(--quantum);
+      background:linear-gradient(90deg, var(--quantum), #00ffff);
       color:#000;
       border:none;
       font-weight:900;
-      font-size:14px;
-      border-radius:6px;
+      font-size:15px;
+      border-radius:8px;
       cursor:pointer;
       margin-top:20px;
-      transition:all 0.2s;
+      transition:all 0.3s;
+      box-shadow:0 0 30px var(--glow-q);
     }
     .btn-inject:hover {
-      background:#00ffff;
-      box-shadow:0 0 40px #00ffff66;
+      transform:scale(1.03);
+      box-shadow:0 0 50px #00ffff88;
     }
 
-    #viewport { width:100vw; height:100vh; }
+    #viewport { width:100vw; height:100vh; background:#000; }
   </style>
 </head>
 <body>
 
 <div id="cursor"></div>
 
-<div id="temporal-lead" class="hud-widget">
-  <span class="label" style="font-size:11px;letter-spacing:3px;">NEURAL PROJECTION LEAD</span>
-  <input type="range" id="lead-slider" min="0" max="100" value="35">
+<div id="temporal-hud" class="hud">
+  <span class="label" style="font-size:11px;letter-spacing:3px;color:var(--neural);">NEURAL PROJECTION LEAD</span>
+  <input type="range" id="lead" min="0" max="100" value="40">
   <div class="label-row">
     <span>REAL-TIME</span>
-    <span>FUTURE_OFFSET</span>
+    <span>FUTURE OFFSET</span>
   </div>
-  <button class="btn-inject" onclick="injectNodes(24)">INJECT TEMPORAL NODES</button>
+  <button class="btn-inject" onclick="inject(28)">INJECT TEMPORAL NODES</button>
 </div>
 
-<div id="parallel-monitor" class="hud-widget">
-  <div id="thread-status">THREADS: ACTIVE // PARALLEL_SYNC: <span id="sync-val">100</span>%</div>
-  <div id="lead-time" style="color:var(--neural);margin-top:12px;font-size:11px;">
+<div id="status-hud" class="hud">
+  <div>THREADS: ACTIVE // SYNC: <span id="sync">100</span>%</div>
+  <div style="color:var(--neural);margin-top:10px;">
     Neural Lead: <span id="lead-val">0.0</span>s
   </div>
 </div>
@@ -109,8 +137,8 @@ let scene, camera, renderer, world, entities = [];
 
 function init() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 8000);
-  camera.position.set(160, 140, 160);
+  camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 10000);
+  camera.position.set(180, 150, 180);
 
   renderer = new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(innerWidth, innerHeight);
@@ -118,7 +146,7 @@ function init() {
 
   new THREE.OrbitControls(camera, renderer.domElement);
 
-  world = new CANNON.World({gravity:new CANNON.Vec3(0,-9.81,0)});
+  world = new CANNON.World({gravity:new CANNON.Vec3(0,-12,0)});
 
   const ground = new CANNON.Body({mass:0, shape:new CANNON.Plane()});
   ground.quaternion.setFromEuler(-Math.PI/2,0,0);
@@ -132,108 +160,84 @@ function init() {
   animate();
 }
 
-function injectNodes(count = 20) {
-  const geo = new THREE.SphereGeometry(2.4, 24, 24);
+function inject(count = 28) {
+  const geo = new THREE.SphereGeometry(2.5, 28, 28);
   for(let i=0; i<count; i++) {
     const mat = new THREE.MeshStandardMaterial({
-      color:0x00e5ff,
-      metalness:0.7,
-      roughness:0.15,
+      color: 0x00e5ff,
+      metalness:0.8,
+      roughness:0.1,
       emissive:0x00aaff,
-      emissiveIntensity:0.5
+      emissiveIntensity:0.6
     });
     const mesh = new THREE.Mesh(geo, mat);
 
     const body = new CANNON.Body({
-      mass:1.4,
-      shape:new CANNON.Sphere(2.4),
-      linearDamping:0.01,
-      angularDamping:0.02
+      mass:1.6,
+      shape:new CANNON.Sphere(2.5),
+      linearDamping:0.01
     });
     body.position.set(
-      (Math.random()-0.5)*180,
-      100 + i*8,
-      (Math.random()-0.5)*180
+      (Math.random()-0.5)*220,
+      120 + i*9,
+      (Math.random()-0.5)*220
     );
 
-    // Predictive ghost
     const ghostMat = new THREE.MeshBasicMaterial({
       color:0xff00ff,
       wireframe:true,
       transparent:true,
-      opacity:0.4
+      opacity:0.45
     });
     const ghost = new THREE.Mesh(geo, ghostMat);
 
-    // Trail line for ghost path
-    const trailPoints = [];
-    const trailGeo = new THREE.BufferGeometry().setFromPoints(trailPoints);
-    const trailMat = new THREE.LineBasicMaterial({color:0xff00ff, transparent:true, opacity:0.6});
-    const trail = new THREE.Line(trailGeo, trailMat);
-
     scene.add(mesh);
     scene.add(ghost);
-    scene.add(trail);
     world.addBody(body);
 
-    // Spawn scale animation
-    mesh.scale.set(0.01,0.01,0.01);
-    ghost.scale.set(0.01,0.01,0.01);
+    // Spawn animation
+    mesh.scale.set(0.1,0.1,0.1);
+    ghost.scale.set(0.1,0.1,0.1);
     let t = 0;
-    const grow = setInterval(() => {
-      t += 0.1;
+    const anim = setInterval(() => {
+      t += 0.12;
       const s = Math.min(1, t);
       mesh.scale.set(s,s,s);
       ghost.scale.set(s,s,s);
-      if (t >= 1) clearInterval(grow);
+      if (t >= 1) clearInterval(anim);
     }, 16);
 
-    entities.push({mesh, body, ghost, trail, trailPoints});
+    entities.push({mesh, body, ghost});
   }
 }
 
 function animate() {
   requestAnimationFrame(animate);
 
-  const leadPct = document.getElementById('lead-slider').value / 100; // 0..1
-  const leadSeconds = leadPct * 15; // max 15s projection
-  document.getElementById('lead-val').innerText = leadSeconds.toFixed(1);
-  document.getElementById('sync-val').innerText = Math.round(100 - leadPct*65); // desync grows with lead
+  const lead = document.getElementById('lead').value / 100;
+  const leadSec = lead * 18;
+  document.getElementById('lead-val').innerText = leadSec.toFixed(1);
+  document.getElementById('sync').innerText = Math.round(100 - lead*70);
 
-  // Dilated real physics step
-  world.step(1/60 * (1 - leadPct*0.85));
+  world.step(1/60 * (1 - lead*0.9));
 
-  entities.forEach((e, idx) => {
+  entities.forEach((e, i) => {
     e.mesh.position.copy(e.body.position);
     e.mesh.quaternion.copy(e.body.quaternion);
 
-    // Predictive ghost: ballistic integration
-    const vel = e.body.velocity;
-    const pos = e.body.position;
+    let fx = e.body.position.x + e.body.velocity.x * leadSec;
+    let fy = e.body.position.y + e.body.velocity.y * leadSec - 4.905 * leadSec**2;
+    let fz = e.body.position.z + e.body.velocity.z * leadSec;
 
-    let fx = pos.x + vel.x * leadSeconds;
-    let fy = pos.y + vel.y * leadSeconds - 0.5 * 9.81 * leadSeconds**2;
-    let fz = pos.z + vel.z * leadSeconds;
-
-    fy = Math.max(fy, 2.4); // ground clamp
+    fy = Math.max(fy, 2.5);
 
     e.ghost.position.set(fx, fy, fz);
 
-    // Trail behind ghost
-    e.trailPoints.push(e.ghost.position.clone());
-    if (e.trailPoints.length > 40) e.trailPoints.shift();
-    e.trail.geometry.setFromPoints(e.trailPoints);
-
-    // Fade trail opacity with age
-    e.trail.material.opacity = 0.6 * (1 - leadPct*0.7);
-
-    // Cleanup
-    if (pos.y < -120) {
+    if (e.body.position.y < -200) {
       scene.remove(e.mesh);
       scene.remove(e.ghost);
-      scene.remove(e.trail);
       world.removeBody(e.body);
-      entities.splice(idx, 1);
+      entities.splice(i, 1);
     }
   });
 
@@ -243,4 +247,4 @@ function animate() {
 init();
 </script>
 </body>
-</html>
+  </html>
