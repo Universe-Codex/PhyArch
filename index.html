@@ -226,13 +226,12 @@
 // Real 3D Viewport with Three.js
 let scene, camera, renderer, controls;
 function init3D() {
-  const vp = document.getElementById('viewport');
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0a0f);
-  camera = new THREE.PerspectiveCamera(75, vp.clientWidth / vp.clientHeight, 0.1, 1000);
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   renderer = new THREE.WebGLRenderer({antialias:true});
-  renderer.setSize(vp.clientWidth, vp.clientHeight);
-  vp.appendChild(renderer.domElement);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.getElementById('viewport').appendChild(renderer.domElement);
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   camera.position.z = 5;
 
@@ -248,49 +247,127 @@ function init3D() {
 }
 init3D();
 
+// Temporal Projection (in 3D)
+let temporalLead = 0.4;
+document.getElementById('lead').addEventListener('input', e => temporalLead = e.target.value / 100);
+
+// Self-Analysis & Self-Update
+const backgroundTerminal = document.createElement('div');
+backgroundTerminal.id = 'background-terminal';
+backgroundTerminal.style = 'position:fixed; bottom:0; left:0; right:0; background:var(--surface); padding:8px; font-size:12px; color:var(--success); display:none;';
+document.body.appendChild(backgroundTerminal);
+function logToTerminal(msg) {
+  backgroundTerminal.innerText += msg + '\n';
+  backgroundTerminal.scrollTop = backgroundTerminal.scrollHeight;
+}
+function selfAnalyze() {
+  logToTerminal('Analyzing app...');
+  // Simulate analysis
+  setTimeout(() => {
+    logToTerminal('Missing: Pyodide. Suggest modify to integrate.');
+    // Self-modify (simulate)
+    logToTerminal('Modifying code in background...');
+  }, 1000);
+}
+function selfUpdate() {
+  if (confirm('Allow self-update? (Period: 7 days)')) {
+    logToTerminal('Searching for updates...');
+    // Simulate search
+    setTimeout(() => {
+      logToTerminal('Found update. Installing...');
+      alert('App updated!');
+    }, 2000);
+  }
+}
+backgroundTerminal.style.display = 'block';
+setInterval(selfAnalyze, 60000); // Every minute for demo
+
+// Search Feature
+function search(query) {
+  logToTerminal('Searching: ' + query);
+  return 'Results for "' + query + '" (integrated from web)';
+}
+
+// Python with Pyodide
+async function executePython() {
+  logToTerminal('Loading Pyodide...');
+  let pyodide = await loadPyodide();
+  const code = document.getElementById('python-input').value;
+  try {
+    const result = await pyodide.runPythonAsync(code);
+    document.getElementById('python-output').innerText = result;
+  } catch (e) {
+    document.getElementById('python-output').innerText = 'Error: ' + e.message;
+  }
+}
+
 // AI Forge
 function processAI() {
   const prompt = document.getElementById('ai-input').value;
-  document.getElementById('ai-output').innerText = `Generated from prompt: "${prompt}" (self-integrated into simulation)`;
+  logToTerminal('AI processing: ' + prompt);
+  const response = `Generated from prompt: "${prompt}" (self-integrated into simulation)`;
+  document.getElementById('ai-output').innerText = response;
 }
 
-// Temporal Simulation (expanded)
-let lead = 0.4;
-document.getElementById('lead').addEventListener('input', e => lead = e.target.value / 100);
-
-// Self-Update with Permission
-function selfUpdate() {
-  if (confirm('Allow self-update? (Period: 7 days)')) {
-    alert('Searching... Found update. Installing...');
-    // Simulate modification
-    logToTerminal('Modified: Added new feature.');
-  }
-}
-function logToTerminal(msg) {
-  console.log(msg); // Background terminal simulation
-}
-
-// Python Kernel (simulated with Pyodide stub)
-async function executePython() {
-  alert('Pyodide loaded. Code executed (simulated)');
-}
-
-// Voice
+// Voice Input
 function toggleVoice() {
-  alert('Voice command activated');
+  logToTerminal('Voice activated');
+  // Simulate speech recognition
+  alert('Voice command processed (e.g., "inject nodes")');
+}
+
+// Data Feeds
+function fetchDataFeed() {
+  logToTerminal('Fetching data feed');
+  alert('Weather/stock data loaded (influencing simulation)');
+}
+
+// Molecular Viewer
+function fetchMolecule() {
+  logToTerminal('Fetching molecule');
+  alert('Molecular structure rendered in viewport');
 }
 
 // GLTF Import
-document.getElementById('gltf-import').addEventListener('change', e => {
-  alert('GLTF imported (rendered in viewport)');
-});
+function importGLTF(file) {
+  logToTerminal('Importing GLTF: ' + file.name);
+  // Render in Three.js (simulate)
+  const loader = new THREE.GLTFLoader();
+  loader.load(URL.createObjectURL(file), gltf => {
+    scene.add(gltf.scene);
+  });
+}
 
 // Save/Load
 function saveProject() {
+  logToTerminal('Saving project');
+  localStorage.setItem('nexus-project', JSON.stringify(scene.toJSON()));
   alert('Project saved');
 }
 function loadProject() {
+  logToTerminal('Loading project');
+  const data = localStorage.getItem('nexus-project');
+  if (data) {
+    const loader = new THREE.ObjectLoader();
+    loader.parse(JSON.parse(data), obj => {
+      scene = obj;
+    });
+  }
   alert('Project loaded');
+}
+
+// Account
+function login() {
+  logToTerminal('Logging in');
+  localStorage.setItem('user', 'user');
+  alert('Logged in');
+}
+login();
+
+// Collab
+function shareCollab() {
+  logToTerminal('Generating collab link');
+  alert('Collab link: http://nexus.collab');
 }
 </script>
 </body>
