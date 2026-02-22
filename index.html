@@ -360,7 +360,14 @@
             DEXIE: 'https://unpkg.com/dexie/dist/dexie.js',
         };
 
-        const getLib = (name) => '<scr' + 'ipt src="' + LIBS[name] + '"></scr' + 'ipt>';
+        // This replaces line 363
+const getLib = (name) => {
+    const s = document.createElement('script');
+    s.src = LIBS[name];
+    s.async = false; // Ensures they load in order
+    document.head.appendChild(s);
+    return ""; // Return empty string so it doesn't break your existing concatenation
+};
 
         /* ==========================================
            MASTER CREATOR (AUTO-INVENT)
