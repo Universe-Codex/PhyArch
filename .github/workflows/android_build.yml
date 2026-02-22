@@ -38,13 +38,14 @@ jobs:
         run: |
           npm install --legacy-peer-deps
           npm install @capacitor/core @capacitor/android
-
-      - name: Build Web
+          
+          
+      - name: Build Web Assets
         run: |
-          npm run build || mkdir -p dist
-          if [ ! -f "dist/index.html" ]; then
-            echo "<html><body>PhyArch</body></html>" > dist/index.html
-          fi
+          mkdir -p dist
+          cp index.html dist/
+          # If you have an assets folder, uncomment the next line:
+          # cp -r assets dist/ || true
 
       - name: Initialize Capacitor
         run: |
