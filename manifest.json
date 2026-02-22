@@ -1,0 +1,74 @@
+{
+  "name": "PhyArch NEXUS",
+  "short_name": "NEXUS",
+  "description": "The ultimate futuristic science hub for 3D rendering, simulations, AI creation, and data analysis.",
+  "start_url": ".",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "window-controls-overlay"],
+  "background_color": "#0f0f12",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/3b82f6/ffffff?text=NEXUS",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/3b82f6/ffffff?text=NEXUS",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "/",
+  "id": "/",
+  "categories": ["productivity", "science", "developer", "engineering"],
+  "dir": "ltr",
+  "lang": "en",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [
+    {
+      "src": "https://via.placeholder.com/1280x800/0f0f12/ffffff?text=PhyArch+NEXUS+Dashboard",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "https://via.placeholder.com/750x1334/0f0f12/ffffff?text=PhyArch+NEXUS+Mobile",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Launch Workspace",
+      "short_name": "Workspace",
+      "description": "Open the main workspace",
+      "url": "/#workspace",
+      "icons": [
+        {
+          "src": "https://via.placeholder.com/192x192/3b82f6/ffffff?text=WS",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "AI Forge",
+      "short_name": "AI Forge",
+      "description": "Open AI prompt interface",
+      "url": "/#ai-forge",
+      "icons": [
+        {
+          "src": "https://via.placeholder.com/192x192/3b82f6/ffffff?text=AI",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
