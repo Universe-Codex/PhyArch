@@ -3,211 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhyArch Omni v2.7 — Pulse & Echo</title>
+    <title>PhyArch Omni v3.0 — NEXUS • Scientific Master Builder</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <style>
         :root {
-            --bg: #020205;
-            --panel: rgba(8,8,15,0.98);
-            --accent: #00ff88;
-            --accent2: #00ccff;
-            --danger: #ff3366;
+            --bg: #010104;
+            --panel: rgba(12,12,22,0.96);
+            --accent: #00ff9d;
+            --accent2: #00d0ff;
+            --text: #ddd;
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains Mono', 'fira code', monospace; }
-        body { background: var(--bg); color: #eee; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'JetBrains Mono', monospace; }
+        body { background:var(--bg); color:var(--text); overflow:hidden; height:100vh; display:flex; flex-direction:column; }
         
         header {
-            height: 50px;
-            background: #000;
-            border-bottom: 1px solid #1a1a1a;
-            display: flex; align-items: center; padding: 0 20px;
-            justify-content: space-between; z-index: 100;
+            height:58px; background:#000; border-bottom:1px solid #1f1f2b;
+            display:flex; align-items:center; padding:0 20px; justify-content:space-between; z-index:200;
         }
-        .logo { font-size: 16px; letter-spacing: 3px; font-weight: 800; color: #555; }
-        .logo span { color: var(--accent); }
+        .logo { font-size:21px; letter-spacing:5px; font-weight:900; color:#555; }
+        .logo span { color:var(--accent); }
+        .header-tools { display:flex; gap:8px; }
+        .btn {
+            background:rgba(255,255,255,0.03); border:1px solid #333; color:var(--accent);
+            padding:6px 16px; border-radius:6px; font-size:12px; cursor:pointer; transition:0.2s;
+        }
+        .btn:hover { border-color:var(--accent); background:rgba(0,255,157,0.08); }
 
-        .main { flex: 1; display: flex; position: relative; }
-        #viewport { flex: 1; background: #000; cursor: crosshair; }
+        .workspace { flex:1; display:flex; position:relative; }
+        #viewport { flex:1; background:#000; cursor:crosshair; }
         
         .sidebar {
-            width: 300px; background: var(--panel); border-left: 1px solid #1a1a1a;
-            padding: 15px; display: flex; flex-direction: column; gap: 15px; font-size: 12px;
+            width:320px; background:var(--panel); border-left:1px solid #1f1f2b;
+            display:flex; flex-direction:column; overflow:hidden;
         }
-        .glass { background: rgba(255,255,255,0.02); border: 1px solid #222; border-radius: 8px; padding: 12px; }
-
-        #console { height: 220px; background: #000; border-top: 1px solid #1a1a1a; display: flex; flex-direction: column; }
-        #log { flex: 1; padding: 10px; overflow-y: auto; color: #666; font-size: 11px; }
-        .input-row { display: flex; padding: 10px; gap: 10px; background: #050505; }
-        input[type="text"] { 
-            flex: 1; background: #111; border: 1px solid #222; color: var(--accent); 
-            padding: 8px 12px; border-radius: 4px; outline: none;
+        .tab-bar {
+            display:flex; background:#0a0a12; border-bottom:1px solid #222;
         }
-
-        .btn {
-            background: transparent; color: var(--accent); border: 1px solid #333;
-            padding: 5px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s;
+        .tab {
+            flex:1; padding:12px; text-align:center; font-size:11px; cursor:pointer;
+            border-bottom:2px solid transparent;
         }
-        .btn:hover { border-color: var(--accent); background: rgba(0,255,136,0.05); }
-        .btn-active { background: var(--accent) !important; color: #000 !important; }
+        .tab-active { border-bottom:2px solid var(--accent); color:var(--accent); }
+        
+        .panel { flex:1; padding:16px; overflow:auto; display:none; }
+        .panel-active { display:block; }
+        
+        .glass {
+            background:rgba(255,255,255,0.02); border:1px solid #222; border-radius:8px; padding:14px;
+        }
+        
+        #console {
+            height:220px; background:#000; border-top:1px solid #1f1f2b; display:flex; flex-direction:column;
+        }
+        #log {
+            flex:1; padding:12px; overflow-y:auto; font-size:12px; color:#666; background:#050508;
+        }
+        .cmd-row {
+            display:flex; padding:8px; background:#0a0a12;
+        }
+        input[type="text"] {
+            flex:1; background:#111; border:1px solid #333; color:var(--accent);
+            padding:12px; border-radius:6px; outline:none; font-size:14px;
+        }
+        button.exec { background:var(--accent); color:#000; border:none; padding:0 24px; border-radius:6px; font-weight:700; }
+        
+        .ai-chat {
+            height:100%; display:flex; flex-direction:column;
+        }
+        .ai-messages {
+            flex:1; overflow-y:auto; padding:12px; font-size:13px;
+        }
+        .ai-input {
+            display:flex; padding:12px; gap:8px; background:#0a0a12;
+        }
+        
+        .modal {
+            position:fixed; inset:0; background:rgba(0,0,0,0.96); display:none;
+            align-items:center; justify-content:center; z-index:300;
+        }
+        .modal-content {
+            width:96%; max-width:1100px; height:92%; background:#111; border:2px solid var(--accent);
+            border-radius:12px; overflow:hidden; position:relative;
+        }
+        .modal-close { position:absolute; top:12px; right:20px; font-size:32px; cursor:pointer; color:#666; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">PHY<span>ARCH</span> v2.7</div>
-    <div style="display:flex; gap:10px;">
-        <button id="toggleAudio" class="btn">AUDIO: OFF</button>
-        <button id="toggleField" class="btn">FIELD: OFF</button>
-        <button id="resetBtn" class="btn" style="color:var(--danger)">WIPE</button>
+    <div class="logo">PHY<span>ARCH</span> NEXUS <span style="font-size:13px;opacity:0.6">v3.0</span></div>
+    <div class="header-tools">
+        <button class="btn" onclick="toggleAI()">AI CO-PILOT</button>
+        <button class="btn" onclick="exportInvention()">FORGE INVENTION</button>
+        <button class="btn" onclick="screenshot()">📸</button>
+        <button class="btn" style="color:#ff3366" onclick="wipeUniverse()">WIPE</button>
     </div>
 </header>
 
-<div class="main">
+<div class="workspace">
+    <!-- VIEWPORT -->
     <div id="viewport"></div>
+
+    <!-- RIGHT SIDEBAR -->
     <div class="sidebar">
-        <div class="glass">
-            <h4 style="color:var(--accent2)">SPATIAL HASH STATS</h4>
-            <div id="perf-stats" style="margin-top:5px; opacity:0.7;">Active Objects: 0<br>Grid Cells: 0</div>
+        <div class="tab-bar">
+            <div class="tab tab-active" onclick="switchTab(0)">INSPECTOR</div>
+            <div class="tab" onclick="switchTab(1)">AI FORGE</div>
+            <div class="tab" onclick="switchTab(2)">PYTHON</div>
         </div>
-        <div class="glass">
-            <h4 style="color:var(--accent)">INSPECTOR</h4>
-            <div id="inspector" style="margin-top:8px;">No target locked.</div>
+
+        <!-- INSPECTOR -->
+        <div id="panel-0" class="panel panel-active glass">
+            <h4 style="color:var(--accent2);margin-bottom:12px">LOCKED TARGET</h4>
+            <div id="inspector">Click any object in 3D space</div>
         </div>
-        <div class="glass" style="flex:1; display:flex; flex-direction:column;">
-            <h4 style="color:var(--accent2)">PYTHON PATTERN GEN</h4>
-            <textarea id="pyCode" style="width:100%; flex:1; background:#000; border:1px solid #222; color:var(--accent2); margin-top:10px; padding:8px; font-size:10px;">
-# Spiral Formation
+
+        <!-- AI FORGE -->
+        <div id="panel-1" class="panel ai-chat glass">
+            <div class="ai-messages" id="ai-messages">
+                <div style="color:var(--accent);margin-bottom:8px">NEXUS AI: I am ready to co-create universes.</div>
+            </div>
+            <div class="ai-input">
+                <input id="ai-prompt" placeholder="Describe what to build..." style="flex:1">
+                <button onclick="aiForge()" style="background:var(--accent);color:#000;border:none;padding:0 20px">FORGE</button>
+            </div>
+        </div>
+
+        <!-- PYTHON LAB -->
+        <div id="panel-2" class="panel glass">
+            <h4 style="color:var(--accent2)">LIVE PYTHON PATTERN ENGINE</h4>
+            <textarea id="pyCode" style="width:100%;height:380px;background:#000;border:1px solid #222;color:#0ff;font-size:12px;padding:12px;margin-top:12px">
 import math
-for i in range(50):
-    angle = i * 0.5
-    r = i * 0.5
-    js.Omni.spawn('box', 1, 
-        pos={'x': math.cos(angle)*r, 'y': 10+i, 'z': math.sin(angle)*r},
-        color=0x00ccff, size=0.8)
+for i in range(80):
+    a = i * 0.3
+    r = 12 + i * 0.2
+    Omni.spawn('sphere', 1, {
+        pos: {'x': math.cos(a)*r, 'y': 8 + i*0.4, 'z': math.sin(a)*r},
+        size: 0.6 + math.sin(i)*0.3,
+        color: 0x00ffcc
+    })
             </textarea>
-            <button id="runPyBtn" class="btn" style="margin-top:10px; width:100%;">BOOTING PYTHON...</button>
+            <button onclick="runPythonPattern()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#000;font-weight:700">EXECUTE PYTHON PATTERN</button>
         </div>
     </div>
 </div>
 
+<!-- CONSOLE -->
 <div id="console">
     <div id="log"></div>
-    <div class="input-row">
-        <input type="text" id="cmd" placeholder="Execute command...">
+    <div class="cmd-row">
+        <input type="text" id="cmd" placeholder="Natural language or command...">
+        <button class="exec" onclick="executeCommand()">EXEC</button>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <div onclick="closeModal()" class="modal-close">✕</div>
+        <iframe id="modal-frame" style="width:100%;height:100%;border:none"></iframe>
     </div>
 </div>
 
 <script>
-// ====================== AUDIO ENGINE ======================
-const AudioEngine = {
-    ctx: null,
-    enabled: false,
-    init() {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    },
-    playCollision(impact) {
-        if (!this.enabled || !this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(100 + impact * 200, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(Math.min(0.2, impact * 0.05), this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.1);
-    }
-};
-
-// ====================== SPATIAL HASHING ======================
-// Reduces collision complexity from O(n^2) to O(n)
-class SpatialHash {
-    constructor(cellSize) {
-        this.cellSize = cellSize;
-        this.grid = new Map();
-    }
-    _key(v) {
-        const x = Math.floor(v.x / this.cellSize);
-        const y = Math.floor(v.y / this.cellSize);
-        const z = Math.floor(v.z / this.cellSize);
-        return `${x},${y},${z}`;
-    }
-    clear() { this.grid.clear(); }
-    insert(obj) {
-        const key = this._key(obj.mesh.position);
-        if (!this.grid.has(key)) this.grid.set(key, []);
-        this.grid.get(key).push(obj);
-    }
-    getNearby(obj) {
-        const key = this._key(obj.mesh.position);
-        return this.grid.get(key) || [];
-    }
-}
-
-// ====================== ENGINE ======================
+// ====================== CORE ENGINE ======================
 let scene, camera, renderer, controls, coreMesh;
 let objects = [];
-let fieldActive = false;
-const hash = new SpatialHash(5);
+let selected = null;
+let pyodideInstance = null;
+let audioEnabled = true;
+let fieldEnabled = false;
 
 const Omni = {
+    log(msg, col = "#888") {
+        const l = document.getElementById('log');
+        const d = document.createElement('div');
+        d.style.color = col;
+        d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        l.appendChild(d);
+        l.scrollTop = l.scrollHeight;
+    },
+
     init() {
         const vp = document.getElementById('viewport');
         scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(50, vp.clientWidth/vp.clientHeight, 0.1, 1000);
-        camera.position.set(40, 40, 40);
-        
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        scene.fog = new THREE.FogExp2(0x010104, 0.022);
+
+        camera = new THREE.PerspectiveCamera(52, vp.clientWidth/vp.clientHeight, 0.1, 2000);
+        camera.position.set(55, 48, 72);
+
+        renderer = new THREE.WebGLRenderer({ antialias:true });
         renderer.setSize(vp.clientWidth, vp.clientHeight);
         vp.appendChild(renderer.domElement);
-        
+
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
+        controls.dampingFactor = 0.14;
 
-        const light = new THREE.PointLight(0x00ff88, 1, 100);
-        light.position.set(10, 20, 10);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0x404040));
-        scene.add(new THREE.GridHelper(100, 20, 0x222222, 0x111111));
+        // Scientific lighting
+        scene.add(new THREE.AmbientLight(0xaaaaaa, 0.6));
+        const dirLight = new THREE.DirectionalLight(0x00ffcc, 1.2);
+        dirLight.position.set(60, 100, 40);
+        scene.add(dirLight);
 
-        const coreGeo = new THREE.SphereGeometry(4, 32, 32);
-        const coreMat = new THREE.MeshPhongMaterial({ color: 0x00ff88, wireframe: true });
-        coreMesh = new THREE.Mesh(coreGeo, coreMat);
+        // Scientific grid
+        const grid = new THREE.GridHelper(200, 50, 0x00ff88, 0x002211);
+        scene.add(grid);
+        const axes = new THREE.AxesHelper(40);
+        scene.add(axes);
+
+        // Pulsing core
+        const coreMat = new THREE.ShaderMaterial({
+            uniforms: { time: { value: 0 } },
+            vertexShader: `varying vec3 vN; uniform float time; void main(){ vN = normal; vec3 p = position + normal * sin(position.y*4.0 + time*6.0)*0.4; gl_Position = projectionMatrix * modelViewMatrix * vec4(p,1.0); }`,
+            fragmentShader: `varying vec3 vN; uniform float time; void main(){ float p = sin(time*5.0)*0.3+0.7; gl_FragColor = vec4(0.0,1.0,0.7,0.9) * (vN.z*0.6+0.4) * p; }`,
+            wireframe: true,
+            transparent: true
+        });
+        coreMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(7, 3), coreMat);
         scene.add(coreMesh);
 
         this.animate();
-    },
-
-    spawn(type, count, opts = {}) {
-        for(let i=0; i<count; i++) {
-            const size = opts.size || 1.5;
-            const geo = type === 'sphere' ? new THREE.SphereGeometry(size, 8, 8) : new THREE.BoxGeometry(size, size, size);
-            const mat = new THREE.MeshPhongMaterial({ color: opts.color || 0x00ccff, wireframe: true });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(opts.pos?.x || 0, opts.pos?.y || 20, opts.pos?.z || 0);
-            scene.add(mesh);
-            objects.push(new PhysicsObject(mesh, size));
-        }
+        Omni.log("🌌 NEXUS v3.0 SCIENTIFIC MASTER BUILDER ONLINE", "#00ff9d");
     },
 
     animate() {
         requestAnimationFrame(() => Omni.animate());
-        
-        // Update Spatial Hash
-        hash.clear();
-        objects.forEach(o => hash.insert(o));
+        const t = performance.now() * 0.001;
+        if (coreMesh) coreMesh.material.uniforms.time.value = t;
 
-        // Physics Update
-        objects.forEach(o => o.update(hash, fieldActive));
-        
-        document.getElementById('perf-stats').innerHTML = `Objects: ${objects.length}<br>Complexity: O(${objects.length})`;
-        
+        objects.forEach(o => o.update(objects, fieldEnabled));
         controls.update();
         renderer.render(scene, camera);
+    },
+
+    spawn(type = 'box', count = 1, opts = {}) {
+        for (let i = 0; i < count; i++) {
+            let geo;
+            if (type === 'sphere') geo = new THREE.SphereGeometry(opts.size || 1.8, 24, 24);
+            else if (type === 'torus') geo = new THREE.TorusGeometry(opts.size || 2.5, 0.8, 16, 64);
+            else if (type === 'icosa') geo = new THREE.IcosahedronGeometry(opts.size || 2, 1);
+            else geo = new THREE.BoxGeometry(opts.size || 2.2, opts.size || 2.2, opts.size || 2.2);
+
+            const mat = new THREE.MeshPhongMaterial({
+                color: opts.color || 0x00ffcc,
+                wireframe: true,
+                emissive: 0x112233
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(
+                opts.pos ? opts.pos.x : (Math.random()-0.5)*40,
+                opts.pos ? opts.pos.y : 15 + Math.random()*25,
+                opts.pos ? opts.pos.z : (Math.random()-0.5)*40
+            );
+            scene.add(mesh);
+
+            const phys = new PhysicsObject(mesh, opts.size || 2);
+            objects.push(phys);
+        }
+        Omni.log(`Spawned ${count} × ${type}`, "#00ff9d");
     }
 };
 
@@ -215,66 +271,251 @@ class PhysicsObject {
     constructor(mesh, size) {
         this.mesh = mesh;
         this.size = size;
-        this.velocity = new THREE.Vector3((Math.random()-0.5)*0.2, 0, (Math.random()-0.5)*0.2);
+        this.velocity = new THREE.Vector3((Math.random()-0.5)*0.4, Math.random()*2, (Math.random()-0.5)*0.4);
     }
-    update(spatialHash, field) {
+    update(all, field) {
         if (field) {
-            const dir = new THREE.Vector3(0,0,0).sub(this.mesh.position).normalize();
-            this.velocity.add(dir.multiplyScalar(0.05));
+            const toCenter = this.mesh.position.clone().negate().normalize();
+            this.velocity.add(toCenter.multiplyScalar(0.08));
         } else {
-            this.velocity.y -= 0.015; // Gravity
+            this.velocity.y -= 0.032;
         }
-
         this.mesh.position.add(this.velocity);
 
-        // Floor
         if (this.mesh.position.y < this.size/2) {
             this.mesh.position.y = this.size/2;
-            this.velocity.y *= -0.6;
+            this.velocity.y *= -0.68;
+            this.velocity.multiplyScalar(0.92);
         }
 
-        // Optimized Collision via Spatial Hash
-        const nearby = spatialHash.getNearby(this);
-        nearby.forEach(other => {
-            if (other === this) return;
-            const dist = this.mesh.position.distanceTo(other.mesh.position);
-            if (dist < (this.size + other.size)/2) {
-                const impact = this.velocity.length();
-                if (impact > 0.1) AudioEngine.playCollision(impact);
-                
+        // Simple optimized collision
+        for (let other of all) {
+            if (other === this) continue;
+            const d = this.mesh.position.distanceTo(other.mesh.position);
+            if (d < this.size + other.size && d > 0.1) {
                 const push = this.mesh.position.clone().sub(other.mesh.position).normalize();
-                this.velocity.add(push.multiplyScalar(0.02));
+                this.velocity.add(push.multiplyScalar(0.15));
             }
-        });
+        }
+        this.mesh.rotation.x += 0.015;
+        this.mesh.rotation.y += 0.022;
     }
 }
+
+// ====================== AI FORGE ======================
+function aiForge() {
+    const prompt = document.getElementById('ai-prompt').value.trim().toLowerCase();
+    if (!prompt) return;
+
+    const messages = document.getElementById('ai-messages');
+    messages.innerHTML += `<div style="color:#0ff">You: ${prompt}</div>`;
+
+    let response = "Understood. Forging...";
+
+    if (prompt.includes('dna') || prompt.includes('helix')) {
+        response = "Generating double helix DNA structure...";
+        for (let i = 0; i < 60; i++) {
+            const a = i * 0.4;
+            const r = 6;
+            Omni.spawn('sphere', 1, {
+                size: 0.9,
+                pos: {x: Math.cos(a)*r, y: i*0.6 - 10, z: Math.sin(a)*r + Math.sin(i*0.8)*2}
+            });
+            Omni.spawn('sphere', 1, {
+                size: 0.9,
+                pos: {x: Math.cos(a+Math.PI)*r, y: i*0.6 - 10, z: Math.sin(a+Math.PI)*r + Math.cos(i*0.8)*2}
+            });
+        }
+    } else if (prompt.includes('solar') || prompt.includes('orbit')) {
+        response = "Building stable solar system with gravitational simulation...";
+        Omni.spawn('sphere',1,{size:8,color:0xffdd00}); // sun
+        for (let i = 0; i < 7; i++) {
+            const r = 12 + i*9;
+            Omni.spawn('sphere',1,{size:2.2 - i*0.2, color:0x88ccff});
+            // velocity for circular orbit
+            objects[objects.length-1].velocity.set(0,0,Math.sqrt(0.8/r)*12);
+        }
+    } else if (prompt.includes('plot') || prompt.includes('graph') || prompt.includes('function')) {
+        response = "Plotting parametric surface...";
+        for (let u = 0; u < 30; u++) {
+            for (let v = 0; v < 30; v++) {
+                const x = u*0.8 - 12;
+                const z = v*0.8 - 12;
+                const y = Math.sin(x*0.6) * Math.cos(z*0.6) * 5;
+                Omni.spawn('box',1,{size:0.6, pos:{x,y+15,z}, color:0x00aaff});
+            }
+        }
+    } else if (prompt.includes('particle') || prompt.includes('fountain')) {
+        response = "Launching particle fountain simulation...";
+        for (let i = 0; i < 120; i++) Omni.spawn('sphere',1,{size:0.5,color:0xff00ff});
+    } else {
+        response = "Interpreting as freeform creation...";
+        Omni.spawn('icosa', 18);
+    }
+
+    messages.innerHTML += `<div style="color:var(--accent)">NEXUS: ${response}</div>`;
+    messages.scrollTop = messages.scrollHeight;
+    document.getElementById('ai-prompt').value = '';
+}
+
+// ====================== PYTHON ======================
+async function runPythonPattern() {
+    if (!pyodideInstance) {
+        Omni.log("Booting Pyodide...", "#ff0");
+        pyodideInstance = await loadPyodide();
+        window.Omni = Omni;
+        pyodideInstance.globals.set("js", window);
+        Omni.log("Python + SymPy ready for scientific computation", "#00ff9d");
+    }
+    try {
+        await pyodideInstance.runPythonAsync(document.getElementById('pyCode').value);
+    } catch(e) {
+        Omni.log("Python error: " + e.message, "#f66");
+    }
+}
+
+// ====================== COMMAND PARSER ======================
+async function executeCommand() {
+    const input = document.getElementById('cmd').value.trim();
+    if (!input) return;
+    Omni.log(`> ${input}`, "#fff");
+
+    const lower = input.toLowerCase();
+
+    if (lower.includes('helix') || lower.includes('dna')) {
+        aiForge(); // re-use AI logic
+    } else if (lower.includes('solar') || lower.includes('planet')) {
+        Omni.spawn('sphere',1,{size:9,color:0xffee00});
+        for(let i=0;i<8;i++) Omni.spawn('sphere',1,{size:1.8});
+    } else if (lower.includes('explode') || lower.includes('burst')) {
+        Omni.spawn('sphere', 80, {size:0.8,color:0xff0088});
+    } else if (lower.includes('viz') || lower.includes('bar')) {
+        const m = input.match(/\[.*?\]/);
+        if (m) {
+            const data = JSON.parse(m[0]);
+            data.forEach((v,i) => Omni.spawn('box',1,{size:v*1.2, pos:{x:i*3-20,y:v*2,z:0},color:0x00aaff}));
+        }
+    } else {
+        Omni.spawn('torus', 12);
+    }
+    document.getElementById('cmd').value = '';
+}
+
+// ====================== UI HELPERS ======================
+function switchTab(n) {
+    document.querySelectorAll('.tab').forEach((t,i) => {
+        t.classList.toggle('tab-active', i===n);
+    });
+    document.querySelectorAll('.panel').forEach((p,i) => {
+        p.classList.toggle('panel-active', i===n);
+    });
+}
+
+function toggleAI() {
+    switchTab(1);
+}
+
+function exportInvention() {
+    const name = prompt("Name your invention:", "Quantum Simulator");
+    if (!name) return;
+    const html = `<!DOCTYPE html><html><head><title>${name} — PhyArch Forged</title></head><body style="margin:0;background:#000;color:#0f0;font-family:monospace"><h1 style="padding:30px">${name}</h1><div style="padding:30px">This invention was forged by PhyArch NEXUS AI.</div></body></html>`;
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name.replace(/ /g,'_') + '.html';
+    a.click();
+    Omni.log(`Invention ${name} forged and exported`, "#00ff9d");
+}
+
+function screenshot() {
+    renderer.render(scene, camera);
+    const link = document.createElement('a');
+    link.download = 'phyarch-nexus.png';
+    link.href = renderer.domElement.toDataURL('image/png');
+    link.click();
+}
+
+function wipeUniverse() {
+    if (confirm('WIPE ENTIRE UNIVERSE?')) {
+        objects.forEach(o => scene.remove(o.mesh));
+        objects = [];
+        Omni.log("Universe reset to singularity", "#f66");
+    }
+}
+
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+}
+
+// ====================== SELECTION & INTERACTION ======================
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+document.getElementById('viewport').addEventListener('click', e => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+
+    if (hits.length > 0) {
+        let obj = hits[0].object;
+        while (obj && !objects.find(p => p.mesh === obj)) obj = obj.parent;
+        if (obj) {
+            if (selected) selected.material.emissive.setHex(0x000000);
+            selected = obj;
+            selected.material.emissive.setHex(0x00ff88);
+
+            document.getElementById('inspector').innerHTML = `
+                <b>Type:</b> ${obj.geometry.type}<br>
+                <b>Position:</b> ${obj.position.toArray().map(v=>v.toFixed(2)).join(', ')}<br>
+                <button onclick="deleteSelected()" style="margin-top:10px;padding:6px 14px;background:#f33;color:#fff;border:none">DELETE</button>
+            `;
+        }
+    }
+});
+
+window.deleteSelected = () => {
+    if (!selected) return;
+    const idx = objects.findIndex(o => o.mesh === selected);
+    if (idx > -1) {
+        scene.remove(selected);
+        objects.splice(idx, 1);
+    }
+    selected = null;
+    document.getElementById('inspector').innerHTML = 'No target locked.';
+};
 
 // ====================== BOOT ======================
 (async () => {
     Omni.init();
-    const pyBtn = document.getElementById('runPyBtn');
-    try {
-        const pyodide = await loadPyodide();
+
+    // Auto-load Pyodide in background
+    setTimeout(async () => {
+        pyodideInstance = await loadPyodide();
         window.Omni = Omni;
-        pyodide.globals.set("js", window);
-        pyBtn.textContent = "RUN PYTHON PATTERN";
-        pyBtn.onclick = () => pyodide.runPython(document.getElementById('pyCode').value);
-    } catch(e) { pyBtn.textContent = "PY FAIL"; }
+        pyodideInstance.globals.set("js", window);
+        Omni.log("Python scientific engine fully loaded", "#00ff9d");
+    }, 800);
 
-    document.getElementById('toggleAudio').onclick = (e) => {
-        if (!AudioEngine.ctx) AudioEngine.init();
-        AudioEngine.enabled = !AudioEngine.enabled;
-        e.target.classList.toggle('btn-active');
-        e.target.textContent = `AUDIO: ${AudioEngine.enabled ? 'ON' : 'OFF'}`;
-    };
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Delete' && selected) deleteSelected();
+        if (e.key === '/' && document.getElementById('cmd') !== document.activeElement) {
+            document.getElementById('cmd').focus();
+            e.preventDefault();
+        }
+    });
 
-    document.getElementById('toggleField').onclick = (e) => {
-        fieldActive = !fieldActive;
-        e.target.classList.toggle('btn-active');
-        e.target.textContent = `FIELD: ${fieldActive ? 'ON' : 'OFF'}`;
-    };
-    
-    document.getElementById('resetBtn').onclick = () => location.reload();
+    // Resize
+    window.addEventListener('resize', () => {
+        camera.aspect = document.getElementById('viewport').clientWidth / document.getElementById('viewport').clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(document.getElementById('viewport').clientWidth, document.getElementById('viewport').clientHeight);
+    });
+
+    Omni.log("Type anything or use AI Forge to begin building.", "#aaa");
 })();
 </script>
 </body>
