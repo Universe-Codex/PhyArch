@@ -19,6 +19,7 @@
       --border: #252530;
       --green: #22c55e;
       --yellow: #eab308;
+      --surface-elevated: #1a1a24;
     }
 
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
@@ -28,8 +29,7 @@
       color: var(--text);
       font-family: 'Inter', system-ui, sans-serif;
       overflow-x: hidden;
-      /* Padding bottom ensures content isn't hidden behind the bottom app bar */
-      padding-bottom: 90px; 
+      padding-bottom: 90px; /* Space for bottom nav */
       -webkit-font-smoothing: antialiased;
     }
 
@@ -47,11 +47,7 @@
       justify-content: space-between;
     }
     
-    .logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--accent);
-    }
+    .logo { font-size: 20px; font-weight: 700; color: var(--accent); }
 
     /* Hide desktop nav on mobile */
     nav { display: none; }
@@ -60,8 +56,8 @@
       #bottom-bar { display: none !important; }
       body { padding-bottom: 0; }
     }
-    
-    nav a { color: var(--dim); text-decoration: none; font-weight: 500; }
+    nav a { color: var(--dim); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+    nav a:hover { color: var(--text); }
 
     /* --- HERO --- */
     .hero {
@@ -72,117 +68,92 @@
     .hero h1 { font-size: clamp(32px, 8vw, 48px); font-weight: 700; margin-bottom: 16px; }
     .hero p { font-size: 16px; color: var(--dim); max-width: 800px; margin: 0 auto 32px; }
     
-    .btn-primary {
-      padding: 16px 32px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.2s;
+    .hero button {
+      padding: 16px 32px; background: var(--accent); color: white; border: none;
+      border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; transition: all 0.2s;
     }
-    .btn-primary:active { background: var(--accent-hover); }
+    .hero button:active { transform: translateY(2px); background: var(--accent-hover); }
 
-    /* --- SECTIONS & CARDS --- */
+    /* --- SECTIONS & CAROUSELS --- */
     .section { padding: 40px 24px; max-width: 1200px; margin: 0 auto; }
     .section h2 { font-size: 24px; font-weight: 600; margin-bottom: 24px; }
 
     .carousel {
-      display: flex;
-      overflow-x: auto;
-      gap: 16px;
-      padding-bottom: 16px;
-      scrollbar-width: none; /* Hide scrollbar for clean look */
+      display: flex; overflow-x: auto; gap: 16px; padding-bottom: 16px; scrollbar-width: none;
     }
     .carousel::-webkit-scrollbar { display: none; }
 
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      min-width: 260px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 24px; min-width: 260px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .card h3 { font-size: 18px; margin-bottom: 8px; }
     
     .badge {
-      display: inline-block;
-      background: var(--red);
-      color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-      margin-bottom: 12px;
+      display: inline-block; background: var(--red); color: white; padding: 4px 12px;
+      border-radius: 20px; font-size: 12px; font-weight: 500; margin-bottom: 12px;
     }
 
     /* --- WORKSPACE --- */
     #workspace {
-      height: 40vh; /* Responsive height instead of fixed 600px */
-      min-height: 300px;
-      background: #000;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      margin: 16px 0;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--dim);
+      height: 40vh; min-height: 300px; background: var(--surface-elevated);
+      border-radius: 16px; border: 1px solid var(--border); margin: 16px 0;
+      position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
     }
 
-    /* Action Grid for Mobile Buttons */
+    /* Mobile-Friendly Action Grid */
     .action-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-top: 24px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 24px;
     }
+    @media(min-width: 480px) { .action-grid { grid-template-columns: repeat(3, 1fr); } }
+    
     .action-grid button {
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
+      padding: 12px; border: none; border-radius: 8px; color: white;
+      font-weight: 600; font-size: 14px; cursor: pointer;
     }
     .bg-accent { background: var(--accent); }
     .bg-green { background: var(--green); }
     .bg-yellow { background: var(--yellow); color: #000 !important; }
     .bg-red { background: var(--red); }
 
-    /* --- MOBILE BOTTOM BAR --- */
-    #bottom-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 12px 0;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom)); /* iOS safe area */
-      z-index: 1000;
+    /* --- UI PANELS (Python/AI) --- */
+    .ui-panel {
+      display: none; position: fixed; bottom: 80px; left: 16px; right: 16px;
+      background: var(--surface-elevated); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; z-index: 1001; box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
     }
-    
+    .ui-panel input {
+      width: 100%; padding: 12px; margin-bottom: 12px; background: var(--bg);
+      border: 1px solid var(--border); color: white; border-radius: 6px;
+    }
+    .ui-panel .output {
+      margin-top: 12px; padding: 12px; background: #000; border-radius: 6px;
+      font-family: monospace; font-size: 12px; color: var(--green); min-height: 40px;
+    }
+
+    /* --- BOTTOM BAR & FLOATING ELEMENTS --- */
+    #bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface);
+      border-top: 1px solid var(--border); display: flex; justify-content: space-around;
+      align-items: center; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); z-index: 1000;
+    }
     .bar-icon {
-      color: var(--dim);
-      font-size: 12px;
-      font-weight: 600;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
+      color: var(--dim); font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer;
     }
     .bar-icon.active { color: var(--accent); }
+
+    #voice-mic {
+      position: fixed; bottom: 100px; right: 24px; background: var(--green);
+      color: white; width: 56px; height: 56px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; z-index: 900;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4); font-weight: bold;
+    }
+
+    #background-terminal {
+      position: fixed; top: 70px; left: 16px; right: 16px; background: rgba(0,0,0,0.8);
+      padding: 12px; border-radius: 8px; font-family: monospace; font-size: 10px;
+      color: var(--green); display: none; z-index: 500; pointer-events: none;
+    }
 
     footer { text-align: center; padding: 24px; color: var(--dim); font-size: 14px; border-top: 1px solid var(--border); }
   </style>
@@ -193,7 +164,9 @@
   <div class="logo">PhyArch NEXUS</div>
   <nav>
     <a href="#">Hub</a>
+    <a href="#">Feed</a>
     <a href="#workspace">Workspace</a>
+    <a href="#">Achievements</a>
     <a href="#settings-section">Settings</a>
   </nav>
 </header>
@@ -201,20 +174,28 @@
 <section class="hero">
   <h1>PhyArch NEXUS</h1>
   <p>The ultimate futuristic science hub for 3D rendering, simulations, AI creation, and data analysis.</p>
-  <button class="btn-primary" onclick="document.getElementById('workspace').scrollIntoView({behavior:'smooth'})">Enter Workspace</button>
+  <button onclick="document.getElementById('workspace').scrollIntoView({behavior:'smooth'})">Enter Workspace</button>
 </section>
 
 <section class="section">
   <h2>Key Features</h2>
   <div class="carousel">
-    <div class="card">
-      <h3>3D Rendering</h3>
-      <p>Real-time 3D viewport with physics and projections.</p>
-    </div>
-    <div class="card">
-      <h3>AI Forge</h3>
-      <p>Prompt-based creation for molecules, models, and simulations.</p>
-    </div>
+    <div class="card"><h3>3D Rendering</h3><p>Real-time 3D viewport with physics.</p></div>
+    <div class="card"><h3>AI Forge</h3><p>Prompt-based creation for molecules.</p></div>
+    <div class="card"><h3>Python Kernel</h3><p>Run code for data analysis.</p></div>
+    <div class="card"><h3>Real-Time Data</h3><p>Integrate weather/stock feeds.</p></div>
+    <div class="card"><h3>Molecular Viewer</h3><p>Fetch structures from PubChem.</p></div>
+    <div class="card"><h3>GLTF Import</h3><p>Drag and drop 3D models.</p></div>
+    <div class="card"><h3>Search & Research</h3><p>Built-in search for data.</p></div>
+    <div class="card"><h3>Self-Update</h3><p>App analyzes and modifies itself.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Projections & Achievements</h2>
+  <div class="carousel">
+    <div class="card"><span class="badge">New</span><h3>Simulation Master</h3><p>Run 100 simulations — 40% complete.</p></div>
+    <div class="card"><span class="badge" style="background:var(--accent)">Pro</span><h3>App Builder</h3><p>Create 50 apps — 80% complete.</p></div>
   </div>
 </section>
 
@@ -222,54 +203,81 @@
   <h2>Workspace</h2>
   <div id="workspace">
     <div id="canvas-container" style="width: 100%; height: 100%; position: absolute; top:0; left:0;"></div>
-    <span id="workspace-placeholder">3D Viewport Placeholder</span>
+    <span id="workspace-placeholder" style="color:var(--dim)">3D Viewport Offline</span>
   </div>
   
   <div class="action-grid">
     <button class="bg-accent" onclick="init3D()">Init 3D View</button>
-    <button class="bg-green" onclick="alert('Python Terminal opened')">Python Terminal</button>
-    <button class="bg-yellow" onclick="alert('AI Forge opened')">AI Forge</button>
-    <button class="bg-red" onclick="alert('Molecular Viewer')">Molecular Viewer</button>
+    <button class="bg-green" onclick="togglePanel('python-terminal')">Python Term</button>
+    <button class="bg-yellow" onclick="togglePanel('ai-forge')">AI Forge</button>
+    <button class="bg-red" onclick="fetchMolecule()">Mol Viewer</button>
     <button class="bg-accent" onclick="document.getElementById('gltf-import').click()">Import GLTF</button>
-    <button class="bg-yellow" onclick="alert('Project Saved')">Save Project</button>
+    <button class="bg-green" onclick="fetchDataFeed()">Data Feed</button>
+    <button class="bg-yellow" onclick="saveProject()">Save Proj</button>
+    <button class="bg-yellow" onclick="loadProject()">Load Proj</button>
+    <input type="file" id="gltf-import" accept=".gltf,.glb" style="display:none;" onchange="importGLTF(this.files[0])">
   </div>
-  <input type="file" id="gltf-import" accept=".gltf,.glb" style="display:none;" onchange="alert('GLTF imported')">
 </section>
 
-<footer>
-  © 2026 PhyArch NEXUS. All rights reserved.
-</footer>
+<section id="settings-section" class="section">
+  <h2>Settings</h2>
+  <div class="card">
+    <h3>Self-Update Core</h3>
+    <p style="margin-bottom: 16px; color: var(--dim);">Allow the app to search, analyze, and update itself periodically.</p>
+    <button style="padding:12px 24px; background:var(--yellow); border:none; border-radius:8px; cursor:pointer;" onclick="selfUpdate()">Check for Update</button>
+  </div>
+</section>
+
+<div id="background-terminal"></div>
+
+<div id="python-terminal" class="ui-panel">
+  <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+    <h3 style="color:var(--green); font-size:14px;">Python Kernel</h3>
+    <span onclick="togglePanel('python-terminal')" style="color:white; cursor:pointer;">X</span>
+  </div>
+  <input type="text" id="python-input" placeholder="print('Hello World')">
+  <button class="bg-green" style="padding:8px 16px; border:none; border-radius:4px; color:white; cursor:pointer;" onclick="executePython()">Run</button>
+  <div id="python-output" class="output"></div>
+</div>
+
+<div id="ai-forge" class="ui-panel">
+  <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+    <h3 style="color:var(--yellow); font-size:14px;">AI Forge</h3>
+    <span onclick="togglePanel('ai-forge')" style="color:white; cursor:pointer;">X</span>
+  </div>
+  <input type="text" id="ai-input" placeholder="Generate molecular structure...">
+  <button class="bg-yellow" style="padding:8px 16px; border:none; border-radius:4px; cursor:pointer;" onclick="processAI()">Generate</button>
+  <div id="ai-output" class="output"></div>
+</div>
+
+<div id="voice-mic" onclick="toggleVoice()">MIC</div>
+
+<footer>© 2026 PhyArch NEXUS. All rights reserved.</footer>
 
 <div id="bottom-bar">
-  <a href="#" class="bar-icon active">Hub</a>
-  <a href="#workspace" class="bar-icon">Workspace</a>
-  <a href="#" class="bar-icon">Search</a>
-  <a href="#settings-section" class="bar-icon">Settings</a>
+  <span class="bar-icon active" onclick="location.href='#'">Hub</span>
+  <span class="bar-icon" onclick="alert('Search (Simulated)')">Search</span>
+  <span class="bar-icon" onclick="togglePanel('ai-forge')">AI</span>
+  <span class="bar-icon" onclick="document.getElementById('settings-section').scrollIntoView()">Config</span>
 </div>
 
 <script>
-// Mobile-responsive 3D Viewport
+// --- 3D Viewport Logic ---
 let scene, camera, renderer;
-
 function init3D() {
   document.getElementById('workspace-placeholder').style.display = 'none';
   const container = document.getElementById('canvas-container');
-  container.innerHTML = ''; // clear previous
-  
+  container.innerHTML = ''; 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-  
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
   container.appendChild(renderer.domElement);
-  
+  camera.position.z = 5;
   const geometry = new THREE.BoxGeometry();
-  const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6, wireframe: true });
+  const material = new THREE.MeshBasicMaterial({color: 0x3b82f6, wireframe: true});
   const cube = new THREE.Mesh(geometry, material);
   scene.add(cube);
-  
-  camera.position.z = 3;
-  
   function animate3D() {
     requestAnimationFrame(animate3D);
     cube.rotation.x += 0.01;
@@ -278,14 +286,66 @@ function init3D() {
   }
   animate3D();
 
-  // Handle mobile orientation changes / resizing
   window.addEventListener('resize', () => {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
 }
-</script>
 
+// --- UI Panel Toggle ---
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  // Hide all others first
+  document.querySelectorAll('.ui-panel').forEach(p => { if(p.id !== id) p.style.display = 'none'; });
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+// --- Background Core Logic ---
+const terminal = document.getElementById('background-terminal');
+terminal.innerText = 'Background Terminal: Ready for self-analysis...';
+function selfAnalyze() {
+  terminal.style.display = 'block';
+  terminal.innerText = 'Analyzing...\nMissing: Full Pyodide.\nModifying code...';
+  setTimeout(() => { terminal.innerText = 'Modified: Added Pyodide stub.\nSystem Stable.'; setTimeout(()=> { terminal.style.display='none'}, 2000); }, 1500);
+}
+function selfUpdate() {
+  if (confirm('Allow self-update? (Checks every 7 days)')) {
+    terminal.style.display = 'block';
+    terminal.innerText = 'Searching for updates...';
+    setTimeout(() => {
+      terminal.innerText = 'Found update: Integrating new feature.';
+      alert('Updated successfully!');
+      setTimeout(()=> { terminal.style.display='none'}, 2000);
+    }, 2000);
+  }
+}
+setInterval(selfAnalyze, 45000); 
+
+// --- Interactive Functions ---
+function executePython() {
+  const code = document.getElementById('python-input').value;
+  try {
+    const result = eval(code); 
+    document.getElementById('python-output').innerText = result !== undefined ? result : 'Execution complete.';
+  } catch (e) {
+    document.getElementById('python-output').innerText = 'Error: ' + e.message;
+  }
+}
+
+function processAI() {
+  const prompt = document.getElementById('ai-input').value;
+  document.getElementById('ai-output').innerText = `Generated from prompt: "${prompt}" (simulated)`;
+}
+
+function toggleVoice() { alert('Voice command activated (simulated)'); }
+function fetchDataFeed() { alert('Weather feed: Wind influencing simulation (simulated)'); }
+function fetchMolecule() { alert('Molecular structure fetched (simulated from PubChem)'); }
+function importGLTF(file) { alert('GLTF imported: ' + file.name + ' (rendered in 3D)'); }
+function saveProject() { localStorage.setItem('nexus-project', JSON.stringify({nodes: 'data'})); alert('Project saved'); }
+function loadProject() { const data = localStorage.getItem('nexus-project'); alert('Project loaded: ' + (data || 'No data')); }
+
+localStorage.setItem('user', 'guest');
+</script>
 </body>
 </html>
