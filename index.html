@@ -3,80 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NEXUS v22 — Sovereign Stream</title>
+  <title>NEXUS v30 — Temporal Offset</title>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
 
   <style>
-    :root { --accent: #00ffb2; --bg: #000; --glass: rgba(5, 5, 10, 0.9); }
+    :root { --quantum: #00e5ff; --neural: #ff00ff; --bg: #000; }
     * { margin:0; padding:0; box-sizing:border-box; cursor: none !important; }
     body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
 
-    #cursor { position: fixed; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 10000; box-shadow: 0 0 10px var(--accent); }
+    #cursor { position: fixed; width: 14px; height: 14px; border: 1px solid #fff; border-radius: 50%; pointer-events: none; z-index: 10000; }
 
     .widget {
-      position: fixed; background: var(--glass); backdrop-filter: blur(20px);
-      border: 1px solid rgba(0, 255, 178, 0.2); border-radius: 4px; padding: 15px; z-index: 1000;
+      position: fixed; background: rgba(5, 5, 15, 0.9); backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; z-index: 1000;
     }
     
-    #os-header { top:0; left:0; width:100%; height:40px; border-bottom:1px solid #111; display:flex; align-items:center; padding:0 20px; font-size:10px; color:var(--accent); }
-    #core-hud { top: 50px; left: 20px; width: 280px; }
-    #data-stream { bottom: 20px; left: 20px; width: 350px; height: 150px; overflow: hidden; font-size: 9px; line-height: 1.4; color: var(--accent); }
-    #archive-hub { top: 50px; right: 20px; bottom: 20px; width: 300px; overflow-y: auto; }
+    #temporal-ctrl { top: 20px; left: 20px; width: 340px; border-top: 2px solid var(--neural); }
+    #parallel-stats { bottom: 20px; left: 20px; width: 340px; font-size: 10px; }
 
-    .log-entry { padding: 8px; border-bottom: 1px solid #111; cursor: pointer; opacity: 0.7; }
-    .log-entry:hover { opacity: 1; background: rgba(0,255,178,0.05); }
-    .btn { width: 100%; padding: 10px; background: var(--accent); color: #000; border: none; font-weight: 900; cursor: pointer; margin-top: 10px; }
+    input[type=range] { width: 100%; accent-color: var(--neural); margin-top: 10px; }
+    .label { font-size: 8px; color: var(--quantum); letter-spacing: 2px; text-transform: uppercase; }
+    .btn { width: 100%; padding: 12px; background: var(--quantum); color: #000; border: none; font-weight: 900; cursor: pointer; margin-top: 15px; }
+    
     #viewport { width: 100vw; height: 100vh; }
-    .stream-line { border-left: 2px solid var(--accent); padding-left: 5px; margin-bottom: 2px; }
   </style>
 </head>
 <body>
 
 <div id="cursor"></div>
-<header id="os-header">PHYNEXUS_SOVEREIGN // KERNEL_INTEGRITY: OK</header>
 
-<div id="core-hud" class="widget">
-  <span style="font-size: 9px; opacity: 0.5;">MODULE CONTROL</span>
-  <button class="btn" onclick="spawn(10)">SPAWN CLUSTER</button>
-  <div style="margin-top:10px; font-size:10px;">
-    <input type="checkbox" id="thermal-toggle" checked> Thermal Mapping<br>
-    <input type="checkbox" id="stream-toggle" checked> Live Telemetry<br>
-    <input type="checkbox" id="pixel-toggle" onchange="applyPixelation()"> Compression
+<div id="temporal-ctrl" class="widget">
+  <span class="label">Neural Projection Lead</span>
+  <input type="range" id="dilation" min="1" max="100" value="20">
+  <div style="display:flex; justify-content: space-between; font-size: 9px; margin-top:5px;">
+    <span>REAL-TIME</span>
+    <span>FUTURE_OFFSET</span>
   </div>
+  <button class="btn" onclick="spawn(15)">INJECT TEMPORAL NODES</button>
 </div>
 
-<div id="data-stream" class="widget">
-  <div id="stream-output"></div>
-</div>
-
-<div id="archive-hub" class="widget">
-  <span style="font-size: 9px; opacity: 0.5;">ARCHIVE // RECONSTRUCT</span>
-  <div id="archive-list"></div>
+<div id="parallel-stats" class="widget">
+  <div id="thread-readout">THREADS: ACTIVE // PARALLEL_SYNC: 100%</div>
+  <div style="color:var(--neural); margin-top:5px;" id="prediction-info">Neural Lead: 0.0s</div>
 </div>
 
 <div id="viewport"></div>
 
 <script>
-let scene, camera, renderer, world, entities = [], tiles = [];
-const TILE_RES = 10;
+let scene, camera, renderer, world, entities = [];
 
 function init() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 5000);
-  camera.position.set(100, 100, 100);
+  camera.position.set(120, 120, 120);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.getElementById('viewport').appendChild(renderer.domElement);
 
   new THREE.OrbitControls(camera, renderer.domElement);
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.81, 0) });
 
-  createLattice();
-  
   window.onmousemove = (e) => {
     document.getElementById('cursor').style.left = e.clientX + 'px';
     document.getElementById('cursor').style.top = e.clientY + 'px';
@@ -85,107 +75,56 @@ function init() {
   animate();
 }
 
-function createLattice() {
-  const geo = new THREE.PlaneGeometry(10, 10);
-  for(let x = -TILE_RES; x < TILE_RES; x++) {
-    for(let z = -TILE_RES; z < TILE_RES; z++) {
-      const mat = new THREE.MeshBasicMaterial({ color: 0x050505, side: THREE.DoubleSide });
-      const tile = new THREE.Mesh(geo, mat);
-      tile.rotation.x = Math.PI / 2;
-      tile.position.set(x * 10, 0, z * 10);
-      tile.userData = { hits: 0 };
-      scene.add(tile);
-      tiles.push(tile);
-    }
-  }
-}
-
-function pushStream(text) {
-  if (!document.getElementById('stream-toggle').checked) return;
-  const out = document.getElementById('stream-output');
-  const line = document.createElement('div');
-  line.className = 'stream-line';
-  line.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
-  out.prepend(line);
-  if (out.childNodes.length > 15) out.lastChild.remove();
-}
-
-function spawn(count, x = null, z = null) {
-  const geo = new THREE.IcosahedronGeometry(2, 0);
+function spawn(count) {
+  const geo = new THREE.SphereGeometry(2, 16, 16);
   for(let i=0; i<count; i++) {
-    const mat = new THREE.MeshPhongMaterial({ color: 0x00ffb2, wireframe: true });
+    // Physical Body
+    const mat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, metalness: 0.5, roughness: 0.2 });
     const mesh = new THREE.Mesh(geo, mat);
     const body = new CANNON.Body({ mass: 1, shape: new CANNON.Sphere(2) });
+    body.position.set((Math.random()-0.5)*100, 60 + (i*5), (Math.random()-0.5)*100);
     
-    const px = x !== null ? x : (Math.random()-0.5)*150;
-    const pz = z !== null ? z : (Math.random()-0.5)*150;
-    body.position.set(px, 60 + (i*5), pz);
+    // Neural Ghost (The Future State)
+    const ghostMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true, transparent: true, opacity: 0.3 });
+    const ghost = new THREE.Mesh(geo, ghostMat);
     
-    body.addEventListener("collide", (e) => {
-      updateLattice(body.position.x, body.position.z);
-      pushStream(`IMPACT AT ${body.position.x.toFixed(1)}, ${body.position.z.toFixed(1)}`);
-    });
-
     scene.add(mesh);
+    scene.add(ghost);
     world.addBody(body);
-    entities.push({ mesh, body, id: `SIG_${Math.floor(Math.random()*999)}` });
+    entities.push({ mesh, body, ghost });
   }
-  pushStream(`INJECTED ${count} ENTITIES`);
-}
-
-function updateLattice(x, z) {
-  tiles.forEach(tile => {
-    const d = Math.sqrt((tile.position.x - x)**2 + (tile.position.z - z)**2);
-    if(d < 10) {
-      tile.userData.hits += 0.2;
-      tile.material.color.setHSL(0.35 - Math.min(tile.userData.hits * 0.1, 0.35), 1, Math.min(tile.userData.hits * 0.2, 0.4));
-    }
-  });
-}
-
-function archive(e) {
-  const list = document.getElementById('archive-list');
-  const div = document.createElement('div');
-  div.className = 'log-entry';
-  const pos = {x: e.body.position.x, z: e.body.position.z};
-  div.innerHTML = `<strong>${e.id}</strong><br>DE-RES // X:${pos.x.toFixed(1)} Z:${pos.z.toFixed(1)}`;
-  
-  div.onclick = () => {
-    spawn(1, pos.x, pos.z);
-    div.remove();
-  };
-  
-  list.prepend(div);
-  scene.remove(e.mesh);
-  world.removeBody(e.body);
-  pushStream(`${e.id} ARCHIVED TO BLACK BOX`);
-}
-
-function applyPixelation() {
-  renderer.setPixelRatio(document.getElementById('pixel-toggle').checked ? 0.25 : window.devicePixelRatio);
 }
 
 function animate() {
   requestAnimationFrame(animate);
-  world.step(1/60);
   
-  const thermal = document.getElementById('thermal-toggle').checked;
+  const dilationFactor = document.getElementById('dilation').value / 200;
+  document.getElementById('prediction-info').innerText = `Neural Lead: ${(dilationFactor * 10).toFixed(1)}s`;
 
-  for (let i = entities.length - 1; i >= 0; i--) {
-    const e = entities[i];
+  // Thread 1: Physical Reality (Slowed by Dilation Slider)
+  world.step(1/60);
+
+  // Thread 2: Parallel Thinking (Always Full Speed + Offset)
+  entities.forEach(e => {
     e.mesh.position.copy(e.body.position);
     e.mesh.quaternion.copy(e.body.quaternion);
 
-    if (thermal) {
-      const s = e.body.velocity.length();
-      e.mesh.material.color.setHSL(0.4 - Math.min(s * 0.02, 0.4), 1, 0.5);
-    }
+    // Simulating Future Projection based on current velocity vectors
+    // This is the "Parallel Thinking" that speed-loads the trajectory
+    let futureX = e.body.position.x + (e.body.velocity.x * dilationFactor * 10);
+    let futureY = e.body.position.y + (e.body.velocity.y * dilationFactor * 10) - (0.5 * 9.81 * Math.pow(dilationFactor * 10, 2));
+    let futureZ = e.body.position.z + (e.body.velocity.z * dilationFactor * 10);
 
-    if (e.body.position.y < -50) {
-      archive(e);
-      entities.splice(i, 1);
+    e.ghost.position.set(futureX, Math.max(futureY, 0), futureZ);
+    
+    if(e.body.position.y < -50) {
+      scene.remove(e.mesh);
+      scene.remove(e.ghost);
+      world.removeBody(e.body);
+      entities.splice(entities.indexOf(e), 1);
     }
-  }
+  });
+
   renderer.render(scene, camera);
 }
 
