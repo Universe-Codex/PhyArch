@@ -4,20 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>PhyArch NEXUS</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap">
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
   
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #111116;
-      --text: #f0f4f8;
-      --dim: #8a8f99;
-      --accent: #3b82f6;
-      --red: #f85149;
-      --border: #252530;
-      --green: #22c55e;
-      --yellow: #eab308;
+      --bg: #05050a;
+      --surface: #0d0d16;
+      --accent-cyan: #00f2ff;
+      --accent-magenta: #ff00ff;
+      --text: #e0e0ff;
+      --dim: #707080;
+      --border: #1a1a2e;
     }
 
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
@@ -27,231 +25,198 @@
       color: var(--text);
       font-family: 'Inter', sans-serif;
       overflow-x: hidden;
-      padding-bottom: 100px;
+      padding-bottom: 120px;
     }
 
-    /* --- MOBILE APP HEADER --- */
+    h1, h2, .logo, .terminal-title { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+
+    /* --- HEADER --- */
     header {
-      position: sticky; top: 0;
-      background: rgba(17, 17, 22, 0.95);
-      backdrop-filter: blur(15px);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
-      z-index: 1000;
+      padding: 20px 24px;
       display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border);
     }
-    .logo { font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: 1px; }
+    .logo { color: var(--accent-cyan); font-size: 16px; font-weight: 700; }
+    .sync-status { color: var(--accent-magenta); font-size: 10px; font-weight: 700; }
 
-    /* --- SYSTEM NOTIFICATIONS (Replaces Alerts) --- */
-    #system-toast {
-      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-      background: var(--accent); color: white; padding: 10px 20px;
-      border-radius: 50px; font-size: 12px; font-weight: 600;
-      z-index: 2000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }
-
-    /* --- HERO & SECTIONS --- */
+    /* --- RESEARCH TERMINAL MAIN --- */
     .hero { padding: 40px 24px; text-align: center; }
-    .hero h1 { font-size: 36px; margin-bottom: 12px; }
-    .hero p { color: var(--dim); margin-bottom: 24px; }
+    .hero h1 { font-size: 32px; margin-bottom: 8px; line-height: 1.2; }
+    .hero p { color: var(--dim); font-size: 14px; }
 
-    .section { padding: 20px 24px; }
-    .carousel { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; scrollbar-width: none; }
-    .carousel::-webkit-scrollbar { display: none; }
+    /* --- NEURAL PROJECTION CARD (From Screenshot) --- */
+    .projection-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 20px 24px;
+    }
+    .card-label { font-size: 10px; color: var(--accent-cyan); margin-bottom: 15px; display: block; }
     
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 20px; min-width: 250px;
+    .slider-container { margin: 20px 0; position: relative; }
+    input[type=range] {
+      width: 100%; -webkit-appearance: none; background: #333; height: 4px; border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; background: var(--accent-magenta);
+      border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px var(--accent-magenta);
+    }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--accent-cyan); margin-top: 10px; }
+
+    .btn-inject {
+      width: 100%; padding: 16px; background: var(--accent-cyan); color: #000;
+      border: none; border-radius: 8px; font-weight: 800; font-family: 'Orbitron';
+      font-size: 14px; margin-top: 10px; cursor: pointer;
     }
 
-    /* --- WORKSPACE --- */
-    #workspace {
-      height: 350px; background: #000; border-radius: 20px;
-      margin: 20px 0; position: relative; border: 1px solid var(--border);
-    }
-
-    .action-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-    }
-    .action-grid button {
-      padding: 14px; border: none; border-radius: 12px; color: white;
-      font-weight: 700; font-size: 13px; cursor: pointer;
-    }
-
-    /* --- AI DRAWER PANEL --- */
+    /* --- CONVERSATIONAL AI DRAWER --- */
     .drawer {
       position: fixed; bottom: -100%; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--accent);
-      border-radius: 24px 24px 0 0; padding: 24px; z-index: 1500;
-      transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: var(--surface); border-top: 1px solid var(--accent-cyan);
+      border-radius: 24px 24px 0 0; padding: 20px; z-index: 2000;
+      transition: bottom 0.4s ease; height: 70vh; display: flex; flex-direction: column;
     }
     .drawer.active { bottom: 0; }
-    .drawer-handle { 
-        width: 40px; height: 4px; background: var(--border); 
-        margin: -10px auto 20px; border-radius: 2px;
+    
+    #chat-history {
+      flex-grow: 1; overflow-y: auto; margin-bottom: 15px;
+      display: flex; flex-direction: column; gap: 12px;
+      padding-right: 5px;
+    }
+    .msg { padding: 10px 14px; border-radius: 12px; font-size: 13px; max-width: 85%; line-height: 1.4; }
+    .msg.user { background: var(--border); align-self: flex-end; color: white; }
+    .msg.ai { background: rgba(0, 242, 255, 0.1); border-left: 2px solid var(--accent-cyan); align-self: flex-start; }
+
+    .chat-input-area { display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 15px; }
+    #ai-chat-input {
+      flex-grow: 1; background: #000; border: 1px solid var(--border);
+      color: white; padding: 12px; border-radius: 8px;
     }
 
-    /* --- FLOATING AI BUTTON --- */
-    #ai-fab {
-      position: fixed; bottom: 110px; right: 20px;
-      background: var(--accent); color: white;
-      width: 60px; height: 60px; border-radius: 30px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-      z-index: 999;
+    /* --- PILL NAV (From Screenshot) --- */
+    .pill-nav-container {
+      position: fixed; bottom: 30px; left: 24px; right: 24px;
+      background: rgba(20, 20, 30, 0.8); backdrop-filter: blur(10px);
+      border-radius: 40px; padding: 10px; border: 1px solid var(--border);
+      display: flex; justify-content: space-around; z-index: 1000;
     }
-
-    /* --- BOTTOM NAV --- */
-    #bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(17, 17, 22, 0.9); backdrop-filter: blur(15px);
-      display: flex; justify-content: space-around; padding: 15px 0 30px;
-      border-top: 1px solid var(--border); z-index: 1000;
+    .pill-item {
+      padding: 10px 20px; color: var(--dim); font-size: 11px;
+      font-weight: 700; text-decoration: none; border-radius: 30px;
     }
-    .nav-item { color: var(--dim); font-size: 12px; font-weight: 600; text-decoration: none; }
-    .nav-item.active { color: var(--accent); }
+    .pill-item.active { background: rgba(255,255,255,0.05); color: var(--accent-cyan); }
 
+    /* Background simulation logs */
+    #bg-logs {
+      position: fixed; bottom: 100px; left: 24px; font-family: monospace;
+      font-size: 9px; color: var(--accent-magenta); opacity: 0.6; pointer-events: none;
+    }
   </style>
 </head>
 <body>
 
-<div id="system-toast">System Update Syncing...</div>
-
 <header>
   <div class="logo">PHYARCH // NEXUS</div>
-  <div id="ai-status" style="font-size: 10px; color: var(--green);">● AI ONLINE</div>
+  <div class="sync-status">SYNC: 100%</div>
 </header>
 
 <div class="hero">
-  <h1>RESEARCH TERMINAL</h1>
+  <h1>RESEARCH<br>TERMINAL</h1>
   <p>Neural Projection & Data Synthesis</p>
-  <button style="padding:12px 24px; background:var(--accent); border:none; border-radius:8px; color:white; font-weight:bold;" onclick="document.getElementById('workspace').scrollIntoView()">Launch Workspace</button>
 </div>
 
-<div class="section">
-  <h2>Key Modules</h2>
-  <div class="carousel">
-    <div class="card"><h3>3D Visualizer</h3><p>Real-time physics rendering.</p></div>
-    <div class="card"><h3>AI Forge</h3><p>Neural molecular synthesis.</p></div>
-    <div class="card"><h3>Data Stream</h3><p>Live global feed integration.</p></div>
+<div class="projection-card">
+  <span class="card-label">NEURAL PROJECTION LEAD</span>
+  <div class="slider-container">
+    <input type="range" min="0" max="100" value="45">
+    <div class="slider-labels">
+      <span>REAL-TIME</span>
+      <span>FUTURE_OFFSET</span>
+    </div>
   </div>
+  <button class="btn-inject" onclick="injectNodes()">INJECT TEMPORAL NODES</button>
 </div>
 
-<div class="section">
-  <h2>Workspace</h2>
-  <div id="workspace">
-    <div id="canvas-container" style="width:100%; height:100%;"></div>
-  </div>
-  
-  <div class="action-grid">
-    <button style="background:var(--accent)" onclick="init3D()">Initialize 3D</button>
-    <button style="background:var(--green)" onclick="openDrawer('python-drawer')">Python Kernel</button>
-    <button style="background:var(--yellow); color:#000" onclick="fetchDataFeed()">Sync Data</button>
-    <button style="background:var(--red)" onclick="openDrawer('ai-drawer')">AI Forge</button>
-  </div>
-</div>
+<div id="bg-logs">THREADS: ACTIVE // PARALLEL_SYNC: 100%<br>Neural Lead: 0.0s</div>
 
 <div id="ai-drawer" class="drawer">
-  <div class="drawer-handle"></div>
-  <h3>Neural Assistant</h3>
-  <input type="text" id="ai-input" placeholder="Enter synthesis prompt..." style="width:100%; padding:15px; margin:15px 0; background:var(--bg); border:1px solid var(--border); color:white; border-radius:10px;">
-  <button onclick="processAI()" style="width:100%; padding:15px; background:var(--accent); border:none; border-radius:10px; color:white; font-weight:bold;">GENERATE</button>
-  <div id="ai-output" style="margin-top:15px; color:var(--green); font-family:monospace; font-size:12px;"></div>
-  <button onclick="closeDrawers()" style="margin-top:10px; background:none; border:none; color:var(--dim); width:100%;">Close</button>
+  <div style="text-align:center; color:var(--accent-cyan); font-size:12px; margin-bottom:15px; font-family:Orbitron;">NEURAL ASSISTANT</div>
+  <div id="chat-history">
+    <div class="msg ai">System initialized. I am the PhyArch Intelligence. How can I assist your research today?</div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="ai-chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
+    <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:0 15px; border-radius:8px; font-weight:bold;">SEND</button>
+  </div>
+  <button onclick="toggleDrawer()" style="margin-top:10px; background:none; border:none; color:var(--dim); font-size:11px;">MINIMIZE</button>
 </div>
 
-<div id="python-drawer" class="drawer">
-  <div class="drawer-handle"></div>
-  <h3>Python Terminal</h3>
-  <input type="text" id="py-input" placeholder="print('Running simulation...')" style="width:100%; padding:15px; margin:15px 0; background:#000; border:1px solid var(--green); color:var(--green); font-family:monospace; border-radius:10px;">
-  <button onclick="runPython()" style="width:100%; padding:15px; background:var(--green); border:none; border-radius:10px; color:white; font-weight:bold;">EXECUTE</button>
-  <div id="py-output" style="margin-top:15px; color:var(--green); font-family:monospace; font-size:12px;"></div>
-  <button onclick="closeDrawers()" style="margin-top:10px; background:none; border:none; color:var(--dim); width:100%;">Close</button>
-</div>
-
-<div id="ai-fab" onclick="openDrawer('ai-drawer')">AI</div>
-
-<nav id="bottom-nav">
-  <a href="#" class="nav-item active">HUB</a>
-  <a href="#" class="nav-item">DATA</a>
-  <a href="#" class="nav-item">CORE</a>
-  <a href="#" class="nav-item" onclick="showToast('Checking for Updates...')">SYNC</a>
+<nav class="pill-nav-container">
+  <a href="#" class="pill-item active">HUB</a>
+  <a href="#" onclick="alert('Data Stream Loading...')" class="pill-item">DATA</a>
+  <a href="#" onclick="toggleDrawer()" class="pill-item">CORE</a>
+  <a href="#" class="pill-item">LOGS</a>
 </nav>
 
 <script>
-// --- CORE AI LOGIC (Background Working) ---
-function showToast(msg) {
-  const toast = document.getElementById('system-toast');
-  toast.innerText = msg;
-  toast.style.display = 'block';
-  setTimeout(() => { toast.style.display = 'none'; }, 3000);
+// Toggle AI Drawer
+function toggleDrawer() {
+  document.getElementById('ai-drawer').classList.toggle('active');
 }
 
-// Background Self-Analysis (Working in background)
-setInterval(() => {
-  console.log("AI Background Analysis: Optimizing Viewport...");
-  // Simulate the background AI finding a "tweak"
-  document.getElementById('ai-status').innerText = "● AI ANALYZING";
+// Conversational Logic
+function sendMsg() {
+  const input = document.getElementById('ai-chat-input');
+  const history = document.getElementById('chat-history');
+  if(!input.value.trim()) return;
+
+  // Add User Message
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg user';
+  userMsg.innerText = input.value;
+  history.appendChild(userMsg);
+
+  const query = input.value.toLowerCase();
+  input.value = '';
+  history.scrollTop = history.scrollHeight;
+
+  // Simulate "Thinking"
   setTimeout(() => {
-    document.getElementById('ai-status').innerText = "● AI ONLINE";
-  }, 2000);
-}, 30000);
-
-// --- 3D VIEWPORT ---
-let scene, camera, renderer, cube;
-function init3D() {
-  const container = document.getElementById('canvas-container');
-  container.innerHTML = '';
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  container.appendChild(renderer.domElement);
-  
-  const geometry = new THREE.IcosahedronGeometry(1, 1);
-  const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6, wireframe: true });
-  cube = new THREE.Mesh(geometry, material);
-  scene.add(cube);
-  camera.position.z = 3;
-
-  function animate() {
-    requestAnimationFrame(animate);
-    cube.rotation.y += 0.01;
-    renderer.render(scene, camera);
-  }
-  animate();
-  showToast("3D Engine Initialized");
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'msg ai';
+    
+    // Simple conversational logic
+    if(query.includes("hello") || query.includes("hi")) {
+        aiMsg.innerText = "Greetings. Connection to the temporal core is stable. What are we projecting today?";
+    } else if(query.includes("inject") || query.includes("node")) {
+        aiMsg.innerText = "I have queued the temporal nodes. Please confirm injection via the primary terminal slider.";
+    } else if(query.includes("status")) {
+        aiMsg.innerText = "All systems nominal. Parallel sync is at 100%. Thermal levels within range.";
+    } else {
+        aiMsg.innerText = "Query processed. I'm analyzing the data related to '" + query + "'. Should I run a full simulation?";
+    }
+    
+    history.appendChild(aiMsg);
+    history.scrollTop = history.scrollHeight;
+  }, 800);
 }
 
-// --- UI NAVIGATION ---
-function openDrawer(id) {
-  closeDrawers();
-  document.getElementById(id).classList.add('active');
-}
-function closeDrawers() {
-  document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
-}
-
-function processAI() {
-  const input = document.getElementById('ai-input').value;
-  document.getElementById('ai-output').innerText = "> Processing: " + input + "\n> Synthesis complete. New molecule mapped to workspace.";
-  showToast("AI Synthesis Successful");
+function injectNodes() {
+    const logs = document.getElementById('bg-logs');
+    logs.innerHTML = "INJECTING NODES...<br>RECALIBRATING TEMPORAL OFFSET...";
+    setTimeout(() => {
+        logs.innerHTML = "THREADS: ACTIVE // PARALLEL_SYNC: 100%<br>Neural Lead: 0.0s";
+        alert("Temporal Nodes Injected Successfully.");
+    }, 2000);
 }
 
-function runPython() {
-  const input = document.getElementById('py-input').value;
-  try {
-    const res = eval(input);
-    document.getElementById('py-output').innerText = "> Result: " + (res || "Success");
-  } catch(e) {
-    document.getElementById('py-output').innerText = "> Error: " + e.message;
-  }
-}
-
-function fetchDataFeed() {
-  showToast("Fetching Global Science Feed...");
-  setTimeout(() => { showToast("Data Synced: 4 New Simulations Available"); }, 2000);
-}
+// Dynamic Background Logs
+setInterval(() => {
+    const time = (Math.random() * 0.5).toFixed(2);
+    document.getElementById('bg-logs').innerHTML = `THREADS: ACTIVE // PARALLEL_SYNC: 100%<br>Neural Lead: ${time}s`;
+}, 3000);
 </script>
+
 </body>
 </html>
