@@ -16,120 +16,73 @@
       --text: #e0e0ff;
       --dim: #707080;
       --border: #1a1a2e;
+      --green: #22c55e;
     }
 
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-    
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      overflow-x: hidden;
-      padding-bottom: 120px;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; padding-bottom: 120px; }
+    h1, h2, .logo, .btn-inject { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
 
-    h1, h2, .logo, .terminal-title { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
-
-    /* --- HEADER --- */
-    header {
-      padding: 20px 24px;
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
+    /* --- UI ELEMENTS --- */
+    header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top:0; background: rgba(5,5,10,0.9); z-index: 100; }
     .logo { color: var(--accent-cyan); font-size: 16px; font-weight: 700; }
     .sync-status { color: var(--accent-magenta); font-size: 10px; font-weight: 700; }
 
-    /* --- RESEARCH TERMINAL MAIN --- */
-    .hero { padding: 40px 24px; text-align: center; }
-    .hero h1 { font-size: 32px; margin-bottom: 8px; line-height: 1.2; }
-    .hero p { color: var(--dim); font-size: 14px; }
+    #system-toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--accent-cyan); color: #000; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; z-index: 3000; display: none; }
 
-    /* --- NEURAL PROJECTION CARD (From Screenshot) --- */
-    .projection-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      margin: 20px 24px;
-    }
-    .card-label { font-size: 10px; color: var(--accent-cyan); margin-bottom: 15px; display: block; }
-    
-    .slider-container { margin: 20px 0; position: relative; }
-    input[type=range] {
-      width: 100%; -webkit-appearance: none; background: #333; height: 4px; border-radius: 2px;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 18px; height: 18px; background: var(--accent-magenta);
-      border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px var(--accent-magenta);
-    }
-    .slider-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--accent-cyan); margin-top: 10px; }
+    .section { padding: 20px 24px; }
+    .carousel { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; scrollbar-width: none; }
+    .carousel::-webkit-scrollbar { display: none; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; min-width: 260px; }
 
-    .btn-inject {
-      width: 100%; padding: 16px; background: var(--accent-cyan); color: #000;
-      border: none; border-radius: 8px; font-weight: 800; font-family: 'Orbitron';
-      font-size: 14px; margin-top: 10px; cursor: pointer;
-    }
+    /* --- RESEARCH TERMINAL CARD (Screenshot-Matched) --- */
+    .projection-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 20px 24px; border-top: 2px solid var(--accent-magenta); }
+    .card-label { font-size: 10px; color: var(--accent-cyan); margin-bottom: 15px; display: block; font-weight: bold; }
+    .slider-container { margin: 20px 0; }
+    input[type=range] { width: 100%; -webkit-appearance: none; background: #1a1a2e; height: 6px; border-radius: 3px; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: var(--accent-magenta); border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px var(--accent-magenta); }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--accent-cyan); margin-top: 8px; font-weight: bold; }
+    .btn-inject { width: 100%; padding: 16px; background: var(--accent-cyan); color: #000; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; }
+
+    /* --- WORKSPACE --- */
+    #workspace { height: 300px; background: #000; border-radius: 16px; margin: 20px 0; position: relative; border: 1px solid var(--border); overflow: hidden; }
+    .action-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 24px; }
+    .action-grid button { padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: white; font-weight: 600; font-size: 12px; }
 
     /* --- CONVERSATIONAL AI DRAWER --- */
-    .drawer {
-      position: fixed; bottom: -100%; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--accent-cyan);
-      border-radius: 24px 24px 0 0; padding: 20px; z-index: 2000;
-      transition: bottom 0.4s ease; height: 70vh; display: flex; flex-direction: column;
-    }
+    .drawer { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--accent-cyan); border-radius: 24px 24px 0 0; padding: 20px; z-index: 2000; transition: bottom 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67); height: 75vh; display: flex; flex-direction: column; }
     .drawer.active { bottom: 0; }
-    
-    #chat-history {
-      flex-grow: 1; overflow-y: auto; margin-bottom: 15px;
-      display: flex; flex-direction: column; gap: 12px;
-      padding-right: 5px;
-    }
-    .msg { padding: 10px 14px; border-radius: 12px; font-size: 13px; max-width: 85%; line-height: 1.4; }
-    .msg.user { background: var(--border); align-self: flex-end; color: white; }
-    .msg.ai { background: rgba(0, 242, 255, 0.1); border-left: 2px solid var(--accent-cyan); align-self: flex-start; }
+    #chat-history { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 10px 0; }
+    .msg { padding: 12px 16px; border-radius: 16px; font-size: 13px; max-width: 85%; line-height: 1.5; }
+    .msg.user { background: var(--border); align-self: flex-end; color: white; border-bottom-right-radius: 4px; }
+    .msg.ai { background: rgba(0, 242, 255, 0.08); border: 1px solid rgba(0, 242, 255, 0.2); align-self: flex-start; border-bottom-left-radius: 4px; }
 
-    .chat-input-area { display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 15px; }
-    #ai-chat-input {
-      flex-grow: 1; background: #000; border: 1px solid var(--border);
-      color: white; padding: 12px; border-radius: 8px;
-    }
+    /* --- PILL NAV --- */
+    .pill-nav-container { position: fixed; bottom: 25px; left: 24px; right: 24px; background: rgba(13, 13, 22, 0.95); backdrop-filter: blur(15px); border-radius: 40px; padding: 8px; border: 1px solid var(--border); display: flex; justify-content: space-around; z-index: 1000; }
+    .pill-item { padding: 12px 20px; color: var(--dim); font-size: 11px; font-weight: 700; text-decoration: none; border-radius: 30px; }
+    .pill-item.active { background: rgba(0, 242, 255, 0.1); color: var(--accent-cyan); }
 
-    /* --- PILL NAV (From Screenshot) --- */
-    .pill-nav-container {
-      position: fixed; bottom: 30px; left: 24px; right: 24px;
-      background: rgba(20, 20, 30, 0.8); backdrop-filter: blur(10px);
-      border-radius: 40px; padding: 10px; border: 1px solid var(--border);
-      display: flex; justify-content: space-around; z-index: 1000;
-    }
-    .pill-item {
-      padding: 10px 20px; color: var(--dim); font-size: 11px;
-      font-weight: 700; text-decoration: none; border-radius: 30px;
-    }
-    .pill-item.active { background: rgba(255,255,255,0.05); color: var(--accent-cyan); }
-
-    /* Background simulation logs */
-    #bg-logs {
-      position: fixed; bottom: 100px; left: 24px; font-family: monospace;
-      font-size: 9px; color: var(--accent-magenta); opacity: 0.6; pointer-events: none;
-    }
+    #bg-logs { position: fixed; bottom: 100px; left: 24px; font-family: monospace; font-size: 9px; color: var(--accent-magenta); opacity: 0.7; pointer-events: none; line-height: 1.4; }
   </style>
 </head>
 <body>
+
+<div id="system-toast">UPDATING SYNC...</div>
 
 <header>
   <div class="logo">PHYARCH // NEXUS</div>
   <div class="sync-status">SYNC: 100%</div>
 </header>
 
-<div class="hero">
-  <h1>RESEARCH<br>TERMINAL</h1>
-  <p>Neural Projection & Data Synthesis</p>
+<div class="section" style="text-align:center; padding-top:40px;">
+  <h1 style="font-size: 34px;">RESEARCH<br>TERMINAL</h1>
+  <p style="color:var(--dim); font-size:14px; margin-top:10px;">Neural Projection & Data Synthesis</p>
 </div>
 
 <div class="projection-card">
   <span class="card-label">NEURAL PROJECTION LEAD</span>
   <div class="slider-container">
-    <input type="range" min="0" max="100" value="45">
+    <input type="range" min="0" max="100" value="45" id="temporal-slider">
     <div class="slider-labels">
       <span>REAL-TIME</span>
       <span>FUTURE_OFFSET</span>
@@ -138,85 +91,163 @@
   <button class="btn-inject" onclick="injectNodes()">INJECT TEMPORAL NODES</button>
 </div>
 
+<div class="section">
+  <h2>Key Features</h2>
+  <div class="carousel">
+    <div class="card"><h3>3D Rendering</h3><p>Real-time viewport with physics.</p></div>
+    <div class="card"><h3>AI Forge</h3><p>Prompt-based molecular creation.</p></div>
+    <div class="card"><h3>Python Kernel</h3><p>In-app data analysis scripts.</p></div>
+    <div class="card"><h3>Real-Time Feed</h3><p>Global weather & research sync.</p></div>
+    <div class="card"><h3>GLTF Import</h3><p>Direct 3D model integration.</p></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Workspace</h2>
+  <div id="workspace"><div id="canvas-container" style="width:100%; height:100%;"></div></div>
+  <div class="action-grid">
+    <button onclick="init3D()">INIT 3D VIEW</button>
+    <button onclick="toggleDrawer('ai-drawer')">AI ASSISTANT</button>
+    <button onclick="toggleDrawer('python-drawer')">PYTHON CMD</button>
+    <button onclick="fetchData()">FETCH DATA</button>
+  </div>
+</div>
+
 <div id="bg-logs">THREADS: ACTIVE // PARALLEL_SYNC: 100%<br>Neural Lead: 0.0s</div>
 
 <div id="ai-drawer" class="drawer">
-  <div style="text-align:center; color:var(--accent-cyan); font-size:12px; margin-bottom:15px; font-family:Orbitron;">NEURAL ASSISTANT</div>
+  <div style="font-family:Orbitron; color:var(--accent-cyan); text-align:center; margin-bottom:20px; font-size:12px;">NEURAL ASSISTANT</div>
   <div id="chat-history">
-    <div class="msg ai">System initialized. I am the PhyArch Intelligence. How can I assist your research today?</div>
+    <div class="msg ai">PhyArch Neural Core online. Simulation memory active. How can I assist?</div>
   </div>
-  <div class="chat-input-area">
-    <input type="text" id="ai-chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMsg()">
-    <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:0 15px; border-radius:8px; font-weight:bold;">SEND</button>
+  <div style="display:flex; gap:10px; border-top:1px solid var(--border); padding-top:15px;">
+    <input type="text" id="ai-chat-input" placeholder="Ask about simulations..." style="flex:1; background:#000; border:1px solid var(--border); color:white; padding:12px; border-radius:8px;" onkeypress="if(event.key==='Enter') sendMsg()">
+    <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:0 15px; border-radius:8px; font-weight:800;">SEND</button>
   </div>
-  <button onclick="toggleDrawer()" style="margin-top:10px; background:none; border:none; color:var(--dim); font-size:11px;">MINIMIZE</button>
+  <button onclick="toggleDrawer('ai-drawer')" style="margin-top:15px; background:none; border:none; color:var(--dim); font-size:11px; width:100%;">MINIMIZE</button>
+</div>
+
+<div id="python-drawer" class="drawer">
+    <div style="font-family:Orbitron; color:var(--green); text-align:center; margin-bottom:20px; font-size:12px;">PYTHON KERNEL</div>
+    <div id="py-output" style="flex:1; background:#000; border-radius:8px; padding:15px; font-family:monospace; color:var(--green); font-size:12px; overflow-y:auto;">> Ready for input...</div>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <input type="text" id="py-input" placeholder="print(1+1)" style="flex:1; background:#000; border:1px solid var(--border); color:var(--green); padding:12px; border-radius:8px; font-family:monospace;">
+      <button onclick="runPy()" style="background:var(--green); border:none; padding:0 15px; border-radius:8px; font-weight:800; color:white;">RUN</button>
+    </div>
+    <button onclick="toggleDrawer('python-drawer')" style="margin-top:15px; background:none; border:none; color:var(--dim); font-size:11px; width:100%;">CLOSE</button>
 </div>
 
 <nav class="pill-nav-container">
   <a href="#" class="pill-item active">HUB</a>
-  <a href="#" onclick="alert('Data Stream Loading...')" class="pill-item">DATA</a>
-  <a href="#" onclick="toggleDrawer()" class="pill-item">CORE</a>
+  <a href="#" class="pill-item" onclick="fetchData()">DATA</a>
+  <a href="#" class="pill-item" onclick="toggleDrawer('ai-drawer')">CORE</a>
   <a href="#" class="pill-item">LOGS</a>
 </nav>
 
 <script>
-// Toggle AI Drawer
-function toggleDrawer() {
-  document.getElementById('ai-drawer').classList.toggle('active');
+// --- GLOBAL MEMORY SYSTEM ---
+let simHistory = JSON.parse(localStorage.getItem('phyarch_sims')) || [];
+
+function saveSimulation(type, result) {
+    const entry = { timestamp: new Date().toLocaleTimeString(), type, result };
+    simHistory.push(entry);
+    if(simHistory.length > 5) simHistory.shift(); // Keep last 5
+    localStorage.setItem('phyarch_sims', JSON.stringify(simHistory));
 }
 
-// Conversational Logic
+function showToast(msg) {
+    const t = document.getElementById('system-toast');
+    t.innerText = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+}
+
+// --- 3D VIEWPORT ---
+let scene, camera, renderer, mesh;
+function init3D() {
+    const container = document.getElementById('workspace');
+    const canvasCont = document.getElementById('canvas-container');
+    canvasCont.innerHTML = '';
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    canvasCont.appendChild(renderer.domElement);
+    
+    mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshBasicMaterial({color: 0x00f2ff, wireframe: true}));
+    scene.add(mesh);
+    camera.position.z = 3;
+    
+    function animate() { requestAnimationFrame(animate); mesh.rotation.y += 0.01; renderer.render(scene, camera); }
+    animate();
+    showToast("3D CORE INITIALIZED");
+    saveSimulation("3D Render", "Icosahedron Wireframe projected at 60FPS");
+}
+
+// --- CONVERSATIONAL AI ---
 function sendMsg() {
-  const input = document.getElementById('ai-chat-input');
-  const history = document.getElementById('chat-history');
-  if(!input.value.trim()) return;
+    const input = document.getElementById('ai-chat-input');
+    const hist = document.getElementById('chat-history');
+    if(!input.value.trim()) return;
 
-  // Add User Message
-  const userMsg = document.createElement('div');
-  userMsg.className = 'msg user';
-  userMsg.innerText = input.value;
-  history.appendChild(userMsg);
-
-  const query = input.value.toLowerCase();
-  input.value = '';
-  history.scrollTop = history.scrollHeight;
-
-  // Simulate "Thinking"
-  setTimeout(() => {
-    const aiMsg = document.createElement('div');
-    aiMsg.className = 'msg ai';
+    const uMsg = document.createElement('div');
+    uMsg.className = 'msg user';
+    uMsg.innerText = input.value;
+    hist.appendChild(uMsg);
     
-    // Simple conversational logic
-    if(query.includes("hello") || query.includes("hi")) {
-        aiMsg.innerText = "Greetings. Connection to the temporal core is stable. What are we projecting today?";
-    } else if(query.includes("inject") || query.includes("node")) {
-        aiMsg.innerText = "I have queued the temporal nodes. Please confirm injection via the primary terminal slider.";
-    } else if(query.includes("status")) {
-        aiMsg.innerText = "All systems nominal. Parallel sync is at 100%. Thermal levels within range.";
-    } else {
-        aiMsg.innerText = "Query processed. I'm analyzing the data related to '" + query + "'. Should I run a full simulation?";
-    }
-    
-    history.appendChild(aiMsg);
-    history.scrollTop = history.scrollHeight;
-  }, 800);
+    const query = input.value.toLowerCase();
+    input.value = '';
+    hist.scrollTop = hist.scrollHeight;
+
+    setTimeout(() => {
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'msg ai';
+        
+        if(query.includes("last test") || query.includes("result") || query.includes("previous")) {
+            if(simHistory.length > 0) {
+                const last = simHistory[simHistory.length - 1];
+                aiMsg.innerText = `Accessing logs... Your last test was a "${last.type}" at ${last.timestamp}. Result: ${last.result}`;
+            } else {
+                aiMsg.innerText = "Memory banks are empty. Run a simulation in the Workspace first.";
+            }
+        } else if(query.includes("hello")) {
+            aiMsg.innerText = "Connection secure. How shall we proceed with the research?";
+        } else {
+            aiMsg.innerText = "Understood. Analyzing data parameters for: " + query;
+        }
+        hist.appendChild(aiMsg);
+        hist.scrollTop = hist.scrollHeight;
+    }, 700);
 }
+
+// --- UTILITIES ---
+function toggleDrawer(id) { document.getElementById(id).classList.toggle('active'); }
 
 function injectNodes() {
-    const logs = document.getElementById('bg-logs');
-    logs.innerHTML = "INJECTING NODES...<br>RECALIBRATING TEMPORAL OFFSET...";
+    const val = document.getElementById('temporal-slider').value;
+    showToast(`INJECTING ${val} NODES...`);
+    saveSimulation("Temporal Injection", `Offset set to ${val}% power.`);
+    document.getElementById('bg-logs').innerHTML = `THREADS: RECALIBRATING // PARALLEL_SYNC: 88%<br>Neural Lead: -${(val/100).toFixed(2)}s`;
     setTimeout(() => {
-        logs.innerHTML = "THREADS: ACTIVE // PARALLEL_SYNC: 100%<br>Neural Lead: 0.0s";
-        alert("Temporal Nodes Injected Successfully.");
+        document.getElementById('bg-logs').innerHTML = `THREADS: ACTIVE // PARALLEL_SYNC: 100%<br>Neural Lead: 0.0s`;
+        showToast("INJECTION COMPLETE");
     }, 2000);
 }
 
-// Dynamic Background Logs
-setInterval(() => {
-    const time = (Math.random() * 0.5).toFixed(2);
-    document.getElementById('bg-logs').innerHTML = `THREADS: ACTIVE // PARALLEL_SYNC: 100%<br>Neural Lead: ${time}s`;
-}, 3000);
-</script>
+function fetchData() {
+    showToast("SYNCING DATA FEED...");
+    saveSimulation("Data Sync", "Fetched 4 global atmospheric variables.");
+}
 
+function runPy() {
+    const input = document.getElementById('py-input').value;
+    const out = document.getElementById('py-output');
+    try {
+        const res = eval(input);
+        out.innerText += `\n> ${input}\n[RESULT]: ${res}`;
+        saveSimulation("Python Exec", `Code "${input}" returned ${res}`);
+    } catch(e) { out.innerText += `\n> Error: ${e.message}`; }
+    out.scrollTop = out.scrollHeight;
+}
+</script>
 </body>
 </html>
