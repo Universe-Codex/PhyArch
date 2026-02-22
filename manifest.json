@@ -2,47 +2,46 @@
   "name": "PhyArch NEXUS",
   "short_name": "NEXUS",
   "description": "The ultimate futuristic science hub for 3D rendering, simulations, AI creation, and data analysis.",
-  "start_url": ".",
+  "start_url": "./",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen", "window-controls-overlay"],
   "background_color": "#0f0f12",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "id": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
   "icons": [
-  { "src": "android-chrome-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-  { "src": "android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ]
-      "src": "https://via.placeholder.com/192x192/3b82f6/ffffff?text=NEXUS",
+    {
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://via.placeholder.com/512x512/3b82f6/ffffff?text=NEXUS",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "scope": "/",
-  "id": "/",
-  "categories": ["productivity", "science", "developer", "engineering"],
-  "dir": "ltr",
-  "lang": "en",
-  "prefer_related_applications": false,
-  "related_applications": [],
   "screenshots": [
     {
-      "src": "https://via.placeholder.com/1280x800/0f0f12/ffffff?text=PhyArch+NEXUS+Dashboard",
+      "src": "screenshot-wide.png",
       "sizes": "1280x800",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "PhyArch NEXUS Dashboard"
     },
     {
-      "src": "https://via.placeholder.com/750x1334/0f0f12/ffffff?text=PhyArch+NEXUS+Mobile",
+      "src": "screenshot-narrow.png",
       "sizes": "750x1334",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "PhyArch NEXUS Mobile View"
     }
   ],
   "shortcuts": [
@@ -53,7 +52,7 @@
       "url": "/#workspace",
       "icons": [
         {
-          "src": "https://via.placeholder.com/192x192/3b82f6/ffffff?text=WS",
+          "src": "icon-workspace-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -66,7 +65,7 @@
       "url": "/#ai-forge",
       "icons": [
         {
-          "src": "https://via.placeholder.com/192x192/3b82f6/ffffff?text=AI",
+          "src": "icon-ai-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
