@@ -3,164 +3,190 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PhyArch NEXUS v16 — Sovereign OS</title>
+  <title>NEXUS v22 — Sovereign Stream</title>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
 
   <style>
-    :root { --accent: #00ffb2; --bg: #000; --glass: rgba(5, 5, 10, 0.85); }
+    :root { --accent: #00ffb2; --bg: #000; --glass: rgba(5, 5, 10, 0.9); }
     * { margin:0; padding:0; box-sizing:border-box; cursor: none !important; }
-    body { background:var(--bg); color:#fff; font-family: 'JetBrains Mono', monospace; overflow:hidden; }
+    body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
 
-    /* --- GLOBAL UI COMPONENTS --- */
-    #cursor { position: fixed; width: 18px; height: 18px; border: 1px solid var(--accent); border-radius: 50%; pointer-events: none; z-index: 10000; }
-    
-    #os-header {
-      position: fixed; top: 0; width: 100%; height: 50px; background: rgba(0,0,0,0.5);
-      display: flex; align-items: center; padding: 0 20px; z-index: 5000;
-      border-bottom: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-    }
+    #cursor { position: fixed; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 10000; box-shadow: 0 0 10px var(--accent); }
 
-    /* --- MODULAR WIDGETS --- */
     .widget {
-      position: fixed; background: var(--glass); backdrop-filter: blur(30px);
-      border: 1px solid rgba(0,255,178,0.2); border-radius: 8px; padding: 15px;
-      z-index: 1000; display: none; /* Hidden by default */
-      transition: opacity 0.3s;
+      position: fixed; background: var(--glass); backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 255, 178, 0.2); border-radius: 4px; padding: 15px; z-index: 1000;
     }
-    .widget.visible { display: block; }
+    
+    #os-header { top:0; left:0; width:100%; height:40px; border-bottom:1px solid #111; display:flex; align-items:center; padding:0 20px; font-size:10px; color:var(--accent); }
+    #core-hud { top: 50px; left: 20px; width: 280px; }
+    #data-stream { bottom: 20px; left: 20px; width: 350px; height: 150px; overflow: hidden; font-size: 9px; line-height: 1.4; color: var(--accent); }
+    #archive-hub { top: 50px; right: 20px; bottom: 20px; width: 300px; overflow-y: auto; }
 
-    #pref-matrix { top: 60px; right: 20px; width: 220px; }
-    #omni-forge { top: 60px; left: 20px; width: 340px; }
-    #ai-observer { bottom: 20px; left: 20px; width: 400px; height: 120px; overflow-y: auto; font-size: 11px; }
-
-    /* --- STYLING --- */
-    .toggle-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10px; align-items: center; }
-    input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
-    textarea { width: 100%; background: #000; border: 1px solid #222; color: var(--accent); padding: 8px; font-size: 11px; margin: 10px 0; border-radius: 4px; }
-    .btn { background: var(--accent); color: #000; border: none; padding: 8px; width: 100%; border-radius: 4px; font-weight: 800; cursor: pointer; }
-    .ai-line { color: var(--accent); opacity: 0.8; margin-bottom: 4px; border-left: 2px solid var(--accent); padding-left: 8px; }
+    .log-entry { padding: 8px; border-bottom: 1px solid #111; cursor: pointer; opacity: 0.7; }
+    .log-entry:hover { opacity: 1; background: rgba(0,255,178,0.05); }
+    .btn { width: 100%; padding: 10px; background: var(--accent); color: #000; border: none; font-weight: 900; cursor: pointer; margin-top: 10px; }
+    #viewport { width: 100vw; height: 100vh; }
+    .stream-line { border-left: 2px solid var(--accent); padding-left: 5px; margin-bottom: 2px; }
   </style>
 </head>
 <body>
 
 <div id="cursor"></div>
+<header id="os-header">PHYNEXUS_SOVEREIGN // KERNEL_INTEGRITY: OK</header>
 
-<header id="os-header">
-  <div style="color:var(--accent); font-weight:900; cursor:pointer;" onclick="toggleWidget('pref-matrix')">NEXUS_OS // MENU</div>
-</header>
-
-<div id="pref-matrix" class="widget visible">
-  <span style="font-size: 10px; opacity: 0.5;">PREFERENCES MATRIX</span>
-  <hr style="border:0; border-top:1px solid #222; margin:10px 0;">
-  <div class="toggle-row"><span>FORGE KERNEL</span> <input type="checkbox" checked onclick="toggleWidget('omni-forge')"></div>
-  <div class="toggle-row"><span>AI OBSERVER</span> <input type="checkbox" checked onclick="toggleWidget('ai-observer')"></div>
-  <div class="toggle-row"><span>THERMAL VISION</span> <input type="checkbox" id="thermal-toggle" checked></div>
-  <div class="toggle-row"><span>SOUNDSCAPE</span> <input type="checkbox" id="audio-toggle"></div>
-  <button class="btn" style="margin-top:10px;" onclick="saveConfig()">SAVE CONFIG</button>
+<div id="core-hud" class="widget">
+  <span style="font-size: 9px; opacity: 0.5;">MODULE CONTROL</span>
+  <button class="btn" onclick="spawn(10)">SPAWN CLUSTER</button>
+  <div style="margin-top:10px; font-size:10px;">
+    <input type="checkbox" id="thermal-toggle" checked> Thermal Mapping<br>
+    <input type="checkbox" id="stream-toggle" checked> Live Telemetry<br>
+    <input type="checkbox" id="pixel-toggle" onchange="applyPixelation()"> Compression
+  </div>
 </div>
 
-<div id="omni-forge" class="widget visible">
-  <span style="font-size: 10px; opacity: 0.5;">OMNI-FORGE</span>
-  <textarea id="forge-cmd" rows="3" placeholder="Model: 'Black Hole', 'Fluidity'..."></textarea>
-  <button class="btn" onclick="runForge()">EXECUTE</button>
+<div id="data-stream" class="widget">
+  <div id="stream-output"></div>
 </div>
 
-<div id="ai-observer" class="widget visible">
-  <div class="ai-line">System initialized. Waiting for matter...</div>
+<div id="archive-hub" class="widget">
+  <span style="font-size: 9px; opacity: 0.5;">ARCHIVE // RECONSTRUCT</span>
+  <div id="archive-list"></div>
 </div>
 
 <div id="viewport"></div>
 
 <script>
-let scene, camera, renderer, world, entities = [], audioCtx = null;
-let raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2();
+let scene, camera, renderer, world, entities = [], tiles = [];
+const TILE_RES = 10;
 
 function init() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 5000);
   camera.position.set(100, 100, 100);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.getElementById('viewport').appendChild(renderer.domElement);
 
   new THREE.OrbitControls(camera, renderer.domElement);
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.81, 0) });
-  scene.add(new THREE.GridHelper(500, 50, 0x00ffb2, 0x050510));
 
+  createLattice();
+  
   window.onmousemove = (e) => {
     document.getElementById('cursor').style.left = e.clientX + 'px';
     document.getElementById('cursor').style.top = e.clientY + 'px';
   };
 
   animate();
-  observe("NEXUS Kernel online. Version 16.0 Ready.");
 }
 
-function toggleWidget(id) {
-  document.getElementById(id).classList.toggle('visible');
-}
-
-function observe(text) {
-  const container = document.getElementById('ai-observer');
-  const line = document.createElement('div');
-  line.className = 'ai-line';
-  line.innerText = `> ${text}`;
-  container.prepend(line);
-}
-
-function runForge() {
-  const input = document.getElementById('forge-cmd').value;
-  if(input.includes('spawn')) {
-    spawn(10);
-    observe("Injecting matter into local space.");
-  } else {
-    observe(`Reconfiguring reality model: ${input}`);
+function createLattice() {
+  const geo = new THREE.PlaneGeometry(10, 10);
+  for(let x = -TILE_RES; x < TILE_RES; x++) {
+    for(let z = -TILE_RES; z < TILE_RES; z++) {
+      const mat = new THREE.MeshBasicMaterial({ color: 0x050505, side: THREE.DoubleSide });
+      const tile = new THREE.Mesh(geo, mat);
+      tile.rotation.x = Math.PI / 2;
+      tile.position.set(x * 10, 0, z * 10);
+      tile.userData = { hits: 0 };
+      scene.add(tile);
+      tiles.push(tile);
+    }
   }
 }
 
-function spawn(count) {
+function pushStream(text) {
+  if (!document.getElementById('stream-toggle').checked) return;
+  const out = document.getElementById('stream-output');
+  const line = document.createElement('div');
+  line.className = 'stream-line';
+  line.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
+  out.prepend(line);
+  if (out.childNodes.length > 15) out.lastChild.remove();
+}
+
+function spawn(count, x = null, z = null) {
+  const geo = new THREE.IcosahedronGeometry(2, 0);
   for(let i=0; i<count; i++) {
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(2, 1), new THREE.MeshPhongMaterial({ wireframe: true, color: 0x00ffb2 }));
+    const mat = new THREE.MeshPhongMaterial({ color: 0x00ffb2, wireframe: true });
+    const mesh = new THREE.Mesh(geo, mat);
     const body = new CANNON.Body({ mass: 1, shape: new CANNON.Sphere(2) });
-    body.position.set((Math.random()-0.5)*80, 50, (Math.random()-0.5)*80);
+    
+    const px = x !== null ? x : (Math.random()-0.5)*150;
+    const pz = z !== null ? z : (Math.random()-0.5)*150;
+    body.position.set(px, 60 + (i*5), pz);
+    
+    body.addEventListener("collide", (e) => {
+      updateLattice(body.position.x, body.position.z);
+      pushStream(`IMPACT AT ${body.position.x.toFixed(1)}, ${body.position.z.toFixed(1)}`);
+    });
+
     scene.add(mesh);
     world.addBody(body);
-    entities.push({ mesh, body });
+    entities.push({ mesh, body, id: `SIG_${Math.floor(Math.random()*999)}` });
   }
+  pushStream(`INJECTED ${count} ENTITIES`);
+}
+
+function updateLattice(x, z) {
+  tiles.forEach(tile => {
+    const d = Math.sqrt((tile.position.x - x)**2 + (tile.position.z - z)**2);
+    if(d < 10) {
+      tile.userData.hits += 0.2;
+      tile.material.color.setHSL(0.35 - Math.min(tile.userData.hits * 0.1, 0.35), 1, Math.min(tile.userData.hits * 0.2, 0.4));
+    }
+  });
+}
+
+function archive(e) {
+  const list = document.getElementById('archive-list');
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  const pos = {x: e.body.position.x, z: e.body.position.z};
+  div.innerHTML = `<strong>${e.id}</strong><br>DE-RES // X:${pos.x.toFixed(1)} Z:${pos.z.toFixed(1)}`;
+  
+  div.onclick = () => {
+    spawn(1, pos.x, pos.z);
+    div.remove();
+  };
+  
+  list.prepend(div);
+  scene.remove(e.mesh);
+  world.removeBody(e.body);
+  pushStream(`${e.id} ARCHIVED TO BLACK BOX`);
+}
+
+function applyPixelation() {
+  renderer.setPixelRatio(document.getElementById('pixel-toggle').checked ? 0.25 : window.devicePixelRatio);
 }
 
 function animate() {
   requestAnimationFrame(animate);
   world.step(1/60);
   
-  const useThermal = document.getElementById('thermal-toggle').checked;
+  const thermal = document.getElementById('thermal-toggle').checked;
 
-  entities.forEach(e => {
+  for (let i = entities.length - 1; i >= 0; i--) {
+    const e = entities[i];
     e.mesh.position.copy(e.body.position);
     e.mesh.quaternion.copy(e.body.quaternion);
 
-    if(useThermal) {
-      const speed = e.body.velocity.length();
-      e.mesh.material.color.setHSL(0.6 - (speed * 0.02), 1, 0.5);
-    } else {
-      e.mesh.material.color.setHex(0x00ffb2);
+    if (thermal) {
+      const s = e.body.velocity.length();
+      e.mesh.material.color.setHSL(0.4 - Math.min(s * 0.02, 0.4), 1, 0.5);
     }
-  });
 
+    if (e.body.position.y < -50) {
+      archive(e);
+      entities.splice(i, 1);
+    }
+  }
   renderer.render(scene, camera);
-}
-
-function saveConfig() {
-  const config = {
-    thermal: document.getElementById('thermal-toggle').checked,
-    audio: document.getElementById('audio-toggle').checked
-  };
-  localStorage.setItem('NEXUS_CONFIG', JSON.stringify(config));
-  observe("Configuration saved to local memory.");
 }
 
 init();
