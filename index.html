@@ -2,433 +2,276 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PhyArch NEXUS — Ultimate Futuristic Science Hub</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PhyArch NEXUS</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap">
   <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/examples/js/controls/OrbitControls.js"></script>
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #111116;
-      --text: #f0f4f8;
-      --dim: #8a8f99;
-      --accent: #3b82f6;
-      --red: #f85149;
-      --border: #252530;
-      --green: #22c55e;
-      --yellow: #eab308;
+      --bg: #050508;
+      --surface: #11111a;
+      --accent: #00f2ff;
+      --magenta: #ff00e5;
+      --text: #e0e0e0;
+      --border: rgba(255, 255, 255, 0.1);
+      --glass: rgba(17, 17, 26, 0.8);
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
     body {
-      background:var(--bg);
-      color:var(--text);
-      font-family:'Inter', system-ui, sans-serif;
-      overflow-y:auto;
-      height:100vh;
-      -webkit-font-smoothing:antialiased;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
     }
 
-header {
-  position:sticky;
-  top:0;
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  padding:16px 24px;
-  z-index:1000;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
-.logo {
-  font-size:24px;
-  font-weight:700;
-  color:var(--accent);
-}
-nav {
-  display:flex;
-  gap:24px;
-}
-nav a {
-  color:var(--dim);
-  text-decoration:none;
-  font-weight:500;
-  transition:color 0.2s;
-}
-nav a:hover {
-  color:var(--text);
-}
+    /* --- NAVIGATION --- */
+    header {
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
 
-.hero {
-  padding:80px 24px;
-  text-align:center;
-  background:linear-gradient(to bottom, var(--surface), var(--bg));
-}
-.hero h1 {
-  font-size:48px;
-  font-weight:700;
-  margin-bottom:16px;
-}
-.hero p {
-  font-size:20px;
-  color:var(--dim);
-  max-width:800px;
-  margin:0 auto 32px;
-}
-.hero button {
-  padding:16px 32px;
-  background:var(--accent);
-  color:white;
-  border:none;
-  border-radius:8px;
-  font-weight:600;
-  cursor:pointer;
-  transition:all 0.2s;
-}
-.hero button:hover {
-  background:#1f6feb;
-  transform:translateY(-2px);
-}
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+      text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+    }
 
-.section {
-  padding:48px 24px;
-  max-width:1200px;
-  margin:0 auto;
-}
-.section h2 {
-  font-size:32px;
-  font-weight:600;
-  margin-bottom:24px;
-}
+    /* --- HERO SECTION --- */
+    .hero {
+      padding: 60px 20px;
+      text-align: center;
+      background: radial-gradient(circle at top, #1a1a2e 0%, #050508 100%);
+    }
 
-.carousel {
-  display:flex;
-  overflow-x:auto;
-  gap:24px;
-  padding-bottom:16px;
-}
-.card {
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:24px;
-  min-width:280px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-  transition:all 0.2s;
-}
-.card:hover {
-  transform:translateY(-4px);
-  box-shadow:0 8px 24px rgba(0,0,0,0.4);
-}
-.card h3 {
-  font-size:20px;
-  margin-bottom:8px;
-}
-.badge {
-  display:inline-block;
-  background:var(--red);
-  color:white;
-  padding:4px 12px;
-  border-radius:20px;
-  font-size:12px;
-  font-weight:500;
-  margin-bottom:12px;
-}
+    h1 { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; margin-bottom: 10px; }
+    .hero p { color: #888; margin-bottom: 30px; }
 
-#workspace {
-  height:600px;
-  background:var(--surface-elevated);
-  border-radius:16px;
-  margin:24px 0;
-  position:relative;
-  overflow:hidden;
-}
+    /* --- WORKSPACE (The 3D Part) --- */
+    .workspace-container {
+      position: relative;
+      width: 95%;
+      height: 500px;
+      margin: 20px auto;
+      border-radius: 20px;
+      border: 1px solid var(--accent);
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
+    }
 
-#background-terminal {
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:var(--surface);
-  padding:12px;
-  font-family:monospace;
-  font-size:14px;
-  color:var(--green);
-  display:none;
-  z-index:500;
-}
+    #workspace-canvas { width: 100%; height: 100%; }
 
-#settings-section {
-  padding:48px 24px;
-}
-#update-button {
-  padding:12px 24px;
-  background:var(--yellow);
-  color:var(--bg);
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
+    /* --- NEURAL OVERLAY (From your screenshot) --- */
+    .neural-overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      z-index: 10;
+    }
 
-footer {
-  padding:24px;
-  text-align:center;
-  border-top:1px solid var(--border);
-  color:var(--dim);
-  font-size:14px;
-}  </style></head>
+    .label-row { display: flex; justify-content: space-between; font-size: 10px; font-family: 'Orbitron'; color: var(--accent); margin-bottom: 8px; }
+
+    input[type=range] {
+      width: 100%;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      height: 4px;
+      border-radius: 2px;
+      margin-bottom: 15px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 15px; height: 15px;
+      background: var(--magenta);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--magenta);
+    }
+
+    .btn-inject {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* --- CARDS --- */
+    .section-title { padding: 0 20px; font-family: 'Orbitron'; font-size: 1.2rem; margin-top: 40px; }
+    
+    .carousel {
+      display: flex;
+      overflow-x: auto;
+      padding: 20px;
+      gap: 15px;
+      scrollbar-width: none;
+    }
+
+    .card {
+      min-width: 250px;
+      background: var(--surface);
+      padding: 20px;
+      border-radius: 15px;
+      border: 1px solid var(--border);
+    }
+
+    .card h3 { color: var(--accent); margin-bottom: 10px; font-size: 1.1rem; }
+
+    /* --- BOTTOM DOCK --- */
+    .bottom-nav {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      background: var(--glass);
+      backdrop-filter: blur(15px);
+      display: flex;
+      justify-content: space-around;
+      padding: 15px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .nav-item { color: var(--text); text-decoration: none; font-size: 0.8rem; font-weight: 600; }
+
+    footer { padding: 100px 20px 120px; text-align: center; font-size: 0.7rem; opacity: 0.5; }
+
+  </style>
+</head>
 <body>
 
 <header>
-  <div class="logo">PhyArch NEXUS</div>
-  <nav>
-    <a href="#">Hub</a>
-    <a href="#">Feed</a>
-    <a href="#workspace">Workspace</a>
-    <a href="#">Achievements</a>
-    <a href="#settings-section">Settings</a>
-  </nav>
+  <div class="logo">PhyArch // NEXUS</div>
+  <div style="font-size: 0.7rem; color: var(--magenta)">SYNC: 100%</div>
 </header>
 
 <section class="hero">
-  <h1>PhyArch NEXUS</h1>
-  <p>The ultimate futuristic science hub for 3D rendering, simulations, AI creation, and data analysis.</p>
-  <button onclick="document.getElementById('workspace').scrollIntoView({behavior:'smooth'})">Enter Workspace</button>
+  <h1>RESEARCH TERMINAL</h1>
+  <p>Neural Projection & Data Synthesis</p>
 </section>
 
-<section class="section">
-  <h2>Key Features</h2>
-  <div class="carousel">
-    <div class="card">
-      <h3>3D Rendering</h3>
-      <p>Real-time 3D viewport with physics and projections.</p>
+<div class="workspace-container">
+  <div class="neural-overlay">
+    <div class="label-row">
+      <span>NEURAL PROJECTION LEAD</span>
     </div>
-    <div class="card">
-      <h3>AI Forge</h3>
-      <p>Prompt-based creation for molecules, models, and simulations.</p>
+    <div class="label-row" style="color: #555;">
+      <span>REAL-TIME</span>
+      <span>FUTURE_OFFSET</span>
     </div>
-    <div class="card">
-      <h3>Python Kernel</h3>
-      <p>Run code for data analysis and custom functions.</p>
-    </div>
-    <div class="card">
-      <h3>Real-Time Data</h3>
-      <p>Integrate weather/stock feeds to influence simulations.</p>
-    </div>
-    <div class="card">
-      <h3>Molecular Viewer</h3>
-      <p>Fetch and view molecular structures from PubChem.</p>
-    </div>
-    <div class="card">
-      <h3>GLTF Import</h3>
-      <p>Drag and drop 3D models for instant rendering.</p>
-    </div>
-    <div class="card">
-      <h3>Search & Research</h3>
-      <p>Built-in search for data and updates.</p>
-    </div>
-    <div class="card">
-      <h3>Self-Update</h3>
-      <p>App can analyze, modify, and update itself with permission.</p>
-    </div>
+    <input type="range" id="temporal-slider" min="0" max="100" value="40">
+    <button class="btn-inject" onclick="injectNodes()">INJECT TEMPORAL NODES</button>
   </div>
-</section>
-
-<section class="section">
-  <h2>Projections & Achievements</h2>
-  <div class="carousel">
-    <div class="card">
-      <span class="badge">New</span>
-      <h3>Simulation Master</h3>
-      <p>Run 100 simulations — 40% complete.</p>
-    </div>
-    <div class="card">
-      <span class="badge">Pro</span>
-      <h3>App Builder</h3>
-      <p>Create 50 apps — 80% complete.</p>
-    </div>
+  
+  <div id="workspace-canvas"></div>
+  
+  <div style="position: absolute; bottom: 10px; left: 15px; font-family: monospace; font-size: 10px; color: var(--magenta);">
+    THREADS: ACTIVE // Neural Lead: <span id="lead-val">0.4s</span>
   </div>
-</section>
+</div>
 
-<section class="section">
-  <h2>Workspace</h2>
-  <div id="workspace"></div>
-  <div style="margin-top:24px;text-align:center;">
-    <button style="padding:12px 24px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;" onclick="init3D()">Init 3D View</button>
-    <button style="padding:12px 24px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="togglePython()">Python Terminal</button>
-    <button style="padding:12px 24px;background:var(--yellow);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="toggleAI()">AI Forge</button>
-    <button style="padding:12px 24px;background:var(--red);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="fetchMolecule()">Molecular Viewer</button>
-    <input type="file" id="gltf-import" accept=".gltf,.glb" style="display:none;" onchange="importGLTF(this.files[0])">
-    <button style="padding:12px 24px;background:var(--accent);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="document.getElementById('gltf-import').click()">Import GLTF</button>
-    <button style="padding:12px 24px;background:var(--green);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="fetchDataFeed()">Load Data Feed</button>
-    <button style="padding:12px 24px;background:var(--yellow);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="saveProject()">Save Project</button>
-    <button style="padding:12px 24px;background:var(--yellow);color:white;border:none;border-radius:8px;cursor:pointer;margin-left:12px;" onclick="loadProject()">Load Project</button>
-  </div>
-</section>
-
-<section id="settings-section" class="section">
-  <h2>Settings</h2>
+<h2 class="section-title">SYSTEM MODULES</h2>
+<div class="carousel">
   <div class="card">
-    <h3>Self-Update</h3>
-    <p>Allow the app to search, analyze, and update itself periodically.</p>
-    <button id="update-button" onclick="selfUpdate()">Check for Update</button>
+    <h3>AI Forge</h3>
+    <p>Synthesize molecular structures via prompt injection.</p>
   </div>
-</section>
-
-<div id="background-terminal"></div>
+  <div class="card">
+    <h3>Python Kernel</h3>
+    <p>Execute low-level data analysis on the fly.</p>
+  </div>
+  <div class="card">
+    <h3>Quantum Sync</h3>
+    <p>Align simulation data with real-world feeds.</p>
+  </div>
+</div>
 
 <footer>
-  © 2026 PhyArch NEXUS. All rights reserved.
+  SYSTEM_STABLE // VERSION 2.0.26 <br>
+  © PHYARCH NEXUS INDUSTRIES
 </footer>
 
-<div id="python-terminal" style="display:none;">
-  <input type="text" id="python-input" placeholder="Enter Python code...">
-  <button onclick="executePython()">Run</button>
-  <div id="python-output"></div>
-</div>
-
-<div id="ai-forge" style="display:none;">
-  <input type="text" id="ai-input" placeholder="Enter AI prompt...">
-  <button onclick="processAI()">Generate</button>
-  <div id="ai-output"></div>
-</div>
-
-<div id="voice-mic" style="position:fixed;bottom:80px;right:24px;background:var(--green);color:white;width:56px;height:56px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="toggleVoice()"></div>
-
-<div id="bottom-bar">
-  <span class="bar-icon" onclick="location.href='#'"></span>
-  <span class="bar-icon" onclick="alert('Search')"></span>
-  <span id="ai-button" class="bar-icon" onclick="toggleAI()"></span>
-  <span class="bar-icon" onclick="alert('Notifications')"></span>
-  <span class="bar-icon" onclick="alert('Profile')"></span>
-</div>
+<nav class="bottom-nav">
+  <a href="#" class="nav-item">HUB</a>
+  <a href="#" class="nav-item">DATA</a>
+  <a href="#" class="nav-item" style="color: var(--accent);">CORE</a>
+  <a href="#" class="nav-item">LOGS</a>
+</nav>
 
 <script>
-// 3D Viewport with Three.js
-let scene, camera, renderer;
+let scene, camera, renderer, cube;
+
 function init3D() {
-  const vp = document.getElementById('workspace');
-  vp.innerHTML = '';
+  const container = document.getElementById('workspace-canvas');
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, vp.clientWidth / vp.clientHeight, 0.1, 1000);
-  renderer = new THREE.WebGLRenderer();
-  renderer.setSize(vp.clientWidth, vp.clientHeight);
-  vp.appendChild(renderer.domElement);
-  camera.position.z = 5;
-  const geometry = new THREE.BoxGeometry();
-  const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-  const cube = new THREE.Mesh(geometry, material);
+  camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+  
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  const geometry = new THREE.BoxGeometry(2, 2, 2);
+  const material = new THREE.MeshBasicMaterial({ 
+    color: 0x00f2ff, 
+    wireframe: true 
+  });
+  cube = new THREE.Mesh(geometry, material);
   scene.add(cube);
-  function animate3D() {
-    requestAnimationFrame(animate3D);
+
+  camera.position.z = 5;
+
+  function animate() {
+    requestAnimationFrame(animate);
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
     renderer.render(scene, camera);
   }
-  animate3D();
+  animate();
 }
 
-// Temporal Projection (in 3D)
-let temporalLead = 0.4;
-document.getElementById('lead').addEventListener('input', e => {
-  temporalLead = e.target.value / 100;
-  // Update projection in 3D (simulated)
-  alert('Temporal lead updated to ' + (temporalLead * 20).toFixed(1) + 's');
+// Update the label based on slider
+document.getElementById('temporal-slider').addEventListener('input', (e) => {
+  const val = (e.target.value / 100).toFixed(1);
+  document.getElementById('lead-val').innerText = val + 's';
+  cube.scale.set(1 + val/2, 1 + val/2, 1 + val/2); // Visually react to slider
 });
 
-// Self-Analysis & Self-Update
-const terminal = document.getElementById('background-terminal');
-terminal.style.display = 'block';
-terminal.innerText = 'Background Terminal: Ready for self-analysis...';
-function selfAnalyze() {
-  terminal.innerText += '\nAnalyzing... Missing: Full Pyodide. Modifying code...';
-  // Simulate self-modification
-  setTimeout(() => {
-    terminal.innerText += '\nModified: Added Pyodide stub.';
-  }, 1000);
-}
-function selfUpdate() {
-  if (confirm('Allow self-update? (Checks every 7 days)')) {
-    terminal.innerText += '\nSearching for updates...';
-    // Simulate research/search
-    setTimeout(() => {
-      terminal.innerText += '\nFound update: Integrating new feature.';
-      // Simulate install
-      alert('Updated successfully!');
-    }, 2000);
-  }
-}
-setInterval(selfAnalyze, 30000); // Auto-analyze every 30s
-
-// Search Feature (web integration simulation)
-function search(query) {
-  terminal.innerText += '\nSearching: ' + query;
-  // Simulate
-  return 'Results for "' + query + '" (simulated from web)';
+function injectNodes() {
+  alert("Temporal Nodes Injected into Grid.");
 }
 
-// Update/Install (settings-like)
-document.getElementById('update-button').onclick = selfUpdate;
+// Initialize on load
+window.onload = init3D;
 
-// Python Terminal
-function togglePython() {
-  const term = document.getElementById('python-terminal');
-  term.style.display = term.style.display === 'block' ? 'none' : 'block';
-}
-function executePython() {
-  const code = document.getElementById('python-input').value;
-  // Simulate Pyodide
-  try {
-    const result = eval(code); // Danger: Use real Pyodide in production
-    document.getElementById('python-output').innerText = result;
-  } catch (e) {
-    document.getElementById('python-output').innerText = 'Error: ' + e.message;
-  }
-}
-
-// AI Forge
-function toggleAI() {
-  const forge = document.getElementById('ai-forge');
-  forge.style.display = forge.style.display === 'block' ? 'none' : 'block';
-}
-function processAI() {
-  const prompt = document.getElementById('ai-input').value;
-  const response = `Generated from prompt: "${prompt}" (simulated)`;
-  document.getElementById('ai-output').innerText = response;
-}
-
-// Voice Input
-function toggleVoice() {
-  alert('Voice command activated (simulated)');
-}
-
-// Data Feeds
-function fetchDataFeed() {
-  alert('Weather feed: Wind influencing simulation (simulated)');
-}
-
-// Molecular Viewer
-function fetchMolecule() {
-  alert('Molecular structure fetched (simulated from PubChem)');
-}
-
-// GLTF Import
-function importGLTF(file) {
-  alert('GLTF imported: ' + file.name + ' (rendered in 3D)');
-}
-
-// Save/Load Project
-function saveProject() {
-  localStorage.setItem('nexus-project', JSON.stringify({nodes: 'data'}));
-  alert('Project saved');
-}
-function loadProject() {
-  const data = localStorage.getItem('nexus-project');
-  alert('Project loaded: ' + data);
-}
-
-// Account / Login (simulated)
-localStorage.setItem('user', 'guest');
+// Handle resize
+window.onresize = () => {
+  const container = document.getElementById('workspace-canvas');
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+};
 </script>
+
 </body>
 </html>
