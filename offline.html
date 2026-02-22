@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhyArch NEXUS — Offline</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #0f0f12;
+      color: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .container {
+      max-width: 400px;
+      padding: 24px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 16px;
+      color: #3b82f6;
+    }
+    p {
+      color: #8a8f99;
+      margin-bottom: 24px;
+    }
+    button {
+      padding: 12px 24px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>You're Offline</h1>
+    <p>PhyArch NEXUS needs internet for some features.<br>Check your connection and try again.</p>
+    <button onclick="window.location.reload()">Retry</button>
+  </div>
+</body>
+</html>
