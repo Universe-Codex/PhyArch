@@ -1,66 +1,67 @@
-// sw.js - PhyArch NEXUS Service Worker
-const CACHE_NAME = 'phyarch-nexus-v1';
-const OFFLINE_URL = '/offline.html'; // optional — create this file later
+// sw.js - PhyArch NEXUS Service Worker (v1.1)
+const CACHE_NAME = 'phyarch-nexus-v1.1';
+const OFFLINE_PAGE = '/offline.html';
 
-const CORE_ASSETS = [
+const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  // Add any other critical assets here (CSS, JS CDNs are not cached)
+  '/screenshot-wide.png',
+  '/screenshot-mobile.png',
+  '/offline.html'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      console.log('[SW] Caching core assets');
-      return cache.addAll(CORE_ASSETS);
-    }).then(() => {
-      return self.skipWaiting();
-    })
+      console.log('[SW] Installing core assets');
+      return cache.addAll(STATIC_ASSETS);
+    }).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then(keys => {
       return Promise.all(
-        cacheNames.filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests and browser extensions
-  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
 
-  // Cache-first for core assets
-  if (CORE_ASSETS.some(asset => event.request.url.endsWith(asset))) {
+  // Network-first for dynamic content, cache-first for static assets
+  if (STATIC_ASSETS.some(url => event.request.url.endsWith(url))) {
     event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
+      caches.match(event.request).then(cached => {
+        return cached || fetch(event.request).then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
+          }
+          return networkResponse;
+        });
+      })
     );
-    return;
+  } else {
+    // Network-first with offline fallback for navigation
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        if (event.request.mode === 'navigate') {
+          return caches.match(OFFLINE_PAGE);
+        }
+        return new Response('', { status: 503 });
+      })
+    );
   }
-
-  // Network-first + fallback for everything else
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      // Optional: return offline page for HTML requests
-      if (event.request.mode === 'navigate') {
-        return caches.match(OFFLINE_URL);
-      }
-      // Or just fail silently for other resources
-      return new Response('', { status: 503 });
-    })
-  );
 });
 
-// Optional: push notification / background sync stubs (add later if needed)
-self.addEventListener('push', event => {
-  console.log('[SW] Push received:', event);
+// Background sync / push stub (optional future use)
+self.addEventListener('sync', event => {
+  console.log('[SW] Background sync:', event.tag);
 });
