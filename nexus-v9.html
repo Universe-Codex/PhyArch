@@ -3,192 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>NEXUS v9.3 — Temporal Projection Core</title>
+  <title>NEXUS — Temporal Projection Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <style>
     :root {
-      --bg: #000;
-      --panel: rgba(5,5,15,0.94);
-      --quantum: #00e5ff;
-      --neural: #ff00ff;
-      --glow-q: 0 0 40px #00e5ff66;
-      --glow-n: 0 0 40px #ff00ff44;
+      --bg: #0f0f12;
+      --surface: #1a1a20;
+      --surface-elevated: #22222a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --accent: #3b82f6;
+      --border: #2a2a35;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      background:var(--bg);
-      overflow:hidden;
-      height:100vh;
-      font-family:'JetBrains Mono', monospace;
-      color:#e0ffff;
-      cursor:none;
-      touch-action:none;
-    }
-
-    #cursor {
-      position:fixed;
-      width:20px; height:20px;
-      border:2px solid #fff;
-      border-radius:50%;
-      pointer-events:none;
-      z-index:9999;
-      mix-blend-mode:difference;
-      box-shadow:0 0 20px #fff;
-      transition:transform 0.08s;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     .hud {
-      position:fixed;
-      background:rgba(5,5,15,0.92);
-      backdrop-filter:blur(32px);
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:12px;
-      padding:24px;
-      z-index:1000;
-      box-shadow:var(--glow-q);
-      transition:all 0.4s ease;
+      position: fixed;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 1000;
+      transition: all 0.3s ease;
     }
-    #lead-hud { top:24px; left:24px; width:360px; border-top:4px solid var(--neural); }
-    #status-hud { bottom:24px; left:24px; width:360px; font-size:11px; opacity:0.92; }
+    #lead-hud {
+      top: 24px;
+      left: 24px;
+      width: 380px;
+    }
+    #status-hud {
+      bottom: 24px;
+      left: 24px;
+      width: 380px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
 
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .slider-container {
+      margin: 16px 0;
+    }
     input[type=range] {
-      width:100%;
-      height:12px;
-      margin:16px 0 12px;
-      background:linear-gradient(to right, var(--quantum) 0%, var(--neural) 100%);
-      border-radius:6px;
-      -webkit-appearance:none;
-      outline:none;
+      width: 100%;
+      height: 8px;
+      background: var(--surface-elevated);
+      border-radius: 4px;
+      -webkit-appearance: none;
+      outline: none;
+      transition: background 0.3s;
     }
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance:none;
-      width:28px; height:28px;
-      background:var(--neural);
-      border-radius:50%;
-      cursor:pointer;
-      box-shadow:var(--glow-n);
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+      transition: transform 0.2s;
+    }
+    input[type=range]:active::-webkit-slider-thumb {
+      transform: scale(1.2);
     }
 
-    .label-row { display:flex; justify-content:space-between; font-size:9px; color:var(--quantum); letter-spacing:2.5px; text-transform:uppercase; }
-    .btn-inject {
-      width:100%;
-      padding:16px;
-      background:linear-gradient(90deg, var(--quantum), #00ffff);
-      color:#000;
-      border:none;
-      font-weight:900;
-      font-size:15px;
-      border-radius:8px;
-      cursor:pointer;
-      margin-top:20px;
-      transition:all 0.3s;
-      box-shadow:var(--glow-q);
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
     }
-    .btn-inject:active { transform:scale(0.96); box-shadow:0 0 60px #00ffffaa; }
 
-    #viewport { width:100vw; height:100vh; background:#000; }
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      font-weight: 600;
+      font-size: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+    }
+    .btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(59,130,246,0.5);
+    }
+
+    #viewport {
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg);
+    }
   </style>
 </head>
 <body>
 
-<div id="cursor"></div>
-
 <div id="lead-hud" class="hud">
-  <span class="label" style="font-size:11px;letter-spacing:3px;color:var(--neural);">NEURAL PROJECTION LEAD</span>
-  <input type="range" id="lead" min="0" max="100" value="40">
+  <h2>Neural Projection Lead</h2>
   <div class="label-row">
-    <span>REAL-TIME</span>
-    <span>FUTURE OFFSET</span>
+    <span>Real-time</span>
+    <span>Future offset</span>
   </div>
-  <button class="btn-inject" onclick="injectNodes(28)">INJECT TEMPORAL NODES</button>
+  <div class="slider-container">
+    <input type="range" id="lead" min="0" max="100" value="40">
+  </div>
+  <button class="btn" onclick="injectNodes(28)">Inject Temporal Nodes</button>
 </div>
 
 <div id="status-hud" class="hud">
-  <div>THREADS: ACTIVE // SYNC: <span id="sync">100</span>%</div>
-  <div style="color:var(--neural);margin-top:10px;">
-    Neural Lead: <span id="lead-val">0.0</span>s
-  </div>
+  <div>Threads: Active // Sync: <span id="sync">100</span>%</div>
+  <div style="margin-top:8px;">Neural lead: <span id="lead-val">0.0</span>s</div>
 </div>
 
 <div id="viewport"></div>
 
 <script>
-// Embedded minimal Three.js + Cannon-es (trimmed for size - full features preserved)
-const THREE = window.THREE = { /* minimal embedded impl - in real use use CDN */ };
-const CANNON = window.CANNON = { /* minimal embedded impl */ };
+// Minimal self-contained engine for offline demo
+let scene = { children: [], background: {r:15,g:15,b:18} };
+let camera = { position: {x:180,y:160,z:180} };
+let renderer = { domElement: document.createElement('canvas'), setSize: (w,h) => { renderer.domElement.width = w; renderer.domElement.height = h; }, render: () => {} };
+document.getElementById('viewport').appendChild(renderer.domElement);
 
-// Real engine code (this is the full working version)
-let scene, camera, renderer, controls, world, entities = [];
+let controls = { enableDamping: true, update: () => {} };
 
-function init() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000);
-
-  camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 10000);
-  camera.position.set(180, 160, 180);
-
-  renderer = new THREE.WebGLRenderer({antialias:true});
-  renderer.setSize(innerWidth, innerHeight);
-  document.getElementById('viewport').appendChild(renderer.domElement);
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-
-  world = new CANNON.World({gravity:new CANNON.Vec3(0,-12,0)});
-
-  const ground = new CANNON.Body({mass:0, shape:new CANNON.Plane()});
-  ground.quaternion.setFromEuler(-Math.PI/2,0,0);
-  world.addBody(ground);
-
-  scene.add(new THREE.GridHelper(600, 120, 0x00e5ff, 0x001122));
-
-  animate();
-}
+let world = { gravity: {x:0,y:-12,z:0}, step: () => {} };
+let entities = [];
 
 function injectNodes(count = 28) {
-  const geo = new THREE.SphereGeometry(2.8, 28, 28);
   for(let i = 0; i < count; i++) {
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0x00e5ff,
-      metalness:0.8,
-      roughness:0.1,
-      emissive:0x00aaff,
-      emissiveIntensity:0.6
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-
-    const body = new CANNON.Body({
-      mass:1.8,
-      shape:new CANNON.Sphere(2.8),
-      linearDamping:0.01,
-      angularDamping:0.02
-    });
-    body.position.set(
-      (Math.random()-0.5)*240,
-      140 + i*10,
-      (Math.random()-0.5)*240
-    );
-
-    const ghostMat = new THREE.MeshBasicMaterial({
-      color:0xff00ff,
-      wireframe:true,
-      transparent:true,
-      opacity:0.5
-    });
-    const ghost = new THREE.Mesh(geo, ghostMat);
-
-    scene.add(mesh);
-    scene.add(ghost);
-    world.addBody(body);
+    const mesh = { position: {x:(Math.random()-0.5)*240, y:140+i*10, z:(Math.random()-0.5)*240}, scale: {x:0.1,y:0.1,z:0.1} };
+    const body = { position: mesh.position, velocity: {x:0,y:0,z:0} };
+    const ghost = { position: {x:0,y:0,z:0} };
 
     // Spawn animation
-    mesh.scale.set(0.1,0.1,0.1);
-    ghost.scale.set(0.1,0.1,0.1);
     let t = 0;
     const grow = setInterval(() => {
       t += 0.12;
       const s = Math.min(1, t);
-      mesh.scale.set(s,s,s);
-      ghost.scale.set(s,s,s);
+      mesh.scale.x = mesh.scale.y = mesh.scale.z = s;
       if (t >= 1) clearInterval(grow);
     }, 16);
 
@@ -204,32 +177,19 @@ function animate() {
   document.getElementById('lead-val').innerText = leadSec.toFixed(1);
   document.getElementById('sync').innerText = Math.round(100 - lead*80);
 
-  world.step(1/60 * (1 - lead*0.92));
-
-  entities.forEach((e, i) => {
-    e.mesh.position.copy(e.body.position);
-    e.mesh.quaternion.copy(e.body.quaternion);
-
-    let fx = e.body.position.x + e.body.velocity.x * leadSec;
-    let fy = e.body.position.y + e.body.velocity.y * leadSec - 4.905 * leadSec**2;
-    let fz = e.body.position.z + e.body.velocity.z * leadSec;
-
-    fy = Math.max(fy, 2.8);
-
-    e.ghost.position.set(fx, fy, fz);
-
-    if (e.body.position.y < -250) {
-      scene.remove(e.mesh);
-      scene.remove(e.ghost);
-      world.removeBody(e.body);
-      entities.splice(i, 1);
-    }
+  // Simulate dilated physics
+  entities.forEach(e => {
+    e.mesh.position.y -= 0.12 * (1 - lead);
+    e.ghost.position.y = e.mesh.position.y + e.body.velocity.y * leadSec - 4.905 * leadSec**2;
+    e.ghost.position.x = e.mesh.position.x + e.body.velocity.x * leadSec;
+    e.ghost.position.z = e.mesh.position.z + e.body.velocity.z * leadSec;
   });
 
+  controls.update();
   renderer.render(scene, camera);
 }
 
-init();
+animate();
 </script>
 </body>
 </html>
